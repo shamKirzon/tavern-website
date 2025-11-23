@@ -355,7 +355,7 @@ const ReservationManagement: React.FC = () => {
                       onClick={() => setSelectedReservation(res)}
                       className="bg-black hover:bg-gray-800 text-white px-3 py-1 rounded text-xs font-semibold"
                     >
-                      View Details
+                      View Detail
                     </button>
                   </td>
                 </tr>

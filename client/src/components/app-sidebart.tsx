@@ -14,28 +14,28 @@ import {
 // Menu items.
 const items = [
   {
-    title: "Home",
-    url: "#",
+    title: "Dashboard",
+    url: "/dashboard",
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
+    title: "Report and Analytics",
+    url: "/report-and-analytics",
     icon: Inbox,
   },
   {
-    title: "Calendar",
-    url: "#",
+    title: "Order Tracking",
+    url: "/order-tracking",
     icon: Calendar,
   },
   {
-    title: "Search",
-    url: "#",
+    title: "Reservation Management",
+    url: "/reservation-management",
     icon: Search,
   },
   {
-    title: "Settings",
-    url: "#",
+    title: "Employee Management",
+    url: "/employee-management",
     icon: Settings,
   },
 ];

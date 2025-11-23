@@ -9,9 +9,12 @@ import Layout from "./components/app/layout";
 
 const App = () => {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
+    <Routes>
+      {/* Public route */}
+      <Route path="/" element={<LoginPage />} />
+
+      {/* Layout routes */}
+      <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/order-tracking" element={<OrderTracking />} />
         <Route path="/report-and-analytics" element={<ReportAndAnalytics />} />
@@ -20,8 +23,8 @@ const App = () => {
           element={<ReservationManagement />}
         />
         <Route path="/employee-management" element={<EmployeeManagement />} />
-      </Routes>
-    </Layout>
+      </Route>
+    </Routes>
   );
 };
 

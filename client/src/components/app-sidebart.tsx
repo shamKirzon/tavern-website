@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom";
 
 import {
   Sidebar,
@@ -15,25 +15,24 @@ import {
   SidebarFooter,
   SidebarSeparator,
   useSidebar,
-} from "../components/ui/sidebar"
+} from "../components/ui/sidebar";
 
-import homeIcon from "../assets/icons/home.svg"
-import reportIcon from "../assets/icons/report.svg"
-import eventIcon from "../assets/icons/event.svg"
-import historyIcon from "../assets/icons/history.svg"
-import fastfoodIcon from "../assets/icons/fastfood.svg"
-import groupIcon from "../assets/icons/group.svg"
-import logoutIcon from "../assets/icons/logout.svg"
+import homeIcon from "../assets/icons/home.svg";
+import reportIcon from "../assets/icons/report.svg";
+import eventIcon from "../assets/icons/event.svg";
+import historyIcon from "../assets/icons/history.svg";
+import fastfoodIcon from "../assets/icons/fastfood.svg";
+import groupIcon from "../assets/icons/group.svg";
+import logoutIcon from "../assets/icons/logout.svg";
 
 export default function AppSidebar() {
-  const { state } = useSidebar()
-  const location = useLocation()
-  const current = location.pathname
+  const { state } = useSidebar();
+  const location = useLocation();
+  const current = location.pathname;
 
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="flex flex-col items-center pt-6">
-
         <div className="flex items-center gap-2 mb-2">
           <h3 className="text-3xl font-bold">Tavern Asia</h3>
         </div>
@@ -52,14 +51,12 @@ export default function AppSidebar() {
         )}
       </SidebarHeader>
 
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
 
           <SidebarGroupContent>
             <SidebarMenu>
-
               {/* Dashboard */}
               <SidebarMenuItem>
                 <Link to="/dashboard">
@@ -73,7 +70,9 @@ export default function AppSidebar() {
               {/* Report & Analytics */}
               <SidebarMenuItem>
                 <Link to="/report-and-analytics">
-                  <SidebarMenuButton isActive={current === "/report-and-analytics"}>
+                  <SidebarMenuButton
+                    isActive={current === "/report-and-analytics"}
+                  >
                     <img src={reportIcon} className="w-4 h-4" />
                     <span>Report & Analytics</span>
                   </SidebarMenuButton>
@@ -82,8 +81,8 @@ export default function AppSidebar() {
 
               {/* Reservation Management */}
               <SidebarMenuItem>
-                <Link to="/reservation-management">
-                  <SidebarMenuButton isActive={current === "/reservation-management"}>
+                <Link to="/reservations-">
+                  <SidebarMenuButton isActive={current === "/reservations"}>
                     <img src={eventIcon} className="w-4 h-4" />
                     <span>Reservations</span>
                   </SidebarMenuButton>
@@ -93,7 +92,9 @@ export default function AppSidebar() {
               {/* Reservation History */}
               <SidebarMenuItem>
                 <Link to="/reservations/history">
-                  <SidebarMenuButton isActive={current === "/reservations/history"}>
+                  <SidebarMenuButton
+                    isActive={current === "/reservations/history"}
+                  >
                     <img src={historyIcon} className="w-4 h-4" />
                     <span>Reservation History</span>
                   </SidebarMenuButton>
@@ -113,13 +114,14 @@ export default function AppSidebar() {
               {/* Employees */}
               <SidebarMenuItem>
                 <Link to="/employee-management">
-                  <SidebarMenuButton isActive={current === "/employee-management"}>
+                  <SidebarMenuButton
+                    isActive={current === "/employee-management"}
+                  >
                     <img src={groupIcon} className="w-4 h-4" />
                     <span>Employees</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
-
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -140,5 +142,5 @@ export default function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

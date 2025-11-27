@@ -36,7 +36,7 @@ interface DialogState {
 
 type View = "orders" | "employees";
 
-const Dashboard: React.FC = () => {
+const OrderPage: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>("orders");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
@@ -110,10 +110,28 @@ const Dashboard: React.FC = () => {
       dateTime: "2025-11-21 23:21",
       status: "Pending",
       items: [
-  { qty: 3, name: "Tav Special Pork Sisig", serving: "Solo", notes: "N/A", amount: 5000 },
-  { qty: 1, name: "Tav Chicken Fingers Platter", serving: "To Share", notes: "Wag Chicken", amount: 15000 },
-  { qty: 10, name: "Chili Ballpark Nachos", serving: "Regular", notes: "Extra Chili", amount: 90000 }
-],
+        {
+          qty: 3,
+          name: "Tav Special Pork Sisig",
+          serving: "Solo",
+          notes: "N/A",
+          amount: 5000,
+        },
+        {
+          qty: 1,
+          name: "Tav Chicken Fingers Platter",
+          serving: "To Share",
+          notes: "Wag Chicken",
+          amount: 15000,
+        },
+        {
+          qty: 10,
+          name: "Chili Ballpark Nachos",
+          serving: "Regular",
+          notes: "Extra Chili",
+          amount: 90000,
+        },
+      ],
     },
     {
       id: "3",
@@ -123,10 +141,28 @@ const Dashboard: React.FC = () => {
       dateTime: "2025-11-21 23:21",
       status: "Pending",
       items: [
-  { qty: 3, name: "Tav Special Pork Sisig", serving: "Solo", notes: "N/A", amount: 5000 },
-  { qty: 1, name: "Tav Chicken Fingers Platter", serving: "To Share", notes: "Wag Chicken", amount: 15000 },
-  { qty: 10, name: "Chili Ballpark Nachos", serving: "Regular", notes: "Extra Chili", amount: 90000 }
-],
+        {
+          qty: 3,
+          name: "Tav Special Pork Sisig",
+          serving: "Solo",
+          notes: "N/A",
+          amount: 5000,
+        },
+        {
+          qty: 1,
+          name: "Tav Chicken Fingers Platter",
+          serving: "To Share",
+          notes: "Wag Chicken",
+          amount: 15000,
+        },
+        {
+          qty: 10,
+          name: "Chili Ballpark Nachos",
+          serving: "Regular",
+          notes: "Extra Chili",
+          amount: 90000,
+        },
+      ],
     },
   ]);
 
@@ -183,7 +219,9 @@ const Dashboard: React.FC = () => {
           <div className="relative bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
             <div className="flex items-start gap-8">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-6">Edit Employee Details</h2>
+                <h2 className="text-2xl font-bold mb-6">
+                  Edit Employee Details
+                </h2>
 
                 <div className="mb-4">
                   <input
@@ -199,7 +237,9 @@ const Dashboard: React.FC = () => {
                     type="text"
                     placeholder="First Name"
                     value={editData.name}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                    onChange={(e) =>
+                      setEditData({ ...editData, name: e.target.value })
+                    }
                     className="px-4 py-2 border border-gray-300 rounded text-sm"
                   />
                   <input
@@ -241,7 +281,9 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">Employee Type</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Employee Type
+                  </label>
                   <div className="relative">
                     <select className="w-full px-4 py-2 border border-gray-300 rounded text-sm appearance-none bg-white">
                       <option>Security</option>
@@ -253,11 +295,15 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">Employee PIN</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Employee PIN
+                  </label>
                   <input
                     type="text"
                     value={editData.pin}
-                    onChange={(e) => setEditData({ ...editData, pin: e.target.value })}
+                    onChange={(e) =>
+                      setEditData({ ...editData, pin: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded text-sm"
                   />
                 </div>
@@ -312,7 +358,9 @@ const Dashboard: React.FC = () => {
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
             {dialog.type === "cancel" && (
               <div className="bg-white rounded-lg p-6 max-w-sm">
-                <h3 className="text-lg font-bold mb-4">Are you sure you want to cancel? This will delete all changes</h3>
+                <h3 className="text-lg font-bold mb-4">
+                  Are you sure you want to cancel? This will delete all changes
+                </h3>
                 <div className="flex gap-4">
                   <button
                     onClick={() => setDialog({ type: null, show: false })}
@@ -332,7 +380,9 @@ const Dashboard: React.FC = () => {
 
             {dialog.type === "confirm" && (
               <div className="bg-white rounded-lg p-6 max-w-sm">
-                <h3 className="text-lg font-bold mb-4">Are you sure you want to make changes with Employee Details?</h3>
+                <h3 className="text-lg font-bold mb-4">
+                  Are you sure you want to make changes with Employee Details?
+                </h3>
                 <div className="flex gap-4">
                   <button
                     onClick={() => setDialog({ type: null, show: false })}
@@ -405,12 +455,18 @@ const Dashboard: React.FC = () => {
                       <div className="text-sm font-medium">{order.email}</div>
                     </div>
                     <div className="w-16 text-sm text-right">{order.qty}</div>
-                    <div className="w-24 text-sm text-right">₱ {order.amount.toLocaleString()}</div>
-                    <div className="w-40 text-sm text-right text-gray-600">{order.dateTime}</div>
+                    <div className="w-24 text-sm text-right">
+                      ₱ {order.amount.toLocaleString()}
+                    </div>
+                    <div className="w-40 text-sm text-right text-gray-600">
+                      {order.dateTime}
+                    </div>
                     <div className="w-28">
                       <span
                         className={`inline-block px-3 py-1 rounded text-white text-xs font-semibold ${
-                          order.status === "Served" ? "bg-green-500" : "bg-orange-400"
+                          order.status === "Served"
+                            ? "bg-green-500"
+                            : "bg-orange-400"
                         }`}
                       >
                         {order.status}
@@ -424,33 +480,50 @@ const Dashboard: React.FC = () => {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-300">
-                            <th className="text-left py-2 font-semibold">Qty</th>
-                            <th className="text-left py-2 font-semibold">Order Name</th>
-                            <th className="text-left py-2 font-semibold">Serving</th>
-                            <th className="text-left py-2 font-semibold">Notes</th>
-                            <th className="text-right py-2 font-semibold">Amount</th>
+                            <th className="text-left py-2 font-semibold">
+                              Qty
+                            </th>
+                            <th className="text-left py-2 font-semibold">
+                              Order Name
+                            </th>
+                            <th className="text-left py-2 font-semibold">
+                              Serving
+                            </th>
+                            <th className="text-left py-2 font-semibold">
+                              Notes
+                            </th>
+                            <th className="text-right py-2 font-semibold">
+                              Amount
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {order.items.map((item, itemIdx) => (
-                            <tr key={itemIdx} className="border-b border-gray-200">
+                            <tr
+                              key={itemIdx}
+                              className="border-b border-gray-200"
+                            >
                               <td className="py-2">{item.qty}</td>
                               <td className="py-2">{item.name}</td>
                               <td className="py-2">{item.serving}</td>
                               <td className="py-2">{item.notes}</td>
-                              <td className="py-2 text-right">₱ {item.amount.toLocaleString()}</td>
+                              <td className="py-2 text-right">
+                                ₱ {item.amount.toLocaleString()}
+                              </td>
                             </tr>
                           ))}
-                        <tr>
+                          <tr>
                             <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
                             <td className="py-2 text-right">
-                              <button className="bg-gray-300 text-black px-3 py-1 rounded text-xs">Serve</button>
+                              <button className="bg-gray-300 text-black px-3 py-1 rounded text-xs">
+                                Serve
+                              </button>
                             </td>
                           </tr>
-                          </tbody>
+                        </tbody>
                       </table>
                     </div>
                   )}
@@ -463,7 +536,6 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Employee Management Main View
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="w-full">
@@ -500,26 +572,44 @@ const Dashboard: React.FC = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-300 bg-gray-50">
-                <th className="text-left px-6 py-4 font-semibold text-sm">Full Name</th>
-                <th className="text-left px-6 py-4 font-semibold text-sm">Security PIN</th>
-                <th className="text-left px-6 py-4 font-semibold text-sm">Role</th>
-                <th className="text-left px-6 py-4 font-semibold text-sm">Shift Time</th>
-                <th className="text-left px-6 py-4 font-semibold text-sm">Action</th>
+                <th className="text-left px-6 py-4 font-semibold text-sm">
+                  Full Name
+                </th>
+                <th className="text-left px-6 py-4 font-semibold text-sm">
+                  Security PIN
+                </th>
+                <th className="text-left px-6 py-4 font-semibold text-sm">
+                  Role
+                </th>
+                <th className="text-left px-6 py-4 font-semibold text-sm">
+                  Shift Time
+                </th>
+                <th className="text-left px-6 py-4 font-semibold text-sm">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
               {employees.map((emp, idx) => (
                 <tr
                   key={emp.id}
-                  className={idx !== employees.length - 1 ? "border-b border-gray-300" : ""}
+                  className={
+                    idx !== employees.length - 1
+                      ? "border-b border-gray-300"
+                      : ""
+                  }
                 >
                   <td className="px-6 py-4 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center text-white">{emp.avatar}</div>
+                    <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center text-white">
+                      {emp.avatar}
+                    </div>
                     <span className="text-sm">{emp.name}</span>
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold">{emp.pin}</td>
                   <td className="px-6 py-4 text-sm">{emp.role}</td>
-                  <td className="px-6 py-4 text-sm">{emp.shiftStart} - {emp.shiftEnd}</td>
+                  <td className="px-6 py-4 text-sm">
+                    {emp.shiftStart} - {emp.shiftEnd}
+                  </td>
                   <td className="px-6 py-4 flex gap-2">
                     <button
                       onClick={() => handleEdit(emp)}
@@ -544,4 +634,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default OrderPage;

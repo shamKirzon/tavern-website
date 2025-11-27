@@ -5,7 +5,14 @@ import { ReservationStatus } from "../types/Reservation";
 //Schemas:
 const updateReservationStatusSchema = z.object({
   reservationId: z.string().uuid(), // enforce valid UUID
-  status: z.enum(["none", "pending", "accepted", "rejected", "done"]),
+  status: z.enum([
+    "none",
+    "pending",
+    "accepted",
+    "rejected",
+    "done",
+    "cancelled",
+  ]),
 });
 
 export const validateUpdateReservationStatus = (

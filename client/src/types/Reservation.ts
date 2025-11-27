@@ -22,6 +22,7 @@ export type ReservationStatus =
   | "pending"
   | "accepted"
   | "rejected"
+  | "cancelled"
   | "done";
 
 export type ReservationType = "inclusive" | "exclusive";

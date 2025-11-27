@@ -81,7 +81,7 @@ export default function AppSidebar() {
 
               {/* Reservation Management */}
               <SidebarMenuItem>
-                <Link to="/reservations-">
+                <Link to="/reservations">
                   <SidebarMenuButton isActive={current === "/reservations"}>
                     <img src={eventIcon} className="w-4 h-4" />
                     <span>Reservations</span>

@@ -97,6 +97,13 @@ const ReservationPage: React.FC = () => {
     setImageUrl(imageUrl);
   };
 
+  const getStatusBg = (status: string) => {
+    if (status === "accepted") return "bg-green-500";
+    if (status === "cancelled") return "bg-orange-500";
+    if (status === "rejected") return "bg-red-500";
+    return "bg-orange-400";
+  };
+
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-full mx-auto">
@@ -161,11 +168,9 @@ const ReservationPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span
-                          className={`inline-flex justify-center items-center w-18 px-3 py-1 rounded text-white text-xs font-regular ${
-                            res.reservationStatus === "accepted"
-                              ? "bg-green-500"
-                              : "bg-orange-400"
-                          }`}
+                          className={`inline-flex justify-center items-center w-18 px-3 py-1 rounded text-white text-xs font-regular ${getStatusBg(
+                            res.reservationStatus
+                          )}`}
                         >
                           {res.reservationStatus}
                         </span>
@@ -320,24 +325,52 @@ const ReservationPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-base">
-                      Available Pax
-                    </span>
-                    <span className="font-bold text-base">
-                      {/* {selectedReservation.availablePac} */} availablePac
-                    </span>
-                  </div>
-                </div>
+                <div className="mb-9"></div>
 
                 <div className="flex flex-col gap-3">
-                  <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded font-bold">
-                    Approve Reservation
-                  </button>
-                  <button className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded font-bold">
-                    Decline
-                  </button>
+                  {/* status - pending */}
+                  {selectedReservation.reservationStatus === "pending" && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          reservationsApi.updateReservationStatus(
+                            selectedReservation.reservationId,
+                            "accepted"
+                          );
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded font-bold"
+                      >
+                        Approve Reservation
+                      </button>
+                      <button
+                        onClick={async () => {
+                          reservationsApi.updateReservationStatus(
+                            selectedReservation.reservationId,
+                            "rejected"
+                          );
+                        }}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded font-bold"
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+
+                  {selectedReservation.reservationStatus === "accepted" && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          await reservationsApi.updateReservationStatus(
+                            selectedReservation.reservationId,
+                            "cancelled"
+                          );
+                        }}
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded font-bold"
+                      >
+                        Mark as Cancelled
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (

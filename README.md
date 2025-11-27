@@ -1,4 +1,1 @@
 # tavern-website
-
-HELLO
-WORLD

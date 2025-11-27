@@ -3,6 +3,9 @@ import rateLimit, { RateLimitRequestHandler } from "express-rate-limit";
 
 import cors from "cors";
 import http from "http";
+import reservationRoutes from "./src/reservation/reservation.route";
+import orderRoutes from "./src/order/order.route";
+import employeeRoutes from "./src/employee/employee.route";
 
 const app = express();
 
@@ -14,17 +17,20 @@ const rateLimiter: RateLimitRequestHandler = rateLimit({
   legacyHeaders: true,
 });
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(rateLimiter);
 // app.use(helmet());
 // app.use(morgan("dev"));
 
 // app.use("/api/customer", customerRoutes);
-// app.use("/api/reservation", reservationRoutes);
-// app.use("/api/order", orderRoutes);
-// app.use("/api/employee", employeeRoutes);
-
-// app.use("/api/auth", authRoutes);
+app.use("/api/reservation", reservationRoutes);
+app.use("/api/order", orderRoutes);
+app.use("/api/employee", employeeRoutes);
 
 export default app;

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [loginData, setLoginData] = useState<{
     username: string;
     password: string;
@@ -23,23 +25,40 @@ const LoginPage = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+
     const data = {
       username: formData.get("username") as string,
       password: formData.get("password") as string,
     };
 
+    // Step 1: Zod validation
     const parseResult = formSchema.safeParse(data);
 
-    if (parseResult.success) {
-      setFormError({ username: "", password: "" });
-      // handleLogin(data);
-    } else {
+    if (!parseResult.success) {
       const resultError = parseResult.error.format();
       setFormError({
         username: resultError.username?._errors[0] || "",
         password: resultError.password?._errors[0] || "",
       });
+      return;
     }
+
+    // Step 2: ENV validation
+    const ADMIN = import.meta.env.VITE_ADMIN;
+    const PASSWORD = import.meta.env.VITE_PASSWORD;
+
+    if (data.username !== ADMIN || data.password !== PASSWORD) {
+      setFormError({
+        username: data.username !== ADMIN ? "Invalid username" : "",
+        password: data.password !== PASSWORD ? "Invalid password" : "",
+      });
+
+      setLoginData({ username: "", password: "" });
+      return;
+    }
+
+    setFormError({ username: "", password: "" });
+    navigate("/dashboard");
   };
 
   return (

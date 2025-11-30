@@ -6,14 +6,11 @@ import { formatDashDate, formatReadableDate } from "../utils/date";
 
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogFooter,
-  DialogHeader,
+  DialogDescription,
   DialogOverlay,
   DialogTitle,
 } from "../components/ui/dialog";
-import { Button } from "../components/ui/button";
 
 const ReservationPage: React.FC = () => {
   const [selectedReservation, setSelectedReservation] =
@@ -24,11 +21,18 @@ const ReservationPage: React.FC = () => {
   );
 
   const [reservationCount, setReservationCount] = useState<number>(0);
-
-  const [openModalImage, setOpenModalImage] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>("");
-
   const [reservationData, setReservationData] = useState<Reservation[]>([]);
+
+  // Modals:
+  const [openModalImage, setOpenModalImage] = useState<boolean>(false);
+  const [openModalConfirmation, setOpenModalConfirmation] =
+    useState<boolean>(false);
+  const [selectedStatus, setSelectedStatus] = useState<
+    "accepted" | "cancelled" | "rejected" | null
+  >(null);
+  const [selectedReservationId, setSelectedReservationId] =
+    useState<string>("");
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -66,7 +70,7 @@ const ReservationPage: React.FC = () => {
     };
 
     fetchReservations();
-  }, []);
+  }, [openModalConfirmation]);
 
   // customer name:
   useEffect(() => {
@@ -92,6 +96,43 @@ const ReservationPage: React.FC = () => {
 
   // functions:
 
+  const handleReservationStatus = async () => {
+    try {
+      if (selectedStatus === "accepted") {
+        await reservationsApi.updateReservationStatus(
+          selectedReservationId,
+          "accepted"
+        );
+      } else if (selectedStatus === "rejected") {
+        await reservationsApi.updateReservationStatus(
+          selectedReservationId,
+          "rejected"
+        );
+      } else if (selectedStatus === "cancelled") {
+        await reservationsApi.updateReservationStatus(
+          selectedReservationId,
+          "cancelled"
+        );
+      } else throw new Error("The status is invalid");
+    } catch (error) {
+      console.error("Error in handleReservationStatus():", error);
+    } finally {
+      setSelectedReservationId("");
+      setSelectedStatus(null);
+      setOpenModalConfirmation(false);
+      setSelectedReservation(null);
+    }
+  };
+
+  const handleOpenConfirmation = (
+    reservationId: string,
+    status: "accepted" | "cancelled" | "rejected" | null
+  ) => {
+    setSelectedStatus(status);
+    setSelectedReservationId(reservationId);
+    setOpenModalConfirmation(true);
+  };
+
   const handleOpenImage = (imageUrl: string) => {
     setOpenModalImage(true);
     setImageUrl(imageUrl);
@@ -99,6 +140,7 @@ const ReservationPage: React.FC = () => {
 
   const getStatusBg = (status: string) => {
     if (status === "accepted") return "bg-green-500";
+    if (status === "done") return "bg-yellow-500";
     if (status === "cancelled") return "bg-orange-500";
     if (status === "rejected") return "bg-red-500";
     return "bg-orange-400";
@@ -194,7 +236,7 @@ const ReservationPage: React.FC = () => {
             </div>
           </div>
 
-          {/* modal- view image */}
+          {/* modal - view image */}
           <Dialog open={openModalImage} onOpenChange={setOpenModalImage}>
             <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
 
@@ -205,6 +247,58 @@ const ReservationPage: React.FC = () => {
                   alt="Valid ID"
                   className="max-w-full max-h-full rounded-lg object-contain"
                 />
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* modal - confirmation */}
+          <Dialog
+            open={openModalConfirmation}
+            onOpenChange={setOpenModalConfirmation}
+          >
+            <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+
+            <DialogContent className="fixed top-1/2 left-1/2 w-full max-w-sm-translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-lg p-6 space-y-4">
+              {/* Accessible Title */}
+              <DialogTitle className="text-xl font-semibold text-center">
+                {selectedStatus === "accepted" && "Approve Reservation"}
+                {selectedStatus === "rejected" && "Reject Reservation"}
+                {selectedStatus === "cancelled" && "Cancel Reservation"}
+              </DialogTitle>
+
+              {/* Accessible Description */}
+              <DialogDescription className="text-center text-gray-600 text-sm">
+                {selectedStatus === "accepted" &&
+                  "Do you want to accept this reservation?"}
+                {selectedStatus === "rejected" &&
+                  "Do you want to reject this reservation?"}
+                {selectedStatus === "cancelled" &&
+                  "Do you want to cancel this reservation?"}
+              </DialogDescription>
+
+              {/* Confirmation Buttons */}
+              <div className="grid grid-cols-1 gap-3 mt-4">
+                <button
+                  onClick={() => handleReservationStatus()}
+                  className={`w-full px-4 py-3 rounded font-bold text-white transition ${
+                    selectedStatus === "accepted"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : selectedStatus === "rejected"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-yellow-500 hover:bg-yellow-600"
+                  }`}
+                >
+                  {selectedStatus === "accepted" && "Approve Reservation"}
+                  {selectedStatus === "rejected" && "Decline"}
+                  {selectedStatus === "cancelled" && "Mark as Cancelled"}
+                </button>
+
+                <button
+                  onClick={() => setOpenModalConfirmation(false)}
+                  className="w-full px-4 py-3 rounded bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
               </div>
             </DialogContent>
           </Dialog>
@@ -332,23 +426,23 @@ const ReservationPage: React.FC = () => {
                   {selectedReservation.reservationStatus === "pending" && (
                     <>
                       <button
-                        onClick={async () => {
-                          reservationsApi.updateReservationStatus(
+                        onClick={() =>
+                          handleOpenConfirmation(
                             selectedReservation.reservationId,
                             "accepted"
-                          );
-                        }}
+                          )
+                        }
                         className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded font-bold"
                       >
                         Approve Reservation
                       </button>
                       <button
-                        onClick={async () => {
-                          reservationsApi.updateReservationStatus(
+                        onClick={() =>
+                          handleOpenConfirmation(
                             selectedReservation.reservationId,
                             "rejected"
-                          );
-                        }}
+                          )
+                        }
                         className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded font-bold"
                       >
                         Decline
@@ -359,12 +453,12 @@ const ReservationPage: React.FC = () => {
                   {selectedReservation.reservationStatus === "accepted" && (
                     <>
                       <button
-                        onClick={async () => {
-                          await reservationsApi.updateReservationStatus(
+                        onClick={() =>
+                          handleOpenConfirmation(
                             selectedReservation.reservationId,
                             "cancelled"
-                          );
-                        }}
+                          )
+                        }
                         className="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded font-bold"
                       >
                         Mark as Cancelled

@@ -4,8 +4,8 @@ import { Route, Routes } from "react-router-dom";
 import EmployeeManagement from "./pages/EmployeePage";
 import Layout from "./components/app/layout";
 import ReportAndAnalyticsPage from "./pages/ReportAndAnalyticsPage";
-import OrderPage from "./pages/OrderPage";
 import ReservationPage from "./pages/ReservationPage";
+import OrderPage from "./pages/OrderPage";
 
 const App = () => {
   return (

@@ -40,8 +40,6 @@ export const reservationsApi = {
       );
       if (!res) return console.log("Can't update reservation status.");
 
-      console.log("FROM UPDATE RESERVATIONS STATUS: ", res);
-
       return res.data.message;
     } catch (error) {
       console.log("Error in reservationApi/updateReservationStatus(): ", error);

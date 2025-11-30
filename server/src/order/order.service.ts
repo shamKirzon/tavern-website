@@ -9,6 +9,12 @@ class OrderService {
 
     return camelcaseKeys(dbResult ?? [], { deep: true });
   }
+
+  async getEmail(orderId: string) {
+    const myEmail = await orderRepository.getEmail(orderId);
+    if (!myEmail) return;
+    return myEmail[0]!.email;
+  }
 }
 
 export const orderService = new OrderService();

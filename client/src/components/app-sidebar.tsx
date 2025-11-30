@@ -15,7 +15,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
   useSidebar,
-} from "../components/ui/sidebar";
+} from "./ui/sidebar";
 
 import homeIcon from "../assets/icons/home.svg";
 import reportIcon from "../assets/icons/report.svg";

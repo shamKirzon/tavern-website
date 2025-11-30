@@ -59,13 +59,5 @@ export interface NormalizedOrder {
 }
 
 export type OrderFormatResponse = DefaultOrderFormat | AdditionalOrdersFormat;
-/**
- SINCE MERON KANG UNION OF TYPES THEN ALIN MAN SA DALAWANG FORMAT AY PWEDE MONG ILAGAY SA LOOB
- NG USE STATE MO SINCE NAKA OrderFormat siya.
- */
-
-/**
-  PINAKA MADALING GAWIN IS IMERGE MO NALANG AS ONE OBJECT PARA GAGAMIT KA LANG NG SPREAD OPERATOR.
-  */
 
 export type OrderStatus = "pending" | "cancelled" | "done";

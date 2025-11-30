@@ -8,7 +8,7 @@ import type {
 } from "../types/Order";
 
 const OrderPage: React.FC = () => {
-  const [orderTotal, setOrderTotal] = useState<number>(0);
+  const [orderTotal, setOrderTotal] = useState<Record<string, number>>({});
   const [currentView, setCurrentView] = useState<string>("orders");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [customerEmails, setCustomerEmails] = useState<Record<string, string>>(
@@ -72,8 +72,6 @@ const OrderPage: React.FC = () => {
           return;
         }
 
-        console.log("ORDERS FETCHED: ", orders);
-
         // Handle if API returns array of orders
         const ordersArray = Array.isArray(orders) ? orders : [orders];
 
@@ -82,19 +80,9 @@ const OrderPage: React.FC = () => {
           normalizeOrder(order)
         );
 
-        // Calculate total of all order totals
-        // THIS IS MY LAST TOUCH JUST TO COMPUTE THE TOTALS OF EACH ORDERS
-        // OF IF THERE IS AN EXISTING TOTAL THEN FETCH .
-
-        // LAST TASKS: 1. ORDER TOTAL, 2. EMPLOYEE DISPLAYING
-        const totalAmount = normalizedOrders.orderItems.reduce(
-          (sum, order) => sum + order.total,
-          0
-        );
-        setOrderTotal(totalAmount);
+        console.log("NORMALIZED ORDERS; ", normalizedOrders);
 
         setOrderData(normalizedOrders);
-
         normalizedOrders.forEach((order) => {
           console.log(
             `Order ${order.orderId}: ${order.orderItems.length} items`
@@ -110,6 +98,7 @@ const OrderPage: React.FC = () => {
     fetchOrders();
   }, []);
 
+  // fetch order total and emails
   useEffect(() => {
     const fetchEmail = async () => {
       if (!orderData) return;
@@ -128,6 +117,24 @@ const OrderPage: React.FC = () => {
       setCustomerEmails(emails);
     };
 
+    const fetchTotals = async () => {
+      if (!orderData) return;
+
+      const orderTotals: Record<string, number> = {};
+
+      for (const res of orderData) {
+        const total = res.orderItems.reduce(
+          (sum, order) => sum + order.total,
+          0
+        );
+        orderTotals[res.orderId] = total;
+      }
+
+      setOrderTotal(orderTotals);
+    };
+
+    fetchTotals();
+
     fetchEmail();
   }, [orderData]);
 
@@ -135,7 +142,6 @@ const OrderPage: React.FC = () => {
     setExpandedOrderId(expandedOrderId === id ? null : id);
   };
 
-  // Order Tracking View
   if (currentView === "orders") {
     return (
       <div className="min-h-screen bg-white p-8">
@@ -194,8 +200,8 @@ const OrderPage: React.FC = () => {
                       <div className="w-16 text-sm text-right">
                         {order.orderItems.length}
                       </div>
-                      <div className="w-24 text-sm text-right">
-                        ₱ {orderTotal.toLocaleString()}
+                      <div className="w-24 text-sm text-righ t">
+                        ₱ {orderTotal[order.orderId]}
                       </div>
                       <div className="w-40 text-sm text-right text-gray-600">
                         {new Date(order.createdAt).toLocaleString()}

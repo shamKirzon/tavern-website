@@ -4,15 +4,16 @@ import { validateUpdateReservationStatus } from "./reservation.middleware";
 
 const reservationRoutes = Router();
 
+// hello po dana joys
 reservationRoutes.get(
   "/get-reservation-list",
-  reservationController.getReservationList
+  reservationController.getReservationList,
 );
 
 reservationRoutes.post(
   "/update-reservation-status",
   validateUpdateReservationStatus,
-  reservationController.updateReservationStatus
+  reservationController.updateReservationStatus,
 );
 
 reservationRoutes.get("/get-email/:customerId", reservationController.getEmail);

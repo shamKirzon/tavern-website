@@ -3,7 +3,7 @@ import { reservationController } from "./reservation.controller";
 import { validateUpdateReservationStatus } from "./reservation.middleware";
 
 const reservationRoutes = Router();
-//helloworld
+
 reservationRoutes.get(
   "/get-reservation-list",
   reservationController.getReservationList

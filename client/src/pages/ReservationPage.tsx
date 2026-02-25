@@ -4,7 +4,7 @@ import { SideBarReservation } from "../assets/icons/icons";
 
 const ReservationPage = () => {
   // Functions:
-  const currentDate = () => {
+  const getCurrentDate = () => {
     const formattedDate = formatReadableDate(new Date());
     return formattedDate;
   };
@@ -20,7 +20,7 @@ const ReservationPage = () => {
         <div className="ml-6 text-white flex flex-col gap-1">
           <div className="text-4xl font-bold">Reservations</div>
           <div className="text-lg ">
-            {currentDate()} {/* current date */}
+            {getCurrentDate()} {/* current date */}
           </div>
         </div>
       </div>

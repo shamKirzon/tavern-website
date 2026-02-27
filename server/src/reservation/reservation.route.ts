@@ -4,7 +4,7 @@ import { validateUpdateReservationStatus } from "./reservation.middleware";
 
 const reservationRoutes = Router();
 
-// hello po dana joys
+// hello po kuya shammy hhehehheheh 
 reservationRoutes.get(
   "/get-reservation-list",
   reservationController.getReservationList,

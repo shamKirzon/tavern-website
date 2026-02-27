@@ -42,7 +42,7 @@ export default function AppSidebar() {
         </div>
 
         <img
-          src="https://i.pravatar.cc/150?img=3"
+          src="src/assets/images/johnny.png"
           alt="Admin Avatar"
           className="rounded-full w-20 h-20"
         />

@@ -17,28 +17,32 @@ import {
   useSidebar,
 } from "./ui/sidebar";
 
-import homeIcon from "../assets/icons/home.svg";
-import reportIcon from "../assets/icons/report.svg";
-import eventIcon from "../assets/icons/event.svg";
-import historyIcon from "../assets/icons/history.svg";
-import fastfoodIcon from "../assets/icons/fastfood.svg";
-import groupIcon from "../assets/icons/group.svg";
-import logoutIcon from "../assets/icons/logout.svg";
+import {
+  SideBarDashboard,
+  SideBarEmployee,
+  SideBarLogout,
+  SideBarOrder,
+  SideBarReportsAndAnalytics,
+  SideBarReservation,
+} from "../assets/icons/icons";
+import { useState } from "react";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const current = location.pathname;
 
+  const [activeButton, setActiveButton] = useState<string>("dashboard");
+
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar className="border-none bg-white">
       <SidebarHeader className="flex flex-col items-center pt-6">
         <div className="flex items-center gap-2 mb-2">
           <h3 className="text-3xl font-bold">Tavern Asia</h3>
         </div>
 
         <img
-          src="https://i.pravatar.cc/150?img=3"
+          src="src/assets/images/johnny.png"
           alt="Admin Avatar"
           className="rounded-full w-20 h-20"
         />
@@ -60,52 +64,49 @@ export default function AppSidebar() {
               {/* Dashboard */}
               <SidebarMenuItem>
                 <Link to="/dashboard">
-                  <SidebarMenuButton isActive={current === "/dashboard"}>
-                    <img src={homeIcon} className="w-4 h-4" />
+                  <SidebarMenuButton
+                    onClick={() => setActiveButton("dashboard")}
+                    isActive={activeButton === "dashboard"}
+                  >
+                    <SideBarDashboard />
                     <span>Dashboard</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
 
-              {/* Report & Analytics */}
-              <SidebarMenuItem>
-                <Link to="/report-and-analytics">
-                  <SidebarMenuButton
-                    isActive={current === "/report-and-analytics"}
-                  >
-                    <img src={reportIcon} className="w-4 h-4" />
-                    <span>Report & Analytics</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-
-              {/* Reservation Management */}
+              {/* Reservation */}
               <SidebarMenuItem>
                 <Link to="/reservations">
-                  <SidebarMenuButton isActive={current === "/reservations"}>
-                    <img src={eventIcon} className="w-4 h-4" />
+                  <SidebarMenuButton
+                    onClick={() => setActiveButton("reservation")}
+                    isActive={activeButton === "reservation"}
+                  >
+                    <SideBarReservation />
                     <span>Reservations</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
 
-              {/* Reservation History */}
-              <SidebarMenuItem>
+              {/* History */}
+              <SidebarMenuItem className="ml-6 pr-8">
                 <Link to="/reservations/history">
                   <SidebarMenuButton
-                    isActive={current === "/reservations/history"}
+                    onClick={() => setActiveButton("history")}
+                    isActive={activeButton === "history"}
                   >
-                    <img src={historyIcon} className="w-4 h-4" />
-                    <span>Reservation History</span>
+                    <span>History</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
 
               {/* Orders */}
               <SidebarMenuItem>
-                <Link to="/order-tracking">
-                  <SidebarMenuButton isActive={current === "/order-tracking"}>
-                    <img src={fastfoodIcon} className="w-4 h-4" />
+                <Link to="/orders">
+                  <SidebarMenuButton
+                    onClick={() => setActiveButton("orders")}
+                    isActive={activeButton === "orders"}
+                  >
+                    <SideBarOrder />
                     <span>Orders</span>
                   </SidebarMenuButton>
                 </Link>
@@ -115,10 +116,24 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <Link to="/employee-management">
                   <SidebarMenuButton
-                    isActive={current === "/employee-management"}
+                    onClick={() => setActiveButton("employees")}
+                    isActive={activeButton === "employees"}
                   >
-                    <img src={groupIcon} className="w-4 h-4" />
+                    <SideBarEmployee />
                     <span>Employees</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+
+              {/* Report & Analytics */}
+              <SidebarMenuItem>
+                <Link to="/report-and-analytics">
+                  <SidebarMenuButton
+                    onClick={() => setActiveButton("reportAndAnalytics")}
+                    isActive={activeButton === "reportAndAnalytics"}
+                  >
+                    <SideBarReportsAndAnalytics />
+                    <span>Report & Analytics</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -134,7 +149,7 @@ export default function AppSidebar() {
           <SidebarMenuItem>
             <Link to="/logout">
               <SidebarMenuButton>
-                <img src={logoutIcon} className="w-4 h-4" />
+                <SideBarLogout />
                 <span>Logout</span>
               </SidebarMenuButton>
             </Link>

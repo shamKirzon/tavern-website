@@ -6,6 +6,7 @@ import Layout from "./components/app/layout";
 import ReportAndAnalyticsPage from "./pages/ReportAndAnalyticsPage";
 import ReservationPage from "./pages/ReservationPage";
 import OrderPage from "./pages/OrderPage";
+import ReservationHistory from "./pages/ReservationHistory";
 
 const App = () => {
   return (
@@ -16,13 +17,14 @@ const App = () => {
       {/* Layout routes */}
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/order-tracking" element={<OrderPage />} />
+        <Route path="/reservations" element={<ReservationPage />} />
+        <Route path="/reservations/history" element={<ReservationHistory />} />
+        <Route path="/orders" element={<OrderPage />} />
+        <Route path="/employee-management" element={<EmployeeManagement />} />
         <Route
           path="/report-and-analytics"
           element={<ReportAndAnalyticsPage />}
         />
-        <Route path="/reservations" element={<ReservationPage />} />
-        <Route path="/employee-management" element={<EmployeeManagement />} />
       </Route>
     </Routes>
   );

@@ -10,7 +10,7 @@ export default function Layout() {
         <AppSidebar />
 
         {/* Main content */}
-        <main className=" w-full p-6 bg-[#F4EFE8]">
+        <main className=" w-full px-6 py-3 bg-[#F4EFE8]">
           {/* <SidebarTrigger /> */}
           <Outlet />
         </main>

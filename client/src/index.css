@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Fonts */
 @font-face {
   font-family: "Poppins";
   src: url("./assets/fonts/Poppins-Regular.ttf") format("truetype");
@@ -14,6 +13,25 @@
   src: url("./assets/fonts/Poppins-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
+}
+@theme inline {
+  /* your existing sidebar colors... */
+
+  /* Add your custom font */
+  --font-poppins: "Poppins", sans-serif;
+
+  /* Add your custom color */
+  --color-testcolor: #ff0000;
+}
+
+/* Hide scrollbar for Chrome, Safari, Edge */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.hide-scrollbar {
+  scrollbar-width: none;
 }
 
 /* Colors */

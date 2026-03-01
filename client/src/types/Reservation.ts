@@ -18,6 +18,8 @@ export type Reservation = {
   validIdUrl: string;
 };
 
+// helloworld
+
 export type ReservationStatus =
   | "none"
   | "pending"

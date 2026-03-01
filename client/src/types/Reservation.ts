@@ -18,6 +18,8 @@ export type Reservation = {
   validIdUrl: string;
 };
 
+// testing lang ito
+
 export type ReservationStatus =
   | "none"
   | "pending"

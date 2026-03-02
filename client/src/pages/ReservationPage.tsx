@@ -23,14 +23,8 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../components/ui/dialog";
-import { Field, FieldGroup } from "../components/ui/field";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
 
 const ReservationPage = () => {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
@@ -581,7 +575,7 @@ const ReservationPage = () => {
         </div>
 
         {/* Reservation Details Container */}
-        <div className="w-100 h-115 bg-white mt-4 rounded-2xl  overflow-y-auto hide-scrollbar shadow-lg font-poppins ">
+        <div className="w-100 h-115 bg-white mt-4 rounded-2xl  overflow-y-auto  shadow-lg font-poppins ">
           {/* Banner */}
           <div
             className=" flex h-15 rounded-t-2xl text-xl text-white pl-4 items-center

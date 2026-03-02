@@ -86,14 +86,14 @@ export default function AppSidebar() {
                 </Link>
               </SidebarMenuItem>
 
-              {/* History */}
+              {/* Calendar */}
               <SidebarMenuItem className="ml-6 pr-8">
-                <Link to="/reservations/history">
+                <Link to="/reservations/calendar">
                   <SidebarMenuButton
                     onClick={() => setActiveButton("history")}
                     isActive={activeButton === "history"}
                   >
-                    <span>History</span>
+                    <span>Calendar</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>

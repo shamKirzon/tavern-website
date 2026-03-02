@@ -18,7 +18,11 @@ export type Reservation = {
   validIdUrl: string;
 };
 
+<<<<<<< HEAD
 // helloworld
+=======
+// testing lang ito
+>>>>>>> f4218c6a2e1b9ca691a228f55d6ebacee1313b10
 
 export type ReservationStatus =
   | "none"

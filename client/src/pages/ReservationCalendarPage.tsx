@@ -3,22 +3,14 @@ import {
   CancelRequest,
   DateCategory,
   SideBarDashboard,
-  SideBarReservation,
-} from "../assets/icons/icons";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
+} from "@/assets/icons/icons";
+import { Table, TableBody, TableCell, TableRow } from "../components/ui/table";
 
 import { useEffect, useState } from "react";
 import type { Reservation } from "../types/Reservation";
 import { capitalizeWords } from "../utils/capitalizeWords";
 
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,

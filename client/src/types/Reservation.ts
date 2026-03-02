@@ -1,6 +1,7 @@
 export type Reservation = {
+  email: string | null;
   assignedSecurityId: string | null;
-  createdAt: string;
+  createdAt: string | null;
   customerId: string;
   date: string;
   firstName: string;
@@ -17,6 +18,12 @@ export type Reservation = {
   validIdUrl: string;
 };
 
+<<<<<<< HEAD
+// helloworld
+=======
+// testing lang ito
+>>>>>>> f4218c6a2e1b9ca691a228f55d6ebacee1313b10
+
 export type ReservationStatus =
   | "none"
   | "pending"
@@ -26,3 +33,15 @@ export type ReservationStatus =
   | "done";
 
 export type ReservationType = "inclusive" | "exclusive";
+
+export type Cancellation = {
+  reservationCancellationId: string;
+  reservationId: string;
+  createdAt: string | null;
+  status: CancellationStatus;
+  reason: string;
+  notes: string | null;
+  refundReceiptUrl: string | null;
+};
+
+export type CancellationStatus = "pending" | "accepted" | "rejected";

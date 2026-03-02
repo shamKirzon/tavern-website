@@ -29,28 +29,27 @@ import { useState } from "react";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
-  const location = useLocation();
-  const current = location.pathname;
 
   const [activeButton, setActiveButton] = useState<string>("dashboard");
 
   return (
-    <Sidebar className="border-none bg-white">
-      <SidebarHeader className="flex flex-col items-center pt-6">
-        <div className="flex items-center gap-2 mb-2">
-          <h3 className="text-3xl font-bold">Tavern Asia</h3>
-        </div>
+    <Sidebar className="border-none bg-white font-poppins">
+      <h3 className="text-lg mt-1 font-bold pl-3 py-2 text-black">
+        Tavern Asia
+      </h3>
+      <SidebarHeader className="flex flex-col pt-1 items-center">
+        <SidebarSeparator />
 
         <img
           src="src/assets/images/johnny.png"
           alt="Admin Avatar"
-          className="rounded-full w-20 h-20"
+          className="mt-3 rounded-full w-20 h-20"
         />
 
         {state !== "collapsed" && (
           <div className="mt-3 text-center">
-            <p className="font-semibold">Hello, Admin</p>
-            <p className="text-xs text-gray-500">tavernadmin@gmail.com</p>
+            <p className="font-semibold text-lg text-black">Hello, Admin</p>
+            <p className="mt-0f text-xs text-gray-500">tavernadmin@gmail.com</p>
           </div>
         )}
       </SidebarHeader>

@@ -23,6 +23,13 @@ interface LegendItemProps {
   label: string;
 }
 
+interface BookingCalendarProps {
+  // Called when a day WITH a status is clicked; receives the date key (e.g. "2026-03-04")
+  onDayClick?: (dateKey: string, info: BookingInfo) => void;
+  // Parent can supply its own booking data to override or seed the calendar
+  externalBookingData?: BookingData;
+}
+
 function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -38,7 +45,7 @@ function generateMockData(year: number, month: number): BookingData {
     const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const rand = Math.random();
     if (rand < 0.3) {
-      // no data
+      // no status
     } else if (rand < 0.6) {
       const booked = Math.floor(Math.random() * 90) + 5;
       data[key] = { booked, total: 100, status: "available" };
@@ -66,16 +73,24 @@ const STATUS_STYLES: Record<DayStatus, StatusStyle> = {
   },
 };
 
-export function BookingCalendar() {
+export function BookingCalendar({
+  onDayClick,
+  externalBookingData,
+}: BookingCalendarProps) {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [closedEvery, setClosedEvery] = useState<string>("Day");
 
-  const [bookingData] = useState<BookingData>(() =>
-    generateMockData(currentYear, currentMonth),
+  const [internalBookingData, setBookingData] = useState<BookingData>(() =>
+    generateMockData(today.getFullYear(), today.getMonth()),
   );
+
+  // Merge: parent's externalBookingData overrides internal data for any matching keys
+  const bookingData: BookingData = externalBookingData
+    ? { ...internalBookingData, ...externalBookingData }
+    : internalBookingData;
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
@@ -97,6 +112,7 @@ export function BookingCalendar() {
     1000;
 
   function prevMonth(): void {
+    setSelectedDays(new Set());
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear((y) => y - 1);
@@ -106,6 +122,7 @@ export function BookingCalendar() {
   }
 
   function nextMonth(): void {
+    setSelectedDays(new Set());
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear((y) => y + 1);
@@ -136,18 +153,93 @@ export function BookingCalendar() {
     );
   }
 
+  function handleDayClick(d: number): void {
+    const key = getDayKey(d);
+    const info = bookingData[key];
+
+    if (info?.status) {
+      // Has status → single-select only: clear all others, select just this one
+      // Clicking the same already-selected day deselects it
+      setSelectedDays((prev) =>
+        prev.size === 1 && prev.has(key) ? new Set() : new Set([key]),
+      );
+      console.log("Day clicked:", { date: key, ...info });
+      onDayClick?.(key, info);
+    } else {
+      // No status → multi-select toggle, but clear any previously selected status-day first
+      setSelectedDays((prev) => {
+        const hadStatusDay = [...prev].some((k) => bookingData[k]?.status);
+        const next = hadStatusDay ? new Set<string>() : new Set(prev);
+        if (next.has(key)) {
+          next.delete(key);
+        } else {
+          next.add(key);
+        }
+        return next;
+      });
+    }
+  }
+
+  //Magseset lang sa available yung mga date na walang status
+  function handleApply(): void {
+    if (selectedDays.size === 0) return;
+    setBookingData((prev) => {
+      const next = { ...prev };
+      selectedDays.forEach((key) => {
+        // Skip if the day already has any status
+        if (next[key]?.status) return;
+        next[key] = { booked: 0, total: 100, status: "available" };
+      });
+      return next;
+    });
+    setSelectedDays(new Set());
+  }
+
+  function handleCloseAll(): void {
+    setBookingData((prev) => {
+      const next = { ...prev };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = getDayKey(d);
+        const existing = next[key];
+        next[key] = {
+          booked: existing?.booked ?? 100,
+          total: existing?.total ?? 100,
+          status: "closed",
+        };
+      }
+      return next;
+    });
+    setSelectedDays(new Set());
+  }
+
+  // Open All: mark every day in the current month as available
+  function handleOpenAll(): void {
+    setBookingData((prev) => {
+      const next = { ...prev };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = getDayKey(d);
+        const existing = next[key];
+        next[key] = {
+          booked: existing?.booked ?? 0,
+          total: existing?.total ?? 100,
+          status: "available",
+        };
+      }
+      return next;
+    });
+    setSelectedDays(new Set());
+  }
+
   return (
-    <div className=" flex flex-col font-poppins bg-white rounded-2xl overflow-hidden">
+    <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden h-full">
       {/* Legend */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-2 text-sm text-gray-600 border-b border-[#D9D9D9]">
+      <div className="flex items-center justify-between px-5 pt-4 pb-2 text-sm text-gray-600 border-b border-[#D9D9D9] flex-shrink-0">
         <span className="text-[#717171]">
           Total Month Reservation:{" "}
           <span>
             {totalBooked} out of {totalCapacity}
           </span>
         </span>
-
-        {/* Legends  */}
         <div className="flex items-center gap-4 text-xs font-medium">
           <LegendItem
             color="bg-green-200 border border-green-400"
@@ -162,24 +254,24 @@ export function BookingCalendar() {
       </div>
 
       {/* Month Navigation */}
-      <div className="flex items-center justify-between px-5 py-3 ">
+      <div className="flex items-center justify-between px-5 py-3 flex-shrink-0">
         <button
           onClick={prevMonth}
-          className="w-9 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-600 text-4xl "
+          className="w-9 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-600 text-4xl"
         >
           ‹
         </button>
         <h2 className="text-xl font-bold text-gray-800">{monthName}</h2>
         <button
           onClick={nextMonth}
-          className="w-9 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-600 text-4xl "
+          className="w-9 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-600 text-4xl"
         >
           ›
         </button>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 px-3 gap-1 mb-1">
+      <div className="grid grid-cols-7 px-3 gap-1 mb-1 flex-shrink-0">
         {DAYS_OF_WEEK.map((day) => (
           <div
             key={day}
@@ -191,12 +283,13 @@ export function BookingCalendar() {
       </div>
 
       {/* Calendar grid */}
-      <div className="flex-1 px-3 overflow-auto">
-        <div className="flex flex-col gap-1 h-full">
+      <div className="flex-1 px-3 pb-2">
+        <div className="flex flex-col gap-1">
           {weeks.map((week, wi) => (
-            <div key={wi} className="grid grid-cols-7 gap-1 flex-1">
+            <div key={wi} className="grid grid-cols-7 gap-1">
               {week.map((d, di) => {
-                if (!d) return <div key={di} />;
+                if (!d) return <div key={di} className="h-16" />;
+
                 const key = getDayKey(d);
                 const info: BookingInfo | undefined = bookingData[key];
                 const status: DayStatus | undefined = info?.status;
@@ -204,15 +297,16 @@ export function BookingCalendar() {
                   ? STATUS_STYLES[status]
                   : null;
                 const todayCell = isToday(d);
-                const selected = selectedDay === key;
+                const selected = selectedDays.has(key);
+                const hasStatus = !!status;
 
                 return (
                   <button
                     key={di}
-                    onClick={() => setSelectedDay(key)}
+                    onClick={() => handleDayClick(d)}
                     className={`
                       relative flex flex-col items-center justify-center rounded-xl border-2 transition-all
-                      text-gray-800 cursor-pointer select-none
+                      text-gray-800 cursor-pointer select-none h-16
                       ${styles ? styles.cell : "bg-white border-gray-200 hover:border-gray-400"}
                       ${todayCell && !status ? "border-[#c9a800] border-2" : ""}
                       ${selected ? "ring-2 ring-blue-400 ring-offset-1" : ""}
@@ -249,12 +343,18 @@ export function BookingCalendar() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="flex items-center justify-between px-4 py-3  mt-2 gap-2 flex-wrap">
-        <button className="flex items-center gap-2 px-4 py-2 font-medium bg-[#D9D9D9]/31 border border-[#D9D9D9] rounded-2xl text-sm  ">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-t border-[#D9D9D9] gap-2 flex-wrap bg-white">
+        <button
+          onClick={handleOpenAll}
+          className="flex items-center gap-2 px-4 py-2 font-medium bg-[#D9D9D9]/31 border border-[#D9D9D9] rounded-2xl text-sm"
+        >
           <OpenAll />
-          <span>Open All 14 Days</span>
+          <span>Open All {daysInMonth} Days</span>
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 font-medium bg-[#E44848]/8 border border-[#770B0B] rounded-2xl text-sm  ">
+        <button
+          onClick={handleCloseAll}
+          className="flex items-center gap-2 px-4 py-2 font-medium bg-[#E44848]/8 border border-[#770B0B] rounded-2xl text-sm"
+        >
           <ClosedAll />
           <span>Closed All</span>
         </button>
@@ -272,9 +372,21 @@ export function BookingCalendar() {
             <option>Month</option>
           </select>
         </div>
-        <button className="ml-auto px-6 py-2 rounded-full bg-[#b5a020] text-white text-sm font-bold hover:bg-[#9e8c1a] transition shadow-sm whitespace-nowrap">
-          Apply
-        </button>
+        {/* Apply only counts days with no existing status */}
+        {(() => {
+          const applyCount = [...selectedDays].filter(
+            (key) => !bookingData[key]?.status,
+          ).length;
+          return (
+            <button
+              onClick={handleApply}
+              className="ml-auto px-6 py-2 rounded-full bg-[#b5a020] text-white text-sm font-bold hover:bg-[#9e8c1a] transition shadow-sm whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={applyCount === 0}
+            >
+              Apply {applyCount > 0 ? `(${applyCount})` : ""}
+            </button>
+          );
+        })()}
       </div>
     </div>
   );

@@ -754,14 +754,7 @@ const EmployeeManagement: React.FC = () => {
     );
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#F5F0E8",
-        padding: 24,
-        fontFamily: "sans-serif",
-      }}
-    >
+    <div>
       {/* ── BANNER: left-to-right gradient + drop shadow ── */}
       <div
         style={{
@@ -790,7 +783,7 @@ const EmployeeManagement: React.FC = () => {
               justifyContent: "center",
             }}
           >
-            <IconGroup className="" />
+            <IconGroup />
           </div>
           <div>
             <h1
@@ -815,6 +808,49 @@ const EmployeeManagement: React.FC = () => {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "10px 20px",
+            borderRadius: 12,
+            background: "#EFD974",
+            color: "#111",
+            border: "none",
+            fontWeight: 600,
+            fontSize: 16,
+            cursor: "pointer",
+            fontFamily: "sans-serif",
+          }}
+        >
+          <Plus size={16} /> Add Employee
+        </button>
+      </div>
+
+      {/* Header */}
+      <div
+        className="flex flex-row  pl-7 items-center w-full h-[100px] rounded-2xl  justify-between font-poppins"
+        style={{
+          background: "linear-gradient(to right, #AA3131, #770B0B)",
+          boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
+        }}
+      >
+        <div className="flex">
+          <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <IconGroup />
+          </div>
+          <div className="ml-5 text-white">
+            <h1 className="font-poppins text-[38px] font-bold leading-tight">
+              Reservations
+            </h1>
+            <p className="font-poppins text-[13px] mt-0.5 opacity-85">
+              {formatReadableDate(new Date())}
+            </p>
+          </div>
+        </div>
+
         <button
           onClick={() => setShowAddModal(true)}
           style={{

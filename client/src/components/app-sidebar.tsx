@@ -90,8 +90,8 @@ export default function AppSidebar() {
               <SidebarMenuItem className="ml-6 pr-8">
                 <Link to="/reservations/calendar">
                   <SidebarMenuButton
-                    onClick={() => setActiveButton("history")}
-                    isActive={activeButton === "history"}
+                    onClick={() => setActiveButton("calendar")}
+                    isActive={activeButton === "calendar"}
                   >
                     <span>Calendar</span>
                   </SidebarMenuButton>

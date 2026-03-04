@@ -6,7 +6,7 @@ import Layout from "./components/app/layout";
 import ReportAndAnalyticsPage from "./pages/ReportAndAnalyticsPage";
 import ReservationPage from "./pages/ReservationPage";
 import OrderPage from "./pages/OrderPage";
-import ReservationCalendar from "./pages/ReservationCalendarPage";
+import ReservationCalendarPage from "./pages/ReservationCalendarPage";
 
 const App = () => {
   return (
@@ -20,7 +20,7 @@ const App = () => {
         <Route path="/reservations" element={<ReservationPage />} />
         <Route
           path="/reservations/calendar"
-          element={<ReservationCalendar />}
+          element={<ReservationCalendarPage />}
         />
         <Route path="/orders" element={<OrderPage />} />
         <Route path="/employee-management" element={<EmployeeManagement />} />

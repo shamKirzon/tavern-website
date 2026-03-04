@@ -1,9 +1,10 @@
-import { formatReadableDate } from "../utils/date";
+import { formatReadableDate } from "@/utils/date";
 import {
   CancelRequest,
   DateCategory,
+  SideBarDashboard,
   SideBarReservation,
-} from "../assets/icons/icons";
+} from "@/assets/icons/icons";
 import {
   Table,
   TableBody,
@@ -11,20 +12,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
+} from "@/components/ui/table";
 
 import { useEffect, useState } from "react";
-import type { Reservation } from "../types/Reservation";
-import { capitalizeWords } from "../utils/capitalizeWords";
+import type { Reservation } from "@/types/Reservation";
+import { capitalizeWords } from "@/utils/capitalizeWords";
 
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "../components/ui/dialog";
+} from "@/components/ui/dialog";
 
 const ReservationPage = () => {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
@@ -454,30 +455,33 @@ const ReservationPage = () => {
   };
 
   return (
-    // Main container
     <div>
-      {/* Header Container*/}
+      {/* Header */}
       <div
-        className="flex flex-row pl-6 items-center w-full h-27 rounded-2xl shadow-[0_4px_4px_rgba(0,0,0,0.25)]
-                bg-linear-to-r from-[#AA3131] via-[#AA3131] to-[#770B0B]"
+        className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
+        style={{
+          background: "linear-gradient(to right, #AA3131, #770B0B)",
+          boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
+        }}
       >
-        <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center ">
-          <SideBarReservation className="text-white w-10 h-10" />
+        <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+          <SideBarReservation className="text-white w-8 h-8" />
         </div>
-
-        <div className="ml-6 text-white flex flex-col ">
-          <text className="text-4xl font-bold font-poppins ">Reservations</text>
-          <text className="text-lg font-poppins">
-            {getCurrentDate()} {/* current date */}
-          </text>
+        <div className="ml-5 text-white">
+          <h1 className="font-poppins text-[38px] font-bold leading-tight">
+            Reservations
+          </h1>
+          <p className="font-poppins text-[13px] mt-0.5 opacity-85">
+            {formatReadableDate(new Date())}
+          </p>
         </div>
       </div>
 
       {/* Search and Statuses Container*/}
       <div className=" flex flex-col w-full p-4 gap-2 bg-white mt-4 rounded-2xl shadow-lg font-poppins">
-        <text className=" text-sm  text-[#717171]">
+        <span className=" text-sm  text-[#717171]">
           Showing 25 of 99 Reservations
-        </text>
+        </span>
         {/* Search, Status */}
         <div className="flex flex-row gap-2">
           <input
@@ -575,7 +579,7 @@ const ReservationPage = () => {
         </div>
 
         {/* Reservation Details Container */}
-        <div className="w-100 h-115 bg-white mt-4 rounded-2xl  overflow-y-auto  shadow-lg font-poppins ">
+        <div className="flex flex-col w-100 h-115 bg-white mt-4 rounded-2xl  shadow-lg font-poppins">
           {/* Banner */}
           <div
             className=" flex h-15 rounded-t-2xl text-xl text-white pl-4 items-center
@@ -585,9 +589,9 @@ const ReservationPage = () => {
           </div>
 
           {/* Details */}
-          {displayReservationDetails()}
-          {/* Buttons*/}
-          <div>{/* Approved, Rejected, Pending */}</div>
+          <div className="flex-1 overflow-y-auto ">
+            {displayReservationDetails()}
+          </div>
         </div>
       </div>
     </div>

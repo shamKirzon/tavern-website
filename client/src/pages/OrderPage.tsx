@@ -1,3 +1,5 @@
+import { SideBarOrder } from "@/assets/icons/icons";
+import { formatReadableDate } from "@/utils/date";
 import React, { useState } from "react";
 
 const ordersData = [
@@ -79,19 +81,22 @@ const ordersData = [
   },
 ];
 
-type Order = typeof ordersData[0];
+type Order = (typeof ordersData)[0];
 
 const statusStyles: Record<string, { badge: string; border: string }> = {
-  Pending:   { badge: "bg-yellow-400 text-white",  border: "border-yellow-400" },
-  Declined:  { badge: "bg-red-700 text-white",      border: "border-red-700" },
-  Served:    { badge: "bg-green-500 text-white",    border: "border-green-500" },
-  Cancelled: { badge: "bg-gray-400 text-white",     border: "border-gray-400" },
+  Pending: { badge: "bg-yellow-400 text-white", border: "border-yellow-400" },
+  Declined: { badge: "bg-red-700 text-white", border: "border-red-700" },
+  Served: { badge: "bg-green-500 text-white", border: "border-green-500" },
+  Cancelled: { badge: "bg-gray-400 text-white", border: "border-gray-400" },
 };
 
 const tabs = ["All", "Pending", "Served", "Cancelled"];
 
 // ─── ORDER DETAILS MODAL ───────────────────────────────────────────────────────
-const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ order, onClose }) => {
+const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
+  order,
+  onClose,
+}) => {
   const total = order.items.reduce((sum, i) => sum + i.price, 0);
   const totalDue = total - order.alreadyCovered + order.vat;
 
@@ -111,19 +116,38 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center hover:bg-opacity-30 transition"
           >
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-
           {/* Customer Information */}
           <div>
             <div className="flex items-center gap-2 text-red-600 text-xs font-semibold uppercase tracking-wide mb-3">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
               Customer Information
             </div>
@@ -131,21 +155,29 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
               <div className="grid grid-cols-2 divide-x divide-gray-200 border-b border-gray-200">
                 <div className="p-4">
                   <p className="text-xs text-gray-400 mb-1">Full Name</p>
-                  <p className="text-sm font-medium text-gray-800">{order.name}</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {order.name}
+                  </p>
                 </div>
                 <div className="p-4">
                   <p className="text-xs text-gray-400 mb-1">Email</p>
-                  <p className="text-sm font-medium text-gray-800 break-all">{order.email}</p>
+                  <p className="text-sm font-medium text-gray-800 break-all">
+                    {order.email}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 divide-x divide-gray-200">
                 <div className="p-4">
                   <p className="text-xs text-gray-400 mb-1">Reservation Type</p>
-                  <p className="text-sm font-medium text-gray-800">{order.type}</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {order.type}
+                  </p>
                 </div>
                 <div className="p-4">
                   <p className="text-xs text-gray-400 mb-1">Date</p>
-                  <p className="text-sm font-medium text-gray-800">{order.date}</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {order.date}
+                  </p>
                 </div>
               </div>
             </div>
@@ -154,8 +186,18 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
           {/* Order Items */}
           <div>
             <div className="flex items-center gap-2 text-red-600 text-xs font-semibold uppercase tracking-wide mb-3">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
               </svg>
               Order Items
             </div>
@@ -172,7 +214,9 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
                 >
                   <span className="text-gray-700">{item.name}</span>
                   <span className="text-center text-gray-500">x{item.qty}</span>
-                  <span className="text-right font-medium text-gray-800">₱{item.price.toLocaleString()}</span>
+                  <span className="text-right font-medium text-gray-800">
+                    ₱{item.price.toLocaleString()}
+                  </span>
                 </div>
               ))}
             </div>
@@ -181,8 +225,18 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
           {/* Payable Summary */}
           <div>
             <div className="flex items-center gap-2 text-red-600 text-xs font-semibold uppercase tracking-wide mb-3">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
               </svg>
               Payable Summary
             </div>
@@ -200,12 +254,15 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
                 <span>₱{order.vat.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center pt-1">
-                <span className="font-bold text-gray-900 text-base">Total Due</span>
-                <span className="font-bold text-red-700 text-xl">₱{totalDue.toLocaleString()}.00</span>
+                <span className="font-bold text-gray-900 text-base">
+                  Total Due
+                </span>
+                <span className="font-bold text-red-700 text-xl">
+                  ₱{totalDue.toLocaleString()}.00
+                </span>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -213,7 +270,10 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({ or
 };
 
 // ─── ORDER CARD ────────────────────────────────────────────────────────────────
-const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({ order, onClick }) => {
+const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
+  order,
+  onClick,
+}) => {
   const styles = statusStyles[order.status];
   const previewItems = order.items.slice(0, 3);
   const extraCount = order.items.length - 3;
@@ -228,21 +288,43 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({ order, onC
           <h3 className="font-bold text-gray-900 text-base">{order.name}</h3>
           <p className="text-xs text-gray-400">{order.email}</p>
         </div>
-        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge}`}>
+        <span
+          className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge}`}
+        >
           {order.status}
         </span>
       </div>
 
       <div className="flex items-center gap-3 mt-2 mb-4 text-xs text-gray-500">
         <span className="flex items-center gap-1">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+            />
           </svg>
           {order.type}
         </span>
         <span className="flex items-center gap-1">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
           </svg>
           {order.itemCount} items
         </span>
@@ -254,14 +336,18 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({ order, onC
             <span>{item.name}</span>
             <span>
               <span className="text-gray-400 mr-2">x{item.qty}</span>
-              <span className="font-medium">₱{item.price.toLocaleString()}</span>
+              <span className="font-medium">
+                ₱{item.price.toLocaleString()}
+              </span>
             </span>
           </div>
         ))}
       </div>
 
       {extraCount > 0 && (
-        <p className="text-xs text-yellow-600 font-medium mb-4">+{extraCount} more item...</p>
+        <p className="text-xs text-yellow-600 font-medium mb-4">
+          +{extraCount} more item...
+        </p>
       )}
 
       <div className="flex items-center justify-between border-t pt-3 mt-2">
@@ -278,7 +364,7 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({ order, onC
 };
 
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────────
-const OrdersPage: React.FC = () => {
+const OrdersPage = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -298,17 +384,26 @@ const OrdersPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      {/* HEADER */}
-      <div className="bg-gradient-to-r from-red-500 to-red-800 text-white rounded-xl p-6 shadow-lg mb-8 flex items-center gap-4">
-        <div className="bg-white bg-opacity-20 rounded-xl p-3">
-          <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
+    <div className="">
+      {/* Header */}
+      <div
+        className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
+        style={{
+          background: "linear-gradient(to right, #AA3131, #770B0B)",
+          boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
+        }}
+      >
+        <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+          <SideBarOrder className="text-white w-8 h-8" />
+          {/* <SideBarOrder /> */}
         </div>
-        <div>
-          <h1 className="text-3xl font-bold">Orders</h1>
-          <p className="text-sm opacity-90">{today}</p>
+        <div className="ml-5 text-white">
+          <h1 className="font-poppins text-[38px] font-bold leading-tight">
+            Orders
+          </h1>
+          <p className="font-poppins text-[13px] mt-0.5 opacity-85">
+            {formatReadableDate(new Date())}
+          </p>
         </div>
       </div>
 
@@ -320,7 +415,9 @@ const OrdersPage: React.FC = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === tab ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                activeTab === tab
+                  ? "bg-red-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
               }`}
             >
               {tab}
@@ -331,21 +428,43 @@ const OrdersPage: React.FC = () => {
         <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
           <button className="hover:text-gray-900">‹</button>
           <span className="font-medium">Today</span>
-          <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">TODAY</span>
+          <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">
+            TODAY
+          </span>
           <button className="hover:text-gray-900">›</button>
         </div>
 
         <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M6 12h12M9 17h6" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 7h18M6 12h12M9 17h6"
+            />
           </svg>
           <span>Newest</span>
         </div>
 
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
             <input
               type="text"
@@ -361,17 +480,26 @@ const OrdersPage: React.FC = () => {
       {/* ORDER CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filtered.map((order, i) => (
-          <OrderCard key={i} order={order} onClick={() => setSelectedOrder(order)} />
+          <OrderCard
+            key={i}
+            order={order}
+            onClick={() => setSelectedOrder(order)}
+          />
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center text-gray-400 py-24 text-sm">No orders found.</div>
+        <div className="text-center text-gray-400 py-24 text-sm">
+          No orders found.
+        </div>
       )}
 
       {/* MODAL */}
       {selectedOrder && (
-        <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
       )}
     </div>
   );

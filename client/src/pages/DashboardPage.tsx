@@ -8,7 +8,7 @@ import {
   Bar,
   BarChart,
 } from "recharts";
-import { formatReadableDate } from "../utils/date";
+import { formatReadableDate } from "@/utils/date";
 import {
   SideBarDashboard,
   IconCalendarToday,
@@ -17,7 +17,7 @@ import {
   IconCreditCardGear,
   IconFastFood,
   IconFace,
-} from "../assets/icons/icons";
+} from "@/assets/icons/icons";
 import {
   ChartContainer,
   ChartTooltip,
@@ -25,7 +25,7 @@ import {
   ChartLegend,
   ChartLegendContent,
   type ChartConfig,
-} from "../components/ui/chart";
+} from "@/components/ui/chart";
 
 // Backend: update values below to connect to your API
 

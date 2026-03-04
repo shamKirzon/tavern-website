@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
-import type { Reservation } from "../types/Reservation";
-import { reservationsApi } from "../api/reservations.api";
-import { formatDashDate, formatReadableDate } from "../utils/date";
+import type { Reservation } from "@/types/Reservation";
+import { reservationsApi } from "@/api/reservations.api";
+import { formatDashDate, formatReadableDate } from "@/utils/date";
 
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogOverlay,
   DialogTitle,
-} from "../components/ui/dialog";
+} from "@/components/ui/dialog";
 
 const ReservationCalendarPage: React.FC = () => {
   const [selectedReservation, setSelectedReservation] =

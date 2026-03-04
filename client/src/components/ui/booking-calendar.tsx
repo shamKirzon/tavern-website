@@ -1,3 +1,4 @@
+import { ClosedAll, OpenAll } from "@/assets/icons/icons";
 import { useState } from "react";
 
 const DAYS_OF_WEEK = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
@@ -65,7 +66,7 @@ const STATUS_STYLES: Record<DayStatus, StatusStyle> = {
   },
 };
 
-export default function BookingCalendar() {
+export function BookingCalendar() {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
@@ -138,17 +139,16 @@ export default function BookingCalendar() {
   return (
     <div className=" flex flex-col font-poppins bg-white rounded-2xl overflow-hidden">
       {/* Legend */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-2 text-sm text-gray-600">
-        <span className="font-medium text-gray-700">
+      <div className="flex items-center justify-between px-5 pt-4 pb-2 text-sm text-gray-600 border-b border-[#D9D9D9]">
+        <span className="text-[#717171]">
           Total Month Reservation:{" "}
-          <span className="font-semibold">
+          <span>
             {totalBooked} out of {totalCapacity}
           </span>
         </span>
 
-        {/* check box  */}
+        {/* Legends  */}
         <div className="flex items-center gap-4 text-xs font-medium">
-          <LegendItem color="bg-white border border-gray-300" label="Closed" />
           <LegendItem
             color="bg-green-200 border border-green-400"
             label="Available"
@@ -157,12 +157,12 @@ export default function BookingCalendar() {
             color="bg-[#f0e96a] border border-[#c9b800]"
             label="Fully Booked"
           />
-          <LegendItem color="bg-red-200 border border-red-400" label="Close" />
+          <LegendItem color="bg-red-200 border border-red-400" label="Closed" />
         </div>
       </div>
 
       {/* Month Navigation */}
-      <div className="flex items-center justify-between px-5 py-3">
+      <div className="flex items-center justify-between px-5 py-3 ">
         <button
           onClick={prevMonth}
           className="w-9 h-10 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-100 transition text-gray-600 text-4xl "
@@ -249,12 +249,14 @@ export default function BookingCalendar() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 mt-2 gap-2 flex-wrap">
-        <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition whitespace-nowrap">
-          <span>⏰</span> Open All 14 Days
+      <div className="flex items-center justify-between px-4 py-3  mt-2 gap-2 flex-wrap">
+        <button className="flex items-center gap-2 px-4 py-2 font-medium bg-[#D9D9D9]/31 border border-[#D9D9D9] rounded-2xl text-sm  ">
+          <OpenAll />
+          <span>Open All 14 Days</span>
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-red-400 text-sm font-semibold text-red-500 hover:bg-red-50 transition whitespace-nowrap">
-          <span>🚫</span> Closed All
+        <button className="flex items-center gap-2 px-4 py-2 font-medium bg-[#E44848]/8 border border-[#770B0B] rounded-2xl text-sm  ">
+          <ClosedAll />
+          <span>Closed All</span>
         </button>
         <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
           <span>Closed every</span>
@@ -263,7 +265,7 @@ export default function BookingCalendar() {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
               setClosedEvery(e.target.value)
             }
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 bg-white focus:outline-none"
+            className="border border-gray-300 rounded-lg px-1 py-1 text-sm font-medium text-gray-700 bg-[#D9D9D9]/31 focus:outline-none"
           >
             <option>Day</option>
             <option>Week</option>

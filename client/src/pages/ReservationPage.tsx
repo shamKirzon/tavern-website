@@ -291,7 +291,7 @@ const ReservationPage = () => {
     );
 
     const displayCancellationRequestButton = () => (
-      <div className="flex px-4 flex-col gap-3">
+      <div className="flex px-4 flex-col gap-3 mt-2">
         {/* cancellation status = pending */}
         <div className="flex flex-col p-2 gap-1 bg-[#AA3131]/20 border border-[#AA3131] rounded-2xl w-full ">
           <div className="flex justify-between w-full">
@@ -426,7 +426,7 @@ const ReservationPage = () => {
           {/* Button Container */}
           <div className="flex flex-col gap-3 text-white pb-4">
             {/* Valid id & Proof of Payment Button  */}
-            <div className="flex  gap-3 justify-center mt-3">
+            <div className="flex  gap-3 justify-center mt-6">
               <button className="bg-[#1C1B1F] rounded-xl w-40">
                 <span className="text-[0.8rem]">View Valid ID</span>
               </button>
@@ -530,14 +530,14 @@ const ReservationPage = () => {
       {/* Reservation List and Details Container */}
       <div className="flex flex-row gap-5">
         {/* Reservation ListS */}
-        <div className="w-200 h-115 bg-white p-3  font-poppins mt-4 rounded-2xl shadow-lg overflow-y-auto hide-scrollbar ">
+        <div className="w-200 h-115 bg-white p-3  font-poppins mt-4 rounded-2xl shadow-lg overflow-y-auto  ">
           <Table>
             <TableHeader>
               <TableRow className="border-[#D9D9D9]">
                 <TableHead className="w-2.5"></TableHead>
-                <TableHead className="w-40">Name</TableHead>
-                <TableHead className="w-45">Status</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead className="w-50">Name</TableHead>
+                <TableHead className="w-50">Status</TableHead>
+                <TableHead className="w-30">Type</TableHead>
                 <TableHead>Pax</TableHead>
                 <TableHead className="text-right">Date & Time</TableHead>
               </TableRow>

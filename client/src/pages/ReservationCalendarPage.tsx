@@ -17,10 +17,10 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 import { useEffect, useState } from "react";
 import React from "react";
-import BookingCalendar from "@/components/ui/bookingcalendar";
+import { BookingCalendar } from "@/components/ui/booking-calendar";
 
 const ReservationCalendarPage = () => {
-  // calendar ui:
+  // Calendar UI:
   const [date, setDate] = React.useState<Date | undefined>(
     new Date(new Date().getFullYear(), 1, 12),
   );
@@ -156,7 +156,7 @@ const ReservationCalendarPage = () => {
       {/* Calendar & Reservation Summary Container*/}
       <div className="flex flex-row gap-5">
         {/* Calendar*/}
-        <div className="w-200 h-140 bg-white p-3 mt-4 rounded-2xl shadow-lg">
+        <div className="w-200  bg-white p-3 mt-4 rounded-2xl shadow-lg">
           <BookingCalendar />
         </div>
 
@@ -182,7 +182,7 @@ const ReservationCalendarPage = () => {
                         onCheckedChange={setIsOpenForReservation}
                         className="data-[state=checked]:bg-[#009507] data-[state=unchecked]:bg-gray-300"
                       />
-                      <span>Airplane Mode</span>
+                      <span>Open for reservations</span>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -16,8 +16,19 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 import { useEffect, useState } from "react";
+import React from "react";
+import BookingCalendar from "@/components/ui/bookingcalendar";
 
 const ReservationCalendarPage = () => {
+  // calendar ui:
+  const [date, setDate] = React.useState<Date | undefined>(
+    new Date(new Date().getFullYear(), 1, 12),
+  );
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
+
+  // others:
   const [isOpenForReservations, setIsOpenForReservation] =
     useState<boolean>(false);
 
@@ -142,10 +153,12 @@ const ReservationCalendarPage = () => {
         </div>
       </div>
 
-      {/* Calendar & Reservation Summary*/}
+      {/* Calendar & Reservation Summary Container*/}
       <div className="flex flex-row gap-5">
         {/* Calendar*/}
-        <div className="w-200 h-115 bg-white p-3   mt-4 rounded-2xl shadow-lg overflow-y-auto hide-scrollbar "></div>
+        <div className="w-200 h-140 bg-white p-3 mt-4 rounded-2xl shadow-lg">
+          <BookingCalendar />
+        </div>
 
         {/*Reservation Summary*/}
         <div className="w-100 h-115 bg-white mt-4 rounded-2xl  overflow-y-auto hide-scrollbar shadow-lg  ">

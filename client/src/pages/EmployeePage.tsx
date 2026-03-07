@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Eye, EyeOff, X, Search } from "lucide-react";
+import { Plus, Eye, EyeOff, Search, ChevronDown } from "lucide-react";
 import { employeesApi } from "@/api/employees.api";
 import type { Employee } from "@/types/Employee";
 import { formatReadableDate } from "@/utils/date";
@@ -13,11 +13,13 @@ import {
   IconCoPresent,
   IconEngineering,
 } from "@/assets/icons/icons";
+import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
 
-const ROLE_FILTERS = ["All", "Manager", "Server", "Cashier", "Security Guard"];
-const EMPLOYEE_TYPES = ["Manager", "Server", "Cashier", "Security Guard"];
-const ROLE_ORDER = ["MANAGER", "SERVER", "CASHIER", "SECURITY GUARD"];
-
+// ── Constants ──────────────────────────────────────────────────────────────────
+const ROLE_FILTERS = ["All", "Server", "Cashier", "Security Guard"];
+const EMPLOYEE_TYPES = ["Server", "Cashier", "Security Guard"];
+const ROLE_ORDER = ["SERVER", "CASHIER", "SECURITY GUARD"];
+const ROLES_WITH_PIN = ["CASHIER", "SECURITY GUARD"];
 const DAY_KEYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 const DAY_ALIASES: Record<string, string> = {
@@ -58,85 +60,27 @@ const getInitials = (name: string) =>
     .join("")
     .toUpperCase();
 
-const Backdrop: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-  <div
-    onClick={onClick}
-    style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 40,
-      backdropFilter: "blur(6px)",
-      backgroundColor: "rgba(0,0,0,0.45)",
-    }}
-  />
-);
+const roleHasPin = (role: string) =>
+  ROLES_WITH_PIN.includes(role.toUpperCase());
 
-const Modal: React.FC<{
+// ── Shared modal header ────────────────────────────────────────────────────────
+const ModalHeader: React.FC<{
   title: string;
-  onClose: () => void;
-  children: React.ReactNode;
   mode?: "add" | "edit" | "delete";
-}> = ({ title, onClose, children, mode }) => (
-  <>
-    <Backdrop onClick={onClose} />
-    <div
-      style={{
-        position: "fixed",
-        zIndex: 50,
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: 440,
-        maxWidth: "95vw",
-        background: "#fff",
-        borderRadius: 20,
-        overflow: "hidden",
-        boxShadow: "0 25px 60px rgba(0,0,0,0.35)",
-      }}
-    >
-      <div
-        style={{
-          background: "linear-gradient(to right, #AA3131, #AA3131, #770B0B)",
-          padding: "20px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* IconCoPresent for Add modal, IconEngineering for Edit modal */}
-          {mode === "add" && <IconCoPresent className="" />}
-          {mode === "edit" && <IconEngineering className="" />}
-          <h2
-            style={{ color: "#fff", fontSize: 22, fontWeight: 700, margin: 0 }}
-          >
-            {title}
-          </h2>
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.2)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#fff",
-          }}
-        >
-          <X size={16} />
-        </button>
-      </div>
-      {children}
-    </div>
-  </>
+}> = ({ title, mode }) => (
+  <div
+    className="px-6 py-5 flex items-center gap-3"
+    style={{ background: "linear-gradient(to right, #AA3131, #770B0B)" }}
+  >
+    {mode === "add" && <IconCoPresent />}
+    {mode === "edit" && <IconEngineering />}
+    <h2 className="text-white text-xl font-bold">{title}</h2>
+  </div>
 );
 
+// ── Employee Form Modal ───────────────────────────────────────────────────────
 interface EmployeeFormModalProps {
+  open: boolean;
   mode: "add" | "edit";
   employee?: Employee | null;
   onClose: () => void;
@@ -144,6 +88,7 @@ interface EmployeeFormModalProps {
 }
 
 const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
+  open,
   mode,
   employee,
   onClose,
@@ -158,8 +103,8 @@ const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
   );
 
   const matchTime = (t?: string) => {
-    if (!t) return TIME_OPTIONS[0];
-    return TIME_OPTIONS.find((o) => o === t.trim()) ?? TIME_OPTIONS[0];
+    if (!t) return "";
+    return TIME_OPTIONS.find((o) => o === t.trim()) ?? "";
   };
 
   const [shiftStart, setShiftStart] = useState(matchTime(employee?.shiftStart));
@@ -170,323 +115,318 @@ const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
   const [pin, setPin] = useState(employee?.pin ?? "");
   const [showPin, setShowPin] = useState(false);
 
+  // ── Validation errors ──
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const needsPin = roleHasPin(type);
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!name.trim()) e.name = "Employee name is required.";
+    if (!type) e.type = "Employee type is required.";
+    if (!shiftStart) e.shiftStart = "Start time is required.";
+    if (!shiftEnd) e.shiftEnd = "End time is required.";
+    if (days.length === 0) e.days = "Select at least one shift day.";
+    if (needsPin) {
+      if (!pin) e.pin = "PIN is required.";
+      else if (pin.length !== 5) e.pin = "PIN must be exactly 5 digits.";
+    }
+    return e;
+  };
+
   const toggleDay = (day: string) =>
     setDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
 
   const handleSave = () => {
+    setSubmitted(true);
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length > 0) return;
+
     onSave({
       fullName: name,
       employeeRole: type.toUpperCase(),
       shiftStart,
       shiftEnd,
       shiftDay: days,
-      pin,
+      pin: needsPin ? pin : "",
     });
     onClose();
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    border: "1.5px solid #d1d5db",
-    borderRadius: 12,
-    padding: "9px 14px",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box",
-    fontFamily: "sans-serif",
-    background: "#fff",
-  };
+  // Re-validate on every change after first submit attempt
+  useEffect(() => {
+    if (submitted) setErrors(validate());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, type, shiftStart, shiftEnd, days, pin, submitted]);
 
-  const labelStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    fontSize: 13,
-    fontWeight: 600,
-    color: "#AA3131",
-    marginBottom: 6,
-  };
+  // Border helper: red if error, normal otherwise
+  const fieldBorder = (key: string) =>
+    errors[key]
+      ? "border-red-500 focus:border-red-500"
+      : "border-gray-300 focus:border-[#AA3131]";
+
+  const labelCls =
+    "flex items-center gap-1.5 text-xs font-bold text-[#AA3131] uppercase tracking-wide mb-2";
 
   return (
-    <Modal
-      title={mode === "add" ? "Add Employee" : "Edit Employee"}
-      onClose={onClose}
-      mode={mode}
-    >
-      <div
-        style={{
-          padding: "20px 24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      {/* <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" /> */}
+      <DialogContent
+        showCloseButton={true}
+        className="fixed top-1/2 left-1/2 w-[440px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl overflow-hidden shadow-2xl p-0 gap-0 border-none"
       >
-        <div>
-          <label style={labelStyle}>
-            <IconCoPresent />
-            Employee Name
-          </label>
-          <input
-            style={inputStyle}
-            placeholder="e.g. Maria Leonora"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
+        <ModalHeader
+          title={mode === "add" ? "Add Employee" : "Edit Employee"}
+          mode={mode}
+        />
 
-        <div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-            <span style={{ ...labelStyle, marginBottom: 0, flex: 1 }}>
-              <IconEngineering />
-              Employee Type
-            </span>
-            <span
-              style={{
-                ...labelStyle,
-                marginBottom: 0,
-                width: 105,
-                justifyContent: "center",
-              }}
-            >
-              Start
-            </span>
-            <span
-              style={{
-                ...labelStyle,
-                marginBottom: 0,
-                width: 105,
-                justifyContent: "center",
-              }}
-            >
-              End
-            </span>
+        <div className="px-6 py-5 flex flex-col gap-5">
+          {/* Employee Name */}
+          <div>
+            <label className={labelCls}>
+              <IconCoPresent />
+              Employee Name
+            </label>
+            <input
+              className={`w-full border-[1.5px] rounded-xl px-4 py-2.5 text-sm outline-none bg-white font-sans transition ${fieldBorder("name")}`}
+              placeholder="e.g. Maria Leonora"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <div style={{ flex: 1 }}>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                style={{ ...inputStyle, appearance: "none" }}
+
+          {/* Employee Type + Shift Time */}
+          <div>
+            <div className="flex gap-2 mb-2">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-[#AA3131] uppercase tracking-wide flex-1">
+                <IconEngineering />
+                Employee Type
+              </span>
+              <span
+                className={`text-xs font-bold uppercase tracking-wide w-[105px] text-center ${errors.shiftStart ? "text-red-500" : "text-[#AA3131]"}`}
               >
-                <option value="">Select Type</option>
-                {EMPLOYEE_TYPES.map((t) => (
+                Start
+              </span>
+              <span
+                className={`text-xs font-bold uppercase tracking-wide w-[105px] text-center ${errors.shiftEnd ? "text-red-500" : "text-[#AA3131]"}`}
+              >
+                End
+              </span>
+            </div>
+
+            <div className="flex gap-2">
+              {/* Type dropdown */}
+              <div className="flex-1 relative">
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className={`w-full border-[1.5px] rounded-xl px-4 py-2.5 text-sm outline-none bg-white appearance-none font-sans transition pr-8 ${fieldBorder("type")}`}
+                >
+                  <option value="">Select Type</option>
+                  {EMPLOYEE_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+              </div>
+
+              {/* Shift Start */}
+              <select
+                value={shiftStart}
+                onChange={(e) => setShiftStart(e.target.value)}
+                className={`w-[105px] border-[1.5px] rounded-xl px-2 py-2.5 text-sm outline-none bg-white font-sans transition text-center ${fieldBorder("shiftStart")}`}
+              >
+                <option value="">--:-- --</option>
+                {TIME_OPTIONS.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+
+              {/* Shift End */}
+              <select
+                value={shiftEnd}
+                onChange={(e) => setShiftEnd(e.target.value)}
+                className={`w-[105px] border-[1.5px] rounded-xl px-2 py-2.5 text-sm outline-none bg-white font-sans transition text-center ${fieldBorder("shiftEnd")}`}
+              >
+                <option value="">--:-- --</option>
+                {TIME_OPTIONS.map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>
                 ))}
               </select>
             </div>
-            <select
-              value={shiftStart}
-              onChange={(e) => setShiftStart(e.target.value)}
-              style={{ ...inputStyle, width: 105 }}
-            >
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <select
-              value={shiftEnd}
-              onChange={(e) => setShiftEnd(e.target.value)}
-              style={{ ...inputStyle, width: 105 }}
-            >
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        <div>
-          <label style={labelStyle}>Shift Days</label>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {DAY_KEYS.map((day) => (
-              <button
-                key={day}
-                type="button"
-                onClick={() => toggleDay(day)}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: 12,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  border: "1.5px solid",
-                  fontFamily: "sans-serif",
-                  borderColor: days.includes(day) ? "#AA3131" : "#d1d5db",
-                  background: days.includes(day) ? "#AA3131" : "#fff",
-                  color: days.includes(day) ? "#fff" : "#333",
-                  transition: "all 0.15s",
-                }}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {mode === "edit" && (
-          <div>
-            <label
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: 2,
-                color: "#888",
-                textTransform: "uppercase",
-                display: "block",
-                marginBottom: 6,
-              }}
-            >
-              Security PIN
-            </label>
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPin ? "text" : "password"}
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                maxLength={6}
-                placeholder="••••••"
-                style={{ ...inputStyle, paddingRight: 40, letterSpacing: 4 }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPin(!showPin)}
-                style={{
-                  position: "absolute",
-                  right: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#888",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                {showPin ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
+            {/* Inline errors for type / shift times */}
+            <div className="flex gap-2 mt-1">
+              <div className="flex-1">
+                {errors.type && (
+                  <p className="text-red-500 text-xs">{errors.type}</p>
+                )}
+              </div>
+              <div className="w-[105px]">
+                {errors.shiftStart && (
+                  <p className="text-red-500 text-xs">{errors.shiftStart}</p>
+                )}
+              </div>
+              <div className="w-[105px]">
+                {errors.shiftEnd && (
+                  <p className="text-red-500 text-xs">{errors.shiftEnd}</p>
+                )}
+              </div>
             </div>
           </div>
-        )}
 
-        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1,
-              padding: "12px",
-              borderRadius: 12,
-              background: "#111",
-              color: "#fff",
-              border: "none",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-              fontFamily: "sans-serif",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            style={{
-              flex: 1,
-              padding: "12px",
-              borderRadius: 12,
-              background: "#EFD974",
-              color: "#111",
-              border: "none",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-              fontFamily: "sans-serif",
-            }}
-          >
-            Save
-          </button>
+          {/* Shift Days */}
+          <div>
+            <label
+              className={`${labelCls} ${errors.days ? "text-red-500" : ""}`}
+            >
+              Shift Days
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {DAY_KEYS.map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => toggleDay(day)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold border-[1.5px] transition-all cursor-pointer font-sans ${
+                    days.includes(day)
+                      ? "bg-[#AA3131] border-[#AA3131] text-white"
+                      : errors.days
+                        ? "bg-white border-red-400 text-gray-700"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+            {errors.days && (
+              <p className="text-red-500 text-xs mt-1">{errors.days}</p>
+            )}
+          </div>
+
+          {/* Security PIN — only for Cashier & Security Guard */}
+          {needsPin && (
+            <div>
+              <label className="block text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">
+                Security PIN
+              </label>
+              <div className="relative">
+                <input
+                  type={showPin ? "text" : "password"}
+                  value={pin}
+                  onChange={(e) => {
+                    // Allow digits only, max 5
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 5);
+                    setPin(val);
+                  }}
+                  inputMode="numeric"
+                  maxLength={5}
+                  placeholder="•••••"
+                  className={`w-full border-[1.5px] rounded-xl px-4 py-2.5 text-sm outline-none bg-white pr-10 tracking-[6px] font-sans transition ${fieldBorder("pin")}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer flex items-center p-0"
+                >
+                  {showPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+              {errors.pin && (
+                <p className="text-red-500 text-xs mt-1">{errors.pin}</p>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 mt-1">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl bg-[#111] text-white font-semibold text-sm cursor-pointer font-sans hover:bg-gray-900 transition border-none"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-1 py-3 rounded-xl bg-[#EFD974] text-[#111] font-semibold text-sm cursor-pointer font-sans hover:bg-yellow-300 transition border-none"
+            >
+              Save
+            </button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 };
 
+// ── Delete Modal ──────────────────────────────────────────────────────────────
 interface DeleteModalProps {
+  open: boolean;
   employee: Employee;
   onClose: () => void;
   onConfirm: () => void;
 }
 
 const DeleteModal: React.FC<DeleteModalProps> = ({
+  open,
   employee,
   onClose,
   onConfirm,
 }) => (
-  <Modal title="Remove Employee" onClose={onClose}>
-    <div style={{ padding: "24px" }}>
-      <p
-        style={{
-          fontSize: 14,
-          color: "#444",
-          marginBottom: 24,
-          lineHeight: 1.6,
-        }}
-      >
-        Are you sure you want to remove <strong>{employee.fullName}</strong> (
-        {employee.employeeRole.charAt(0).toUpperCase() +
-          employee.employeeRole.slice(1).toLowerCase()}
-        )? This cannot be undone.
-      </p>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button
-          onClick={onClose}
-          style={{
-            flex: 1,
-            padding: "12px",
-            borderRadius: 12,
-            background: "#111",
-            color: "#fff",
-            border: "none",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: "pointer",
-            fontFamily: "sans-serif",
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            onConfirm();
-            onClose();
-          }}
-          style={{
-            flex: 1,
-            padding: "12px",
-            borderRadius: 12,
-            background: "#EFD974",
-            color: "#111",
-            border: "none",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: "pointer",
-            fontFamily: "sans-serif",
-          }}
-        >
-          Yes, Remove
-        </button>
+  <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    {/* <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" /> */}
+    <DialogContent
+      showCloseButton={true}
+      className="fixed top-1/2 left-1/2 w-[440px] max-w-[95vw] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl overflow-hidden shadow-2xl p-0 gap-0 border-none"
+    >
+      <ModalHeader title="Remove Employee" mode="delete" />
+      <div className="px-6 py-6">
+        <p className="text-sm text-gray-600 leading-relaxed mb-6">
+          Are you sure you want to remove <strong>{employee.fullName}</strong> (
+          {employee.employeeRole.charAt(0).toUpperCase() +
+            employee.employeeRole.slice(1).toLowerCase()}
+          )? This cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 rounded-xl bg-[#111] text-white font-semibold text-sm cursor-pointer font-sans hover:bg-gray-900 transition border-none"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="flex-1 py-3 rounded-xl bg-[#EFD974] text-[#111] font-semibold text-sm cursor-pointer font-sans hover:bg-yellow-300 transition border-none"
+          >
+            Yes, Remove
+          </button>
+        </div>
       </div>
-    </div>
-  </Modal>
+    </DialogContent>
+  </Dialog>
 );
 
+// ── Employee Card ─────────────────────────────────────────────────────────────
 interface EmployeeCardProps {
   employee: Employee;
   onEdit: (emp: Employee) => void;
@@ -499,152 +439,70 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   onDelete,
 }) => {
   const [showPin, setShowPin] = useState(false);
-  const isManager = employee.employeeRole.toUpperCase() === "MANAGER";
   const roleLabel =
     employee.employeeRole.charAt(0).toUpperCase() +
     employee.employeeRole.slice(1).toLowerCase();
   const normalizedDays = (employee.shiftDay ?? []).map(normalizeDay);
+  const hasPinRole = roleHasPin(employee.employeeRole);
+
+  const badgeCls =
+    employee.employeeRole.toUpperCase() === "SERVER"
+      ? "bg-[#EFD974] text-[#111]"
+      : "bg-[#AA3131] text-white";
 
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1.5px solid #111",
-        borderRadius: 16,
-        padding: 16,
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "#555",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 14,
-              flexShrink: 0,
-            }}
-          >
+    <div className="bg-white border-[1.5px] border-[#111] rounded-2xl p-4 flex flex-col gap-3">
+      {/* Top row */}
+      <div className="flex justify-between items-start">
+        <div className="flex gap-3 items-center">
+          <div className="w-12 h-12 rounded-xl bg-[#555] flex items-center justify-center text-white font-bold text-sm shrink-0">
             {getInitials(employee.fullName)}
           </div>
           <div>
-            <p
-              style={{
-                fontWeight: 700,
-                fontSize: 14,
-                margin: 0,
-                color: "#111",
-              }}
-            >
+            <p className="font-bold text-sm text-[#111] leading-tight">
               {employee.fullName}
             </p>
             <span
-              style={{
-                display: "inline-block",
-                marginTop: 4,
-                padding: "2px 12px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 600,
-                background: isManager ? "#EFD974" : "#AA3131",
-                color: isManager ? "#111" : "#fff",
-              }}
+              className={`inline-block mt-1 px-3 py-0.5 rounded-full text-xs font-semibold ${badgeCls}`}
             >
               {roleLabel}
             </span>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div className="flex gap-1.5">
           <button
             onClick={() => onEdit(employee)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "#111",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-8 h-8 rounded-lg bg-[#111] flex items-center justify-center hover:bg-gray-800 transition cursor-pointer border-none"
           >
             <IconEdit />
           </button>
           <button
             onClick={() => onDelete(employee)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "#111",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-8 h-8 rounded-lg bg-[#111] flex items-center justify-center hover:bg-gray-800 transition cursor-pointer border-none"
           >
             <IconDelete />
           </button>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 12,
-          color: "#555",
-        }}
-      >
+      {/* Shift time */}
+      <div className="flex items-center gap-2 text-xs text-[#555]">
         <IconSchedule />
         <span>Shift</span>
-        <span style={{ fontWeight: 600 }}>
+        <span className="font-semibold">
           {employee.shiftStart} – {employee.shiftEnd}
         </span>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 12,
-          color: "#555",
-          flexWrap: "wrap",
-        }}
-      >
+      {/* Shift days */}
+      <div className="flex items-center gap-2 text-xs text-[#555] flex-wrap">
         <IconCalendar />
         <span>Days</span>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        <div className="flex gap-1 flex-wrap">
           {normalizedDays.map((day) => (
             <span
               key={day}
-              style={{
-                padding: "2px 7px",
-                borderRadius: 6,
-                fontSize: 11,
-                fontWeight: 600,
-                background: "#AA3131",
-                color: "#fff",
-              }}
+              className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#AA3131] text-white"
             >
               {day}
             </span>
@@ -652,44 +510,28 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 12,
-          color: "#555",
-        }}
-      >
-        <IconLock />
-        <span>PIN</span>
-        <span
-          style={{ letterSpacing: 3, color: "#999", fontFamily: "monospace" }}
-        >
-          {showPin ? employee.pin : "••••••"}
-        </span>
-        <button
-          onClick={() => setShowPin(!showPin)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 11,
-            color: "#AA3131",
-            textDecoration: "underline",
-            padding: 0,
-            fontFamily: "sans-serif",
-          }}
-        >
-          {showPin ? "Hide" : "Show"}
-        </button>
-      </div>
+      {/* PIN — only Cashier & Security Guard */}
+      {hasPinRole && (
+        <div className="flex items-center gap-2 text-xs text-[#555]">
+          <IconLock />
+          <span>PIN</span>
+          <span className="tracking-[3px] text-[#999] font-mono">
+            {showPin ? employee.pin : "•••••"}
+          </span>
+          <button
+            onClick={() => setShowPin(!showPin)}
+            className="text-[#AA3131] underline text-xs bg-transparent border-none cursor-pointer p-0 font-sans"
+          >
+            {showPin ? "Hide" : "Show"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
+// ── Main Page ─────────────────────────────────────────────────────────────────
 const EmployeeManagement: React.FC = () => {
-  const currentDate = new Date();
   const [employeeList, setEmployeeList] = useState<Employee[]>([]);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
@@ -709,7 +551,7 @@ const EmployeeManagement: React.FC = () => {
     const newEmp: Employee = {
       employeeId: Date.now().toString(),
       fullName: data.fullName ?? "",
-      employeeRole: data.employeeRole ?? "CASHIER",
+      employeeRole: data.employeeRole ?? "SERVER",
       shiftStart: data.shiftStart ?? "",
       shiftEnd: data.shiftEnd ?? "",
       shiftDay: data.shiftDay ?? [],
@@ -755,190 +597,73 @@ const EmployeeManagement: React.FC = () => {
 
   return (
     <div>
-      {/* ── BANNER: left-to-right gradient + drop shadow ── */}
+      {/* ── Header Banner ── */}
       <div
-        style={{
-          width: "100%",
-          background: "linear-gradient(to right, #AA3131, #AA3131, #770B0B)",
-          borderRadius: 16,
-          boxShadow: "0 4px 4px rgba(0,0,0,0.25)",
-          padding: "16px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 24,
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {/* ── IconGroup in banner ── */}
-          <div
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <IconGroup />
-          </div>
-          <div>
-            <h1
-              style={{
-                color: "#fff",
-                fontSize: 36,
-                fontWeight: 700,
-                margin: 0,
-                lineHeight: 1.2,
-              }}
-            >
-              Employees
-            </h1>
-            <p
-              style={{
-                color: "rgba(255,255,255,0.75)",
-                fontSize: 16,
-                margin: 0,
-              }}
-            >
-              {formatReadableDate(currentDate)}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "10px 20px",
-            borderRadius: 12,
-            background: "#EFD974",
-            color: "#111",
-            border: "none",
-            fontWeight: 600,
-            fontSize: 16,
-            cursor: "pointer",
-            fontFamily: "sans-serif",
-          }}
-        >
-          <Plus size={16} /> Add Employee
-        </button>
-      </div>
-
-      {/* Header */}
-      <div
-        className="flex flex-row  pl-7 items-center w-full h-[100px] rounded-2xl  justify-between font-poppins"
+        className="w-full rounded-2xl px-6 py-4 flex items-center justify-between mb-6"
         style={{
           background: "linear-gradient(to right, #AA3131, #770B0B)",
           boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
         }}
       >
-        <div className="flex">
+        <div className="flex items-center gap-4">
           <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
             <IconGroup />
           </div>
-          <div className="ml-5 text-white">
-            <h1 className="font-poppins text-[38px] font-bold leading-tight">
-              Reservations
+          <div className="text-white">
+            <h1 className="font-poppins text-[36px] font-bold leading-tight">
+              Employees
             </h1>
-            <p className="font-poppins text-[13px] mt-0.5 opacity-85">
+            <p className="text-sm opacity-75 mt-0.5">
               {formatReadableDate(new Date())}
             </p>
           </div>
         </div>
-
         <button
           onClick={() => setShowAddModal(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "10px 20px",
-            borderRadius: 12,
-            background: "#EFD974",
-            color: "#111",
-            border: "none",
-            fontWeight: 600,
-            fontSize: 16,
-            cursor: "pointer",
-            fontFamily: "sans-serif",
-          }}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#EFD974] text-[#111] font-semibold text-sm cursor-pointer font-sans hover:bg-yellow-300 transition border-none"
         >
-          <Plus size={16} /> Add Employee
+          <Plus size={15} />
+          Add Employee
         </button>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginBottom: 20,
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ position: "relative", width: 260 }}>
+      {/* ── Filters Row ── */}
+      <div className="flex gap-3 mb-5 flex-wrap items-center">
+        <div className="relative w-64">
           <Search
             size={15}
-            color="#aaa"
-            style={{
-              position: "absolute",
-              left: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           />
           <input
             type="text"
             placeholder="Search by name or type"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: "100%",
-              border: "1.5px solid #d1d5db",
-              borderRadius: 12,
-              padding: "10px 14px 10px 36px",
-              fontSize: 13,
-              outline: "none",
-              background: "#fff",
-              boxSizing: "border-box",
-              fontFamily: "sans-serif",
-            }}
+            className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none bg-white font-sans focus:border-[#AA3131] transition"
           />
         </div>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+
+        <div className="flex gap-1 flex-wrap bg-white rounded-xl border border-gray-200 px-2 py-1.5 shadow-sm">
           {ROLE_FILTERS.map((role) => (
             <button
               key={role}
               onClick={() => setFilter(role)}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                border: "none",
-                background: filter === role ? "#AA3131" : "transparent",
-                color: filter === role ? "#fff" : "#555",
-                transition: "all 0.15s",
-                fontFamily: "sans-serif",
-              }}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold cursor-pointer border-none transition font-sans ${
+                filter === role
+                  ? "bg-[#AA3131] text-white"
+                  : "bg-transparent text-gray-500 hover:text-gray-800"
+              }`}
             >
               {role}
             </button>
           ))}
         </div>
       </div>
+
+      {/* ── Employee Cards Grid ── */}
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 16,
-        }}
+        className="grid gap-4"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
       >
         {filteredAndSorted.map((employee) => (
           <EmployeeCard
@@ -950,23 +675,35 @@ const EmployeeManagement: React.FC = () => {
         ))}
       </div>
 
-      {showAddModal && (
-        <EmployeeFormModal
-          mode="add"
-          onClose={() => setShowAddModal(false)}
-          onSave={handleAddEmployee}
-        />
+      {filteredAndSorted.length === 0 && (
+        <div className="text-center text-gray-400 py-20 text-sm">
+          No employees found.
+        </div>
       )}
+
+      {/* ── Add Modal ── */}
+      <EmployeeFormModal
+        open={showAddModal}
+        mode="add"
+        onClose={() => setShowAddModal(false)}
+        onSave={handleAddEmployee}
+      />
+
+      {/* ── Edit Modal ── */}
       {editEmployee && (
         <EmployeeFormModal
+          open={!!editEmployee}
           mode="edit"
           employee={editEmployee}
           onClose={() => setEditEmployee(null)}
           onSave={handleEditEmployee}
         />
       )}
+
+      {/* ── Delete Modal ── */}
       {deleteEmployee && (
         <DeleteModal
+          open={!!deleteEmployee}
           employee={deleteEmployee}
           onClose={() => setDeleteEmployee(null)}
           onConfirm={handleDeleteEmployee}

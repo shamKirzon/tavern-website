@@ -1,5 +1,13 @@
 import { ClosedAll, OpenAll } from "@/assets/icons/icons";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "./dialog";
+import { Button } from "./button";
 
 const DAYS_OF_WEEK = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
 
@@ -81,7 +89,15 @@ export function BookingCalendar({
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+
   const [closedEvery, setClosedEvery] = useState<string>("Day");
+  const [openConfirmationDialog, setOpenConfirmationDialog] =
+    useState<boolean>(false);
+  const [confirmationAction, setConfirmationAction] = useState<
+    "apply" | "closedAll" | "openAll" | undefined
+  >();
+
+  const [isConfirm, setIsConfirm] = useState<boolean>(false);
 
   const [internalBookingData, setBookingData] = useState<BookingData>(() =>
     generateMockData(today.getFullYear(), today.getMonth()),
@@ -182,6 +198,7 @@ export function BookingCalendar({
 
   //Magseset lang sa available yung mga date na walang status
   function handleApply(): void {
+    setOpenConfirmationDialog(true);
     if (selectedDays.size === 0) return;
     setBookingData((prev) => {
       const next = { ...prev };
@@ -230,6 +247,25 @@ export function BookingCalendar({
     setSelectedDays(new Set());
   }
 
+  // for dialog result - confirm
+  const handleConfirmDialog = () => {
+    switch (confirmationAction) {
+      case "apply":
+        handleApply();
+        break;
+      case "closedAll":
+        handleCloseAll();
+        break;
+      case "openAll":
+        handleOpenAll();
+        break;
+
+      default:
+        break;
+    }
+    setOpenConfirmationDialog(false);
+  };
+
   return (
     <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden h-full">
       {/* Legend */}
@@ -252,7 +288,6 @@ export function BookingCalendar({
           <LegendItem color="bg-red-200 border border-red-400" label="Closed" />
         </div>
       </div>
-
       {/* Month Navigation */}
       <div className="flex items-center justify-between px-5 py-3 flex-shrink-0">
         <button
@@ -269,7 +304,6 @@ export function BookingCalendar({
           ›
         </button>
       </div>
-
       {/* Day headers */}
       <div className="grid grid-cols-7 px-3 gap-1 mb-1 flex-shrink-0">
         {DAYS_OF_WEEK.map((day) => (
@@ -281,7 +315,6 @@ export function BookingCalendar({
           </div>
         ))}
       </div>
-
       {/* Calendar grid */}
       <div className="flex-1 px-3 pb-2">
         <div className="flex flex-col gap-1">
@@ -342,36 +375,67 @@ export function BookingCalendar({
         </div>
       </div>
 
-      {/* Bottom action bar */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-t border-[#D9D9D9] gap-2 flex-wrap bg-white">
+      {/* Confirmation Modal */}
+      <Dialog
+        open={openConfirmationDialog}
+        onOpenChange={setOpenConfirmationDialog}
+      >
+        <DialogContent className="w-sm p-0 overflow-hidden font-poppins rounded-2xl border-none gap-0">
+          {/* Red header */}
+          <div className=" bg-red-900 px-6 py-5">
+            <DialogTitle className="text-white text-xl font-medium ">
+              Confirmation
+            </DialogTitle>
+          </div>
+
+          {/* Body */}
+          <div className="bg-white px-6 pt-6 pb-6 flex flex-col gap-4 text-sm">
+            <DialogDescription className="text-gray-600 text-md">
+              Are you sure you want to apply this schedule change?
+            </DialogDescription>
+
+            {/* Cancel / Yes, Cancel row */}
+            <div className="flex gap-3">
+              <DialogClose asChild>
+                <Button className="flex-1 bg-[#1C1B1F] hover:bg-gray-900 text-white rounded-xl py-5 text-md">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                onClick={() => {
+                  handleConfirmDialog();
+                }}
+                className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="flex shrink-0  items-center justify-between px-4 py-3 border-t border-[#D9D9D9] gap-2 flex-wrap bg-white">
         <button
-          onClick={handleOpenAll}
+          onClick={() => {
+            setConfirmationAction("openAll");
+            setOpenConfirmationDialog(true);
+          }}
           className="flex items-center gap-2 px-4 py-2 font-medium bg-[#D9D9D9]/31 border border-[#D9D9D9] rounded-2xl text-sm"
         >
           <OpenAll />
           <span>Open All {daysInMonth} Days</span>
         </button>
         <button
-          onClick={handleCloseAll}
+          onClick={() => {
+            setConfirmationAction("closedAll");
+            setOpenConfirmationDialog(true);
+          }}
           className="flex items-center gap-2 px-4 py-2 font-medium bg-[#E44848]/8 border border-[#770B0B] rounded-2xl text-sm"
         >
           <ClosedAll />
           <span>Closed All</span>
         </button>
-        <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
-          <span>Closed every</span>
-          <select
-            value={closedEvery}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setClosedEvery(e.target.value)
-            }
-            className="border border-gray-300 rounded-lg px-1 py-1 text-sm font-medium text-gray-700 bg-[#D9D9D9]/31 focus:outline-none"
-          >
-            <option>Day</option>
-            <option>Week</option>
-            <option>Month</option>
-          </select>
-        </div>
+
         {/* Apply only counts days with no existing status */}
         {(() => {
           const applyCount = [...selectedDays].filter(
@@ -379,7 +443,10 @@ export function BookingCalendar({
           ).length;
           return (
             <button
-              onClick={handleApply}
+              onClick={() => {
+                setOpenConfirmationDialog(true);
+                setConfirmationAction("apply");
+              }}
               className="ml-auto px-6 py-2 rounded-full bg-[#b5a020] text-white text-sm font-bold hover:bg-[#9e8c1a] transition shadow-sm whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
               disabled={applyCount === 0}
             >

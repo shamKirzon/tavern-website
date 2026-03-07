@@ -102,19 +102,22 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-red-500 to-red-800 text-white px-6 py-5 flex items-center justify-between">
+        <div
+          className="text-white px-6 py-5 flex items-center justify-between"
+          style={{ background: "linear-gradient(to right, #AA3131, #770B0B)" }}
+        >
           <h2 className="text-xl font-bold">Order Details</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center hover:bg-opacity-30 transition"
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition"
           >
             <svg
               className="w-4 h-4 text-white"
@@ -133,9 +136,10 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
         </div>
 
         <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-          {/* Customer Information */}
+          {/* ── CUSTOMER INFORMATION ── */}
           <div>
-            <div className="flex items-center gap-2 text-red-600 text-xs font-semibold uppercase tracking-wide mb-3">
+            <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
+              {/* person icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -183,9 +187,49 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
             </div>
           </div>
 
-          {/* Order Items */}
+          {/* ── STAFF INCHARGE ── */}
           <div>
-            <div className="flex items-center gap-2 text-red-600 text-xs font-semibold uppercase tracking-wide mb-3">
+            <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
+              {/* badge/staff icon */}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                />
+              </svg>
+              Staff Incharge
+            </div>
+            <div className="border border-gray-200 rounded-xl overflow-hidden">
+              <div className="grid grid-cols-2 divide-x divide-gray-200">
+                <div className="p-4">
+                  <p className="text-xs text-gray-400 mb-1">Cashier Incharge</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    Maria Santos
+                  </p>
+                </div>
+                <div className="p-4">
+                  <p className="text-xs text-gray-400 mb-1">
+                    Security Incharge
+                  </p>
+                  <p className="text-sm font-medium text-gray-800">
+                    Juan dela Cruz
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── ORDER ITEMS ── */}
+          <div>
+            <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
+              {/* clipboard icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -202,7 +246,8 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
               Order Items
             </div>
             <div className="border border-gray-200 rounded-xl overflow-hidden">
-              <div className="grid grid-cols-3 bg-yellow-400 px-4 py-2 text-xs font-bold text-gray-800 uppercase">
+              {/* Table header */}
+              <div className="grid grid-cols-3 bg-yellow-400 px-4 py-2.5 text-xs font-bold text-gray-800 uppercase tracking-wide">
                 <span>Item</span>
                 <span className="text-center">QTY</span>
                 <span className="text-right">Amount</span>
@@ -222,9 +267,10 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
             </div>
           </div>
 
-          {/* Payable Summary */}
+          {/* ── PAYABLE SUMMARY ── */}
           <div>
-            <div className="flex items-center gap-2 text-red-600 text-xs font-semibold uppercase tracking-wide mb-3">
+            <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
+              {/* card icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -240,7 +286,7 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
               </svg>
               Payable Summary
             </div>
-            <div className="border border-gray-200 rounded-xl p-4 space-y-2">
+            <div className="border border-gray-200 rounded-xl p-4 space-y-2.5">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Total</span>
                 <span>₱{total.toLocaleString()}</span>
@@ -278,15 +324,26 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
   const previewItems = order.items.slice(0, 3);
   const extraCount = order.items.length - 3;
 
+  // "more item" text color: yellow for Pending/Served, red for Declined, gray for Cancelled
+  const moreColor =
+    order.status === "Pending" || order.status === "Served"
+      ? "text-yellow-500"
+      : order.status === "Declined"
+        ? "text-red-600"
+        : "text-gray-400";
+
   return (
     <div
-      className={`bg-white rounded-xl shadow border-t-4 ${styles.border} p-5 cursor-pointer hover:shadow-md transition-shadow`}
+      className={`bg-white rounded-xl shadow-sm border-t-4 ${styles.border} p-5 cursor-pointer hover:shadow-md transition-shadow`}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between mb-1">
+      {/* Card top: name + badge */}
+      <div className="flex items-start justify-between mb-0.5">
         <div>
-          <h3 className="font-bold text-gray-900 text-base">{order.name}</h3>
-          <p className="text-xs text-gray-400">{order.email}</p>
+          <h3 className="font-bold text-gray-900 text-base leading-tight">
+            {order.name}
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">{order.email}</p>
         </div>
         <span
           className={`text-xs font-semibold px-3 py-1 rounded-full ${styles.badge}`}
@@ -295,8 +352,10 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
         </span>
       </div>
 
+      {/* Type + item count */}
       <div className="flex items-center gap-3 mt-2 mb-4 text-xs text-gray-500">
         <span className="flex items-center gap-1">
+          {/* star/sparkle icon */}
           <svg
             className="w-3.5 h-3.5"
             fill="none"
@@ -313,6 +372,7 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
           {order.type}
         </span>
         <span className="flex items-center gap-1">
+          {/* clipboard icon */}
           <svg
             className="w-3.5 h-3.5"
             fill="none"
@@ -330,7 +390,8 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
         </span>
       </div>
 
-      <div className="space-y-2 mb-3">
+      {/* Item list preview */}
+      <div className="space-y-2 mb-1">
         {previewItems.map((item, i) => (
           <div key={i} className="flex justify-between text-sm text-gray-700">
             <span>{item.name}</span>
@@ -345,12 +406,13 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
       </div>
 
       {extraCount > 0 && (
-        <p className="text-xs text-yellow-600 font-medium mb-4">
+        <p className={`text-xs font-medium mt-2 mb-3 ${moreColor}`}>
           +{extraCount} more item...
         </p>
       )}
 
-      <div className="flex items-center justify-between border-t pt-3 mt-2">
+      {/* Footer */}
+      <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-3">
         <span className="text-xs text-gray-400">{order.id}</span>
         <div className="text-right">
           <p className="text-xs text-gray-400">Total</p>
@@ -369,12 +431,6 @@ const OrdersPage = () => {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const today = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const filtered = ordersData.filter((o) => {
     const matchesTab = activeTab === "All" || o.status === activeTab;
     const matchesSearch =
@@ -384,10 +440,10 @@ const OrdersPage = () => {
   });
 
   return (
-    <div className="">
+    <div className=" font-poppins">
       {/* Header */}
       <div
-        className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
+        className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl mb-6"
         style={{
           background: "linear-gradient(to right, #AA3131, #770B0B)",
           boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
@@ -395,7 +451,6 @@ const OrdersPage = () => {
       >
         <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
           <SideBarOrder className="text-white w-8 h-8" />
-          {/* <SideBarOrder /> */}
         </div>
         <div className="ml-5 text-white">
           <h1 className="font-poppins text-[38px] font-bold leading-tight">
@@ -408,7 +463,8 @@ const OrdersPage = () => {
       </div>
 
       {/* FILTERS */}
-      <div className="flex flex-wrap items-center gap-3 mb-8">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        {/* Status tabs */}
         <div className="flex bg-white rounded-lg shadow overflow-hidden">
           {tabs.map((tab) => (
             <button
@@ -416,7 +472,7 @@ const OrdersPage = () => {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? "bg-red-600 text-white"
+                  ? "bg-red-700 text-white"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
@@ -425,15 +481,21 @@ const OrdersPage = () => {
           ))}
         </div>
 
+        {/* Date navigator */}
         <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
-          <button className="hover:text-gray-900">‹</button>
+          <button className="hover:text-gray-900 text-lg leading-none">
+            ‹
+          </button>
           <span className="font-medium">Today</span>
-          <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">
+          <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
             TODAY
           </span>
-          <button className="hover:text-gray-900">›</button>
+          <button className="hover:text-gray-900 text-lg leading-none">
+            ›
+          </button>
         </div>
 
+        {/* Sort */}
         <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
           <svg
             className="w-4 h-4"
@@ -451,6 +513,7 @@ const OrdersPage = () => {
           <span>Newest</span>
         </div>
 
+        {/* Search */}
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
             <svg
@@ -477,8 +540,8 @@ const OrdersPage = () => {
         </div>
       </div>
 
-      {/* ORDER CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ORDER CARDS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filtered.map((order, i) => (
           <OrderCard
             key={i}

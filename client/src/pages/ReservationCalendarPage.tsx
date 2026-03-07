@@ -38,10 +38,6 @@ const ReservationCalendarPage = () => {
     }
   }, [isOpenForReservations]);
 
-  useEffect(() => {
-    // fetch reservationList(accepted, rejected, pending, cancelled, done@)
-  }, []);
-
   const reservationSummaryItems = [
     {
       label: "Pending Reservation",
@@ -74,7 +70,6 @@ const ReservationCalendarPage = () => {
   ];
 
   // Functions:
-
   const reservationSummaryBadge = (label: string) => {
     switch (label) {
       case "Pending Reservation":

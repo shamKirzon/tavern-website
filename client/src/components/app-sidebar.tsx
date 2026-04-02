@@ -18,6 +18,7 @@ import {
 } from "./ui/sidebar";
 
 import {
+  IconGroup,
   SideBarDashboard,
   SideBarEmployee,
   SideBarLogout,
@@ -118,7 +119,7 @@ export default function AppSidebar() {
                     onClick={() => setActiveButton("employees")}
                     isActive={activeButton === "employees"}
                   >
-                    <SideBarEmployee />
+                    <IconGroup />
                     <span>Employees</span>
                   </SidebarMenuButton>
                 </Link>

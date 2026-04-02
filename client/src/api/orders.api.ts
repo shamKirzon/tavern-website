@@ -13,6 +13,17 @@ export const orderApi = {
     }
   },
 
+  async getOrderSummary() {
+    try {
+      const res = await axiosInstance.get("/order/get-order-summary");
+      if (!res) return console.log("Can't get order summary.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in orderApi/getOrderSummary(): ", error);
+    }
+  },
+
   async getEmail(orderId: string) {
     try {
       const res = await axiosInstance.get(`/order/get-email/${orderId}`);

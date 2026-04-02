@@ -13,10 +13,23 @@ export const reservationsApi = {
     }
   },
 
+  async getReservationSummary() {
+    try {
+      const res = await axiosInstance.get(
+        "/reservation/get-reservation-summary",
+      );
+      if (!res) return console.log("Can't get reservation summary.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in reservationApi/getReservationSummmary(): ", error);
+    }
+  },
+
   async getEmail(customerId: string) {
     try {
       const res = await axiosInstance.get(
-        `/reservation/get-email/${customerId}`
+        `/reservation/get-email/${customerId}`,
       );
       if (!res) return console.log("Can't get reservation list.");
 
@@ -28,7 +41,7 @@ export const reservationsApi = {
 
   async updateReservationStatus(
     reservationId: string,
-    status: ReservationStatus
+    status: ReservationStatus,
   ) {
     try {
       const res = await axiosInstance.post(
@@ -36,7 +49,7 @@ export const reservationsApi = {
         {
           reservationId,
           status,
-        }
+        },
       );
       if (!res) return console.log("Can't update reservation status.");
 

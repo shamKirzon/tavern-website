@@ -26,52 +26,53 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { reservationsApi } from "@/api/reservations.api";
+import { orderApi } from "@/api/orders.api";
+import { employeesApi } from "@/api/employees.api";
 
-// Backend: update values below to connect to your API
-
-// ─── Stat Cards ───────────────────────────────────────────────────────────────
-// To connect to API: replace each `value` with your fetched data variable
-// e.g. value: data.totalReservations
+const reservationSummary = await reservationsApi.getReservationSummary();
+const orderSummary = await orderApi.getOrderSummary();
+const employeeSummary = await employeesApi.getEmployeeSummary();
 
 const statCards = [
   {
     label: "Total Reservation",
-    value: 143, // ← replace with API value
+    value: reservationSummary.reservationCount,
     iconBg: "rgba(0,149,7,0.15)",
     iconColor: "#009507",
     Icon: IconCalendarToday,
   },
   {
     label: "Approved Reservations",
-    value: 143, // ← replace with API value
+    value: reservationSummary.accepted,
     iconBg: "rgba(0,17,255,0.12)",
     iconColor: "#2D37C2",
     Icon: IconCalendarCheck,
   },
   {
     label: "Pending Reservations",
-    value: 88, // ← replace with API value
+    value: reservationSummary.pending,
     iconBg: "rgba(239,217,116,0.45)",
     iconColor: "#A6902A",
     Icon: IconCalendarClock,
   },
   {
     label: "Total Earnings",
-    value: "₱122,000.00", // ← replace with API value
+    value: "₱ " + parseInt(orderSummary.totalEarnings).toLocaleString(),
     iconBg: "rgba(149,50,0,0.12)",
     iconColor: "#AD7434",
     Icon: IconCreditCardGear,
   },
   {
     label: "Total Orders Today",
-    value: 205, // ← replace with API value
+    value: orderSummary.orderCount,
     iconBg: "rgba(149,0,82,0.12)",
     iconColor: "#950052",
     Icon: IconFastFood,
   },
   {
     label: "Available Staff",
-    value: 143, // ← replace with API value
+    value: employeeSummary.employeeCount,
     iconBg: "rgba(0,157,255,0.15)",
     iconColor: "#087DC7",
     Icon: IconFace,
@@ -115,8 +116,6 @@ const customerMapChartConfig: ChartConfig = {
   customers: { label: "Customers", color: "#AA3131" },
 };
 
-// END OF DATA — do not edit below unless changing UI layout
-
 const cardShadow = "0 8px 30px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07)";
 
 // ─── Stat Card Component ──────────────────────────────────────────────────────
@@ -158,6 +157,16 @@ const StatCard = ({
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 const DashboardPage = () => {
+  // useEffect(() => {
+  //   const fetchReservation = async () => {
+  //     const data = await reservationsApi.getReservationList();
+
+  //     console.log("DB: ", data);
+  //   };
+
+  //   fetchReservation();
+  // }, []);
+
   return (
     <div className="flex flex-col gap-5">
       {/* Header */}

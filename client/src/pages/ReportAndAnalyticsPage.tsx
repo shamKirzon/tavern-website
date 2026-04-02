@@ -1,11 +1,11 @@
+import { SideBarReportsAndAnalytics } from "@/assets/icons/icons";
+import { formatReadableDate } from "@/utils/date";
 import React from "react";
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
   PieChart,
   Pie,
@@ -13,7 +13,19 @@ import {
   Legend,
   BarChart,
   Bar,
+  Area,
+  AreaChart,
 } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const trendData = [
   { day: "Mon", approved: 9, cancelled: 4 },
@@ -50,219 +62,467 @@ const employees = [
   { name: "Yuji Midorikawa", type: "Full-time" },
 ];
 
+// ─── Chart Configs ────────────────────────────────────────────────────────────
+
+const bookingTrendsChartConfig: ChartConfig = {
+  approved: { label: "Approved", color: "#EAC54F" },
+  cancelled: { label: "Cancelled", color: "#AA3131" },
+};
+
+const revenueChartConfig: ChartConfig = {
+  revenue: { label: "Revenue", color: "#EAC54F" },
+};
+
+const ordersChartConfig: ChartConfig = {
+  orders: { label: "Orders", color: "#AA3131" },
+};
+
+// ─── Shared Styles ────────────────────────────────────────────────────────────
+
+const cardShadow = "0 8px 30px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07)";
+const headerGradient = "linear-gradient(to right, #AA3131, #770B0B)";
+
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+
+const StatCard = ({
+  label,
+  value,
+  accentBg,
+}: {
+  label: string;
+  value: string | number;
+  accentBg: string;
+}) => (
+  <div
+    className="relative bg-white rounded-2xl border border-gray-100 px-5 py-5"
+    style={{ boxShadow: cardShadow }}
+  >
+    <div
+      className="absolute top-4 right-4 w-10 h-10 rounded-xl"
+      style={{ backgroundColor: accentBg }}
+    />
+    <p className="font-poppins text-gray-500 text-[13px] font-medium leading-snug">
+      {label}
+    </p>
+    <p className="font-poppins text-[30px] font-bold text-gray-900 mt-1.5 leading-tight">
+      {value}
+    </p>
+  </div>
+);
+
+// ─── Section Header ───────────────────────────────────────────────────────────
+
+const SectionHeader = ({
+  title,
+  showGenerate = false,
+}: {
+  title: string;
+  showGenerate?: boolean;
+}) => (
+  <div className="flex items-center gap-4 mb-5">
+    <h2 className="font-poppins text-[20px] font-bold text-gray-900 whitespace-nowrap">
+      {title}
+    </h2>
+    <div className="flex-1 h-px bg-gray-200" />
+    {showGenerate && (
+      <button
+        className="text-white text-[13px] font-poppins font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+        style={{ background: headerGradient }}
+      >
+        Generate
+      </button>
+    )}
+  </div>
+);
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 const ReportsAnalyticsPage: React.FC = () => {
-  const today = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-
-      {/* HEADER */}
-      <div className="bg-gradient-to-r from-red-500 to-red-800 text-white rounded-xl p-6 shadow-lg mb-8">
-        <h1 className="text-3xl font-bold">Reports and Analytics</h1>
-        <p className="text-sm opacity-90">{today}</p>
-      </div>
-
-      {/* ================= RESERVATIONS ================= */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-xl font-semibold">Reservations</h2>
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <button className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700">
-            Generate
-          </button>
+    <div className="flex flex-col gap-5 font-poppins">
+      {/* Header */}
+      <div
+        className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
+        style={{
+          background: headerGradient,
+          boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
+        }}
+      >
+        <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+          <SideBarReportsAndAnalytics className="text-white w-8 h-8" />
         </div>
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="relative bg-white rounded-xl shadow p-6">
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-green-200"></div>
-            <p className="text-gray-500 text-sm">Total Reservation</p>
-            <h3 className="text-3xl font-bold mt-2">143</h3>
-          </div>
-
-          <div className="relative bg-white rounded-xl shadow p-6">
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-purple-200"></div>
-            <p className="text-gray-500 text-sm">Approved Reservations</p>
-            <h3 className="text-3xl font-bold mt-2">143</h3>
-          </div>
-
-          <div className="relative bg-white rounded-xl shadow p-6">
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-yellow-200"></div>
-            <p className="text-gray-500 text-sm">Cancelled Reservations</p>
-            <h3 className="text-3xl font-bold mt-2">88</h3>
-          </div>
-        </div>
-
-        {/* Booking Trends + Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold mb-4">Booking Trends</h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="4 4" stroke="#E5E7EB" />
-                  <XAxis dataKey="day" tick={{ fill: "#6B7280" }} />
-                  <YAxis tick={{ fill: "#6B7280" }} />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="approved"
-                    stroke="#EAC54F"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={{ r: 6 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="cancelled"
-                    stroke="#B33939"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold mb-4">Booking Status</h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    dataKey="value"
-                    innerRadius={70}
-                    outerRadius={100}
-                    paddingAngle={3}
-                    stroke="none"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend
-                    verticalAlign="bottom"
-                    align="center"
-                    iconType="square"
-                    wrapperStyle={{ paddingTop: 20 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+        <div className="ml-5 text-white">
+          <h1 className="text-[38px] font-bold leading-tight">
+            Reports and Analytics
+          </h1>
+          <p className="text-[13px] mt-0.5 opacity-85">
+            {formatReadableDate(new Date())}
+          </p>
         </div>
       </div>
 
-      {/* ================= ORDERS & REVENUE ================= */}
-      <div className="mt-16 mb-20">
-        <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-xl font-semibold">Orders and Revenue</h2>
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <button className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700">
-            Generate
-          </button>
+      {/* ═══════════════════ RESERVATIONS ═══════════════════ */}
+      <div>
+        <SectionHeader title="Reservations" showGenerate />
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+          <StatCard
+            label="Total Reservation"
+            value={143}
+            accentBg="rgba(0,149,7,0.15)"
+          />
+          <StatCard
+            label="Approved Reservations"
+            value={143}
+            accentBg="rgba(0,17,255,0.12)"
+          />
+          <StatCard
+            label="Cancelled Reservations"
+            value={88}
+            accentBg="rgba(239,217,116,0.45)"
+          />
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="relative bg-white rounded-xl shadow p-6">
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-green-200"></div>
-            <p className="text-gray-500 text-sm">Total Revenue</p>
-            <h3 className="text-3xl font-bold mt-2">₱123.7K</h3>
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Booking Trends — Line Chart */}
+          <div
+            className="bg-white rounded-2xl border border-gray-100 p-5"
+            style={{ boxShadow: cardShadow }}
+          >
+            <p className="font-bold text-gray-900 text-[15px] mb-1">
+              Booking Trends
+            </p>
+            <p className="text-gray-400 text-[11px] mb-4">
+              Approved vs Cancelled per day
+            </p>
+            <ChartContainer
+              config={bookingTrendsChartConfig}
+              className="h-[260px] w-full"
+            >
+              <LineChart
+                data={trendData}
+                margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
+              >
+                <CartesianGrid vertical={false} stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#9ca3af",
+                    fontFamily: "Poppins",
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#9ca3af",
+                    fontFamily: "Poppins",
+                  }}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" />}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="approved"
+                  stroke="var(--color-approved)"
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cancelled"
+                  stroke="var(--color-cancelled)"
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                />
+                <ChartLegend
+                  content={<ChartLegendContent payload={[]} />}
+                  wrapperStyle={{ paddingTop: "16px" }}
+                  verticalAlign="bottom"
+                />
+              </LineChart>
+            </ChartContainer>
           </div>
 
-          <div className="relative bg-white rounded-xl shadow p-6">
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-purple-200"></div>
-            <p className="text-gray-500 text-sm">Total Orders</p>
-            <h3 className="text-3xl font-bold mt-2">143</h3>
-          </div>
-
-          <div className="relative bg-white rounded-xl shadow p-6">
-            <div className="absolute top-4 right-4 w-10 h-10 rounded-lg bg-yellow-200"></div>
-            <p className="text-gray-500 text-sm">Orders per Day</p>
-            <h3 className="text-3xl font-bold mt-2">88</h3>
-          </div>
-        </div>
-
-        {/* Revenue Graphs */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold mb-4">Revenue Overtime</h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="revenue" stroke="#EAC54F" strokeWidth={3} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold mb-4">Order Volume</h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="orders" fill="#B33939" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          {/* Booking Status — Pie Chart */}
+          <div
+            className="bg-white rounded-2xl border border-gray-100 p-5"
+            style={{ boxShadow: cardShadow }}
+          >
+            <p className="font-bold text-gray-900 text-[15px] mb-1">
+              Booking Status
+            </p>
+            <p className="text-gray-400 text-[11px] mb-4">
+              Distribution of reservation statuses
+            </p>
+            <div className="h-[260px] w-full flex items-center justify-center">
+              <PieChart width={340} height={260}>
+                <Pie
+                  data={statusData}
+                  dataKey="value"
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  stroke="none"
+                >
+                  {statusData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Legend
+                  verticalAlign="bottom"
+                  align="center"
+                  iconType="square"
+                  wrapperStyle={{
+                    paddingTop: 20,
+                    fontFamily: "Poppins",
+                    fontSize: 11,
+                  }}
+                />
+              </PieChart>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ================= EMPLOYEES ================= */}
-      <div className="mt-16 mb-20">
-        <div className="flex items-center gap-4 mb-6">
-          <h2 className="text-xl font-semibold">Employees</h2>
-          <div className="flex-1 h-px bg-gray-300"></div>
+      {/* ═══════════════════ ORDERS & REVENUE ═══════════════════ */}
+      <div>
+        <SectionHeader title="Orders and Revenue" showGenerate />
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+          <StatCard
+            label="Total Revenue"
+            value="₱123.7K"
+            accentBg="rgba(0,149,7,0.15)"
+          />
+          <StatCard
+            label="Total Orders"
+            value={143}
+            accentBg="rgba(0,17,255,0.12)"
+          />
+          <StatCard
+            label="Orders per Day"
+            value={88}
+            accentBg="rgba(239,217,116,0.45)"
+          />
         </div>
 
-        <div className="bg-white rounded-xl shadow p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold">Employee Directory</h3>
-            <p className="text-sm text-gray-500">19 staff members</p>
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Revenue Overtime — Area Chart */}
+          <div
+            className="bg-white rounded-2xl border border-gray-100 p-5"
+            style={{ boxShadow: cardShadow }}
+          >
+            <div className="flex items-start justify-between mb-1">
+              <div>
+                <p className="font-bold text-gray-900 text-[15px]">
+                  Revenue Overtime
+                </p>
+                <p className="text-gray-400 text-[11px] mt-0.5">
+                  Total Revenue (₱) per day
+                </p>
+              </div>
+              <button className="border border-gray-200 text-[11px] font-poppins px-3 py-1.5 rounded-lg text-gray-600 flex items-center gap-1 hover:bg-gray-50 shadow-sm">
+                Weekly <span className="text-[9px]">▾</span>
+              </button>
+            </div>
+            <ChartContainer
+              config={revenueChartConfig}
+              className="h-[260px] w-full"
+            >
+              <AreaChart
+                data={revenueData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-revenue)"
+                      stopOpacity={0.5}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-revenue)"
+                      stopOpacity={0.05}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#9ca3af",
+                    fontFamily: "Poppins",
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#9ca3af",
+                    fontFamily: "Poppins",
+                  }}
+                  tickFormatter={(v: number) => `P${(v / 1000).toFixed(0)}K`}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" />}
+                />
+                <Area
+                  dataKey="revenue"
+                  type="natural"
+                  fill="url(#fillRevenue)"
+                  stroke="var(--color-revenue)"
+                  strokeWidth={2.5}
+                />
+                <ChartLegend
+                  content={<ChartLegendContent payload={[]} />}
+                  wrapperStyle={{ paddingTop: "16px" }}
+                  verticalAlign="bottom"
+                />
+              </AreaChart>
+            </ChartContainer>
+          </div>
+
+          {/* Order Volume — Bar Chart */}
+          <div
+            className="bg-white rounded-2xl border border-gray-100 p-5"
+            style={{ boxShadow: cardShadow }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="font-bold text-gray-900 text-[15px]">
+                  Order Volume
+                </p>
+                <p className="text-gray-400 text-[11px] mt-0.5">
+                  Number of orders per day
+                </p>
+              </div>
+              <button className="border border-gray-200 text-[11px] font-poppins px-3 py-1.5 rounded-lg text-gray-600 flex items-center gap-1 hover:bg-gray-50 shadow-sm">
+                Weekly <span className="text-[9px]">▾</span>
+              </button>
+            </div>
+            <ChartContainer
+              config={ordersChartConfig}
+              className="h-[260px] w-full"
+            >
+              <BarChart
+                data={revenueData}
+                margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid vertical={false} stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  tick={{
+                    fontSize: 10,
+                    fill: "#9ca3af",
+                    fontFamily: "Poppins",
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#9ca3af",
+                    fontFamily: "Poppins",
+                  }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar
+                  dataKey="orders"
+                  fill="var(--color-orders)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════ EMPLOYEES ═══════════════════ */}
+      <div>
+        <SectionHeader title="Employees" />
+
+        <div
+          className="bg-white rounded-2xl border border-gray-100 p-5"
+          style={{ boxShadow: cardShadow }}
+        >
+          <div className="mb-5">
+            <p className="font-bold text-gray-900 text-[15px]">
+              Employee Directory
+            </p>
+            <p className="text-[12px] text-gray-400 mt-0.5">19 staff members</p>
           </div>
 
           <table className="w-full text-sm">
-            <thead className="text-gray-500 uppercase text-xs">
-              <tr className="border-b">
-                <th className="text-left py-3">Name</th>
-                <th className="text-left py-3">Type</th>
-                <th className="text-left py-3">Shift Time</th>
-                <th className="text-left py-3">Days</th>
-                <th className="text-left py-3">PIN</th>
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Name
+                </th>
+                <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Type
+                </th>
+                <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Shift Time
+                </th>
+                <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Days
+                </th>
+                <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  PIN
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-gray-50">
               {employees.map((emp, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="py-4">{emp.name}</td>
-                  <td>
-                    <span className="px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-xs font-medium">
+                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-4 text-[13px] font-medium text-gray-800">
+                    {emp.name}
+                  </td>
+                  <td className="py-4">
+                    <span className="px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-[11px] font-medium">
                       {emp.type}
                     </span>
                   </td>
-                  <td>8:00PM - 6:00AM</td>
-                  <td>Mon,Tue,Wed,Sat</td>
-                  <td>
+                  <td className="py-4 text-[13px] text-gray-500">
+                    8:00PM - 6:00AM
+                  </td>
+                  <td className="py-4 text-[13px] text-gray-500">
+                    Mon, Tue, Wed, Sat
+                  </td>
+                  <td className="py-4">
                     <div className="flex gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                        <div
+                          key={i}
+                          className="w-2 h-2 bg-gray-300 rounded-full"
+                        />
                       ))}
                     </div>
                   </td>
@@ -272,7 +532,6 @@ const ReportsAnalyticsPage: React.FC = () => {
           </table>
         </div>
       </div>
-
     </div>
   );
 };

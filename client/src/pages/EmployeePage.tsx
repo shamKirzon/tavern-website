@@ -607,7 +607,7 @@ const EmployeeManagement: React.FC = () => {
       >
         <div className="flex items-center gap-4">
           <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            <IconGroup />
+            <IconGroup className="text-white" />
           </div>
           <div className="text-white">
             <h1 className="font-poppins text-[36px] font-bold leading-tight">

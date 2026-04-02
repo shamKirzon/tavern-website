@@ -11,11 +11,11 @@ class ReservationService {
   }
   async updateReservationStatus(
     reservationId: string,
-    status: ReservationStatus
+    status: ReservationStatus,
   ) {
     return await reservationRepository.updateReservationStatus(
       reservationId,
-      status
+      status,
     );
   }
 
@@ -23,6 +23,21 @@ class ReservationService {
     const myEmail = await reservationRepository.getEmail(customerId);
     if (!myEmail) return;
     return myEmail[0]!.email;
+  }
+
+  async getReservationSummary() {
+    const data = await this.getReservationList();
+
+    const summary = data?.reduce((acc, curr) => {
+      const status = curr.reservationStatus;
+
+      acc.reservationCount = (acc.total || 0) + 1;
+      acc[status] = (acc[status] || 0) + 1;
+
+      return acc;
+    }, {});
+
+    return summary;
   }
 }
 

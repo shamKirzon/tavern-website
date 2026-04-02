@@ -1,13 +1,18 @@
 import { Router } from "express";
 import { reservationController } from "./reservation.controller";
 import { validateUpdateReservationStatus } from "./reservation.middleware";
+import { reservationService } from "./reservation.service";
 
 const reservationRoutes = Router();
 
-// hello po kuya shammy hhehehheheh 
 reservationRoutes.get(
   "/get-reservation-list",
   reservationController.getReservationList,
+);
+
+reservationRoutes.get(
+  "/get-reservation-summary",
+  reservationController.getReservationSummary,
 );
 
 reservationRoutes.post(

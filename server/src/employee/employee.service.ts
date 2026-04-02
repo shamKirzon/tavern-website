@@ -8,6 +8,21 @@ class EmployeeService {
     return camelcaseKeys(dbResult ?? [], { deep: true });
   }
 
+  async getEmployeeSummary() {
+    const data = await this.getEmployeeList();
+
+    const summary = data?.reduce((acc, curr) => {
+      const role = curr.employeeRole;
+
+      acc.employeeCount = (acc.employeeCount || 0) + 1;
+      acc[role] = (acc[role] || 0) + 1;
+
+      return acc;
+    }, {});
+
+    return summary;
+  }
+
   async getCashierName(employeeId: string, role: "cashier" | "security") {
     let dbResult;
 

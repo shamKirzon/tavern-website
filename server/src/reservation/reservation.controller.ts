@@ -20,6 +20,27 @@ class ReservationController {
     }
   }
 
+  async getReservationSummary(req: Request, res: Response) {
+    try {
+      const result = await reservationService.getReservationSummary();
+
+      if (!result)
+        return res
+          .status(400)
+          .json({ message: "There is no returned reservation summary. " });
+
+      return res.status(200).json({
+        message: "Fetched reservation summary successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getReservationSummary(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't fetch reservation summary" });
+    }
+  }
+
   async updateReservationStatus(req: Request, res: Response) {
     try {
       const { reservationId, status } = req.body;
@@ -31,7 +52,7 @@ class ReservationController {
 
       const result = await reservationService.updateReservationStatus(
         reservationId,
-        status
+        status,
       );
 
       if (!result)

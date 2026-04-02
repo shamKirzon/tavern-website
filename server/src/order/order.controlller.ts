@@ -20,6 +20,25 @@ class OrderController {
     }
   }
 
+  async getOrderSummary(req: Request, res: Response) {
+    try {
+      const result = await orderService.getOrderSummary();
+
+      if (!result)
+        return res
+          .status(400)
+          .json({ message: "There is no returned order summary. " });
+
+      return res.status(200).json({
+        message: "Fetched order summary successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getOrderSummary(): ", error);
+      return res.status(400).json({ message: "can't fetch order summary" });
+    }
+  }
+
   async getEmail(req: Request, res: Response) {
     try {
       const { orderId } = req.params;

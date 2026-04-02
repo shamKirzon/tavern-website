@@ -22,12 +22,31 @@ class EmployeeController {
     }
   }
 
+  async getEmployeeSummary(req: Request, res: Response) {
+    try {
+      const result = await employeeService.getEmployeeSummary();
+
+      if (!result)
+        return res
+          .status(400)
+          .json({ message: "There is no returned employee summary. " });
+
+      return res.status(200).json({
+        message: "Fetched employee summary successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getEmployeeSummary(): ", error);
+      return res.status(400).json({ message: "can't fetch employee summary" });
+    }
+  }
+
   async getCashierName(req: Request, res: Response) {
     const { employeeId, role } = req.body;
     try {
       const employeeName = await employeeService.getCashierName(
         employeeId,
-        role
+        role,
       );
 
       if (!employeeName)

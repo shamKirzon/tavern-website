@@ -16,7 +16,7 @@ class ReservationRepository {
 
   async updateReservationStatus(
     reservationId: string,
-    status: ReservationStatus
+    status: ReservationStatus,
   ) {
     try {
       const { data, error } = await supabase

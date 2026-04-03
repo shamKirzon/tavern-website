@@ -6,6 +6,7 @@ import http from "http";
 import reservationRoutes from "./src/reservation/reservation.route";
 import orderRoutes from "./src/order/order.route";
 import employeeRoutes from "./src/employee/employee.route";
+import customerRoutes from "./src/customer/customer.route";
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 app.use(rateLimiter);
@@ -32,5 +33,6 @@ app.use(rateLimiter);
 app.use("/api/reservation", reservationRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/employee", employeeRoutes);
+app.use("/api/customer", customerRoutes);
 
 export default app;

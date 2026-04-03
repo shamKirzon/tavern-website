@@ -6,6 +6,6 @@ const orderRoutes = Router();
 orderRoutes.get("/get-order-list", orderController.getOrderList);
 orderRoutes.get("/get-order-summary", orderController.getOrderSummary);
 
-orderRoutes.get("/get-email/:orderId", orderController.getEmail);
+orderRoutes.get("/get-total-revenue/:period", orderController.getTotalRevenue);
 
 export default orderRoutes;

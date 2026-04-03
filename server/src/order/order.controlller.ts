@@ -56,6 +56,26 @@ class OrderController {
       return res.status(400).json({ message: "can't create reservation" });
     }
   }
+
+  async getTotalRevenue(req: Request, res: Response) {
+    try {
+      const period = req.params.period || "";
+      const result = await orderService.getTotalRevenue(period);
+
+      if (!result)
+        return res
+          .status(400)
+          .json({ message: "There is no returned total revenue. " });
+
+      return res.status(200).json({
+        message: "Returned total revenue successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getTotalRevenue(): ", error);
+      return res.status(400).json({ message: "can't return  total revenue" });
+    }
+  }
 }
 
 export const orderController = new OrderController();

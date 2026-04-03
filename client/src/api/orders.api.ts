@@ -34,4 +34,17 @@ export const orderApi = {
       console.log("Error in reservationApi/getReservationList(): ", error);
     }
   },
+
+  async getTotalRevenue(revenuePeriod: string) {
+    try {
+      const res = await axiosInstance.get(
+        `/order/get-total-revenue/${revenuePeriod}`,
+      );
+      if (!res) return console.log("Can't get total revenue.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in orderApi/getTotalRevenue(): ", error);
+    }
+  },
 };

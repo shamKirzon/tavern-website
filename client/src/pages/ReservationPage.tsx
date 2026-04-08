@@ -47,7 +47,7 @@ const ReservationPage = () => {
     const fetchReservations = async () => {
       const data = await reservationsApi.getReservationList();
       setReservations(data);
-      console.log("RESERVATION DATA: ", reservations);
+      console.log("RESERVATION DATA ", reservations);
     };
 
     fetchReservations();
@@ -58,15 +58,20 @@ const ReservationPage = () => {
     setImageUrl(imageUrl);
   };
 
-  const reservationFilters = [
-    { count: 3, name: "All" },
-    { count: 23, name: "Pending" },
-    { count: 90, name: "Cancel Request" },
-    { count: 44, name: "Approved" },
-    { count: 31, name: "Declined" },
-    { count: 3, name: "Cancelled" },
-    { count: 92, name: "Done" },
-  ];
+  const reservationFilters = useMemo(() => {
+    const countByStatus = (status: string) =>
+      reservations.filter((r) => r.reservationStatus === status).length;
+
+    return [
+      { count: reservations.length, name: "All" },
+      { count: countByStatus("pending"), name: "Pending" },
+      { count: countByStatus("cancel_request"), name: "Cancel Request" },
+      { count: countByStatus("accepted"), name: "Accepted" },
+      { count: countByStatus("declined"), name: "Declined" },
+      { count: countByStatus("cancelled"), name: "Cancelled" },
+      { count: countByStatus("done"), name: "Done" },
+    ];
+  }, [reservations]);
 
   const filteredReservations = useMemo(() => {
     return reservations.filter((r) => {
@@ -100,7 +105,7 @@ const ReservationPage = () => {
   const filterColors: Record<string, string> = {
     All: "bg-black/20 border-black",
     Pending: "bg-[#A6902A]/20 border-[#A6902A]",
-    Approved: "bg-[#009507]/20 border-[#009507]",
+    Accepted: "bg-[#009507]/20 border-[#009507]",
     Declined: "bg-[#B10000]/20 border-[#B10000]",
     Cancelled: "bg-[#ECD105]/20 border-[#ECD105]",
     CancelRequest: "bg-[#FF8400]/20 border-[#FF8400]",
@@ -110,7 +115,7 @@ const ReservationPage = () => {
   const badgeColors: Record<string, string> = {
     All: "bg-white",
     Pending: "bg-[#A6902A]",
-    Approved: "bg-[#009507]",
+    Accepted: "bg-[#009507]",
     Declined: "bg-[#B10000]",
     Cancelled: "bg-[#ECD105]",
     CancelRequest: "bg-[#FF8400]",

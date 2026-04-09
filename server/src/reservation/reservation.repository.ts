@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase-client";
-import { ReservationStatus } from "../types/Reservation";
+import { CancellationStatus, ReservationStatus } from "../types/Reservation";
 
 class ReservationRepository {
   async getReservationList() {
@@ -64,6 +64,7 @@ class ReservationRepository {
       return null;
     }
   }
+
   async getReservationById(reservationId: string) {
     try {
       const { data, error } = await supabase
@@ -76,6 +77,41 @@ class ReservationRepository {
       return data;
     } catch (error) {
       console.error("Error in repository/getReservationById():", error);
+      return null;
+    }
+  }
+
+  async updateCancellationStatus(
+    reservationCancellationId: string,
+    status: CancellationStatus,
+  ) {
+    try {
+      const { data, error } = await supabase
+        .from("reservation_cancellations")
+        .update({ status })
+        .eq("reservation_cancellation_id", reservationCancellationId);
+
+      if (error) throw error;
+
+      return {
+        message: "Reservation Cancellation status updated successfully.",
+      };
+    } catch (error) {
+      console.error("Error in repository/updateCancellationStatus():", error);
+    }
+  }
+  async uploadRefundReceipt(reservationId: string, imageUrl: string) {
+    try {
+      const { data, error } = await supabase
+        .from("reservation_cancellations")
+        .update({ refund_receipt_url: imageUrl })
+        .eq("reservation_id", reservationId);
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error("Error in repository/uploadRefundReceipt():", error);
       return null;
     }
   }

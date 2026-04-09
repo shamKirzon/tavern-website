@@ -226,7 +226,6 @@ const ReservationPage = () => {
   ) => {
     await reservationsApi.updateReservationStatus(reservationId, status);
 
-    // Add this: update the local state so the list re-renders
     setReservations((prev) =>
       prev.map((r) =>
         r.reservationId === reservationId
@@ -388,8 +387,6 @@ const ReservationPage = () => {
     </Dialog>
   );
 
-  // ─── Cancellation Details Panel ───────────────────────────────────────────
-
   const displayCancellationDetails = () => {
     if (!selectedCancellation) {
       return (
@@ -426,13 +423,12 @@ const ReservationPage = () => {
       { label: "Notes", value: selectedCancellation.notes ?? "N/A" },
       {
         label: "Requested At",
-        value: formatDashDate(selectedCancellation.createdAt), // ← same dash format
+        value: formatDashDate(selectedCancellation.createdAt),
       },
     ];
 
     return (
       <div className="p-2">
-        {/* Cancellation notice banner */}
         <div className="mx-2 mb-2 flex flex-col p-2 gap-1 bg-[#AA3131]/20 border border-[#AA3131] rounded-2xl w-full">
           <div className="flex justify-between w-full">
             <div className="flex flex-row gap-1 items-center">
@@ -529,6 +525,10 @@ const ReservationPage = () => {
       );
     }
 
+    const linkedCancellation = reservationCancellations.find(
+      (c) => c.reservationId === selectedReservation.reservationId,
+    );
+
     const reservationFields = [
       { label: "Status", value: selectedReservation.reservationStatus },
       {
@@ -588,8 +588,8 @@ const ReservationPage = () => {
         >
           <DialogContent className="w-sm p-0 overflow-hidden font-poppins rounded-2xl border-none gap-0">
             {/* Red header */}
-            <div className=" bg-red-900 px-6 py-5">
-              <DialogTitle className="text-white text-xl font-medium ">
+            <div className="bg-red-900 px-6 py-5">
+              <DialogTitle className="text-white text-xl font-medium">
                 Confirmation
               </DialogTitle>
             </div>
@@ -600,7 +600,7 @@ const ReservationPage = () => {
                 Are you sure you want to apply this changes?
               </DialogDescription>
 
-              {/* Cancel / Yes, Cancel row */}
+              {/* Cancel / Confirm row */}
               <div className="flex gap-3">
                 <DialogClose asChild>
                   <Button className="flex-1 bg-[#1C1B1F] hover:bg-gray-900 text-white rounded-xl py-5 text-md">
@@ -674,6 +674,20 @@ const ReservationPage = () => {
               <span className="text-[0.8rem]">View Proof of Payment</span>
             </button>
           </div>
+
+          {linkedCancellation?.refundReceiptUrl && (
+            <div className="flex gap-3 justify-center mt-2">
+              <button
+                onClick={() =>
+                  handleOpenImage(linkedCancellation.refundReceiptUrl)
+                }
+                className="bg-[#1a5c1a] rounded-xl w-full mx-4 py-2"
+              >
+                <span className="text-[0.8rem]">View Refund Receipt</span>
+              </button>
+            </div>
+          )}
+
           {selectedReservation.reservationStatus === "pending" &&
             displayNonCancellationButton()}
         </div>
@@ -833,7 +847,6 @@ const ReservationPage = () => {
                           {capitalizeWords(cancellation.status)}
                         </span>
                       </TableCell>
-                      {/* Reason with ellipsis */}
                       <TableCell className="py-4 max-w-[120px]">
                         <span
                           className="block truncate"
@@ -845,7 +858,6 @@ const ReservationPage = () => {
                       <TableCell className="py-4">
                         {cancellation.reservation?.date ?? "N/A"}
                       </TableCell>
-                      {/* Requested At — same format as Reservation Date */}
                       <TableCell className="py-4 text-right">
                         {formatDashDate(cancellation.createdAt)}
                       </TableCell>
@@ -936,7 +948,6 @@ const ReservationPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Confirm Cancellation / Refund Receipt Modal */}
         {renderConfirmCancellationModal()}
       </div>
     </div>

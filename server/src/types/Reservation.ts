@@ -21,3 +21,5 @@ export type ReservationStatus =
   | "accepted"
   | "rejected"
   | "done";
+
+export type CancellationStatus = "pending" | "accepted" | "rejected";

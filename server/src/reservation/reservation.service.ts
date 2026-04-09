@@ -1,4 +1,4 @@
-import { ReservationStatus } from "../types/Reservation";
+import { CancellationStatus, ReservationStatus } from "../types/Reservation";
 import { reservationRepository } from "./reservation.repository";
 import camelcaseKeys from "camelcase-keys";
 
@@ -53,6 +53,24 @@ class ReservationService {
 
     return summary;
   }
+
+  async updateCancellationStatus(
+    reservationCancellationId: string,
+    status: CancellationStatus,
+  ) {
+    return await reservationRepository.updateCancellationStatus(
+      reservationCancellationId,
+      status,
+    );
+  }
 }
 
 export const reservationService = new ReservationService();
+
+/**
+ NEXT STEP :
+ 1. testing update cancellation status
+ 2. apply it to reservation / cancel request
+ 3. apply also the auto update like in updateReservationStatus() (line 217)
+ 4. Edit the reservation status enum - remove the "cancelled"
+ *  */

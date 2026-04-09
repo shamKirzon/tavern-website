@@ -3,6 +3,7 @@ import { reservationService } from "./reservation.service";
 import { uploadImageWithUrl } from "../utils/uploadImageWithUrl";
 
 import multer from "multer";
+import { reservationRepository } from "./reservation.repository";
 
 const upload = multer({ dest: "uploads/" });
 export const uploadMiddleware = upload.single("file");
@@ -93,6 +94,33 @@ class ReservationController {
       return res.status(400).json({ message: "can't create reservation" });
     }
   }
+  async updateCancellationStatus(req: Request, res: Response) {
+    try {
+      const { reservationCancellationId, status } = req.body;
+
+      if (!reservationCancellationId || !status)
+        return res
+          .status(400)
+          .json({ message: "It must have a reservation id or status" });
+
+      const result = await reservationService.updateCancellationStatus(
+        reservationCancellationId,
+        status,
+      );
+
+      if (!result)
+        return res
+          .status(200)
+          .json({ message: "Can't update the cancellation status." });
+
+      return res.status(200).json({ message: result.message });
+    } catch (error: any) {
+      console.error("error from updateCancellationtatus(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't update cancellation status" });
+    }
+  }
 
   async getEmail(req: Request, res: Response) {
     try {
@@ -140,8 +168,13 @@ class ReservationController {
 
       const localFile = (req as any).file;
       const type = req.body.type;
+      const reservationId = req.body.reservationId;
 
       const imageUrl = await uploadImageWithUrl({ localFile, type });
+
+      if (!imageUrl) return;
+
+      await reservationRepository.uploadRefundReceipt(reservationId, imageUrl);
 
       return res
         .status(200)

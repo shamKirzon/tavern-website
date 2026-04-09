@@ -36,6 +36,12 @@ reservationRoutes.post(
   validateUpdateReservationStatus,
   reservationController.updateReservationStatus,
 );
+
+reservationRoutes.post(
+  "/update-cancellation-status",
+  reservationController.updateCancellationStatus,
+);
+
 reservationRoutes.post(
   "/upload-image",
   uploadMiddleware,

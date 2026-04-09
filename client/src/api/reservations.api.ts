@@ -130,6 +130,7 @@ export const reservationsApi = {
       );
       formData.append("file", renamedFile);
       formData.append("type", type);
+      formData.append("reservationId", data.reservationId);
 
       const res = await axiosInstance.post(
         "/reservation/upload-image",

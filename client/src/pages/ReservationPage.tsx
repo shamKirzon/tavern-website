@@ -1,4 +1,4 @@
-import { formatReadableDate } from "@/utils/date";
+import { formatDashDate, formatReadableDate } from "@/utils/date";
 import { CancelRequest, SideBarReservation } from "@/assets/icons/icons";
 import {
   Table,
@@ -22,9 +22,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { reservationsApi } from "@/api/reservations.api";
+import type { ReservationStatus } from "@/types/Reservation";
 
 const ReservationPage = () => {
   const [reservations, setReservations] = useState<any[]>([]);
+  const [reservationActions, setReservationActions] =
+    useState<ReservationStatus>("none");
+
   const [reservationCancellations, setReservationCancellations] = useState<
     any[]
   >([]);
@@ -40,6 +44,9 @@ const ReservationPage = () => {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [openModalImage, setOpenModalImage] = useState<boolean>(false);
   const [openConfirmCancellationModal, setOpenConfirmCancellationModal] =
+    useState<boolean>(false);
+
+  const [openReservationStatusModal, setOpenReservationStatusModal] =
     useState<boolean>(false);
 
   const [isUploadingReceipt, setIsUploadingReceipt] = useState<boolean>(false);
@@ -105,17 +112,6 @@ const ReservationPage = () => {
         setUploadedRefundReceiptUrl(imageUrl);
         console.log("Refund receipt uploaded:", imageUrl);
         setOpenConfirmCancellationModal(false);
-
-        /**
-         PLAN:
-         1. The refund receipt posted successfully in the cloudinary. Next step is to implement change status
-         to accepted (reservation_cancellations)
-
-         2. Have an auto refresh in cancellation list. OR put the useStateContainer to useEffect to mount. again.
-         3. Use "Cancelled" in reservation filters.
-
-
-         */
       }
     } catch (error) {
       console.log("Error uploading refund receipt:", error);
@@ -126,8 +122,7 @@ const ReservationPage = () => {
 
   const isCancelRequestView = filterActive === "Cancel Request";
 
-  // ─── Filters ──────────────────────────────────────────────────────────────
-
+  // Reservation Filters
   const reservationFilters = useMemo(() => {
     const countByStatus = (status: string) =>
       reservations.filter((r) => r.reservationStatus === status).length;
@@ -148,14 +143,13 @@ const ReservationPage = () => {
       { count: countByStatus("pending"), name: "Pending" },
       { count: pendingCancellations, name: "Cancel Request" },
       { count: countByStatus("accepted"), name: "Accepted" },
-      { count: countByStatus("declined"), name: "Declined" },
+      { count: countByStatus("rejected"), name: "Rejected" },
       { count: cancelledCount, name: "Cancelled" },
       { count: countByStatus("done"), name: "Done" },
     ];
   }, [reservations, reservationCancellations]);
 
-  // ─── Filtered Reservations ────────────────────────────────────────────────
-
+  // Filtered Reservations
   const filteredReservations = useMemo(() => {
     return reservations.filter((r) => {
       const filterStatusMap: Record<string, string> = {
@@ -181,11 +175,9 @@ const ReservationPage = () => {
     });
   }, [reservations, filterActive, searchQuery]);
 
-  // ─── Enriched & Filtered Cancellations ───────────────────────────────────
-
   const enrichedCancellations = useMemo(() => {
     return reservationCancellations
-      .filter((c) => c.status === "pending") // only show pending
+      .filter((c) => c.status === "pending")
       .map((c) => {
         const parentReservation = reservations.find(
           (r) => r.reservationId === c.reservationId,
@@ -194,6 +186,7 @@ const ReservationPage = () => {
       });
   }, [reservationCancellations, reservations]);
 
+  // Filtered Cancellations
   const filteredCancellations = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return enrichedCancellations.filter((c) => {
@@ -209,8 +202,7 @@ const ReservationPage = () => {
     });
   }, [enrichedCancellations, searchQuery]);
 
-  // ─── Row click ────────────────────────────────────────────────────────────
-
+  // Row Click
   const handleRowClick = (item: any, index: number) => {
     setSelectedRow(index);
     if (isCancelRequestView) {
@@ -222,13 +214,29 @@ const ReservationPage = () => {
     }
   };
 
-  // ─── Style maps ───────────────────────────────────────────────────────────
+  const updateReservationStatus = async (
+    reservationId: string,
+    status: ReservationStatus,
+  ) => {
+    await reservationsApi.updateReservationStatus(reservationId, status);
 
+    // Add this: update the local state so the list re-renders
+    setReservations((prev) =>
+      prev.map((r) =>
+        r.reservationId === reservationId
+          ? { ...r, reservationStatus: status }
+          : r,
+      ),
+    );
+
+    setOpenReservationStatusModal(false);
+  };
+  // Styles Mapping
   const filterColors: Record<string, string> = {
     All: "bg-black/20 border-black",
     Pending: "bg-[#A6902A]/20 border-[#A6902A]",
     Accepted: "bg-[#009507]/20 border-[#009507]",
-    Declined: "bg-[#B10000]/20 border-[#B10000]",
+    Rejected: "bg-[#B10000]/20 border-[#B10000]",
     Cancelled: "bg-[#ECD105]/20 border-[#ECD105]",
     CancelRequest: "bg-[#FF8400]/20 border-[#FF8400]",
     Done: "bg-[#2563EB]/20 border-[#2563EB]",
@@ -238,20 +246,11 @@ const ReservationPage = () => {
     All: "bg-white",
     Pending: "bg-[#A6902A]",
     Accepted: "bg-[#009507]",
-    Declined: "bg-[#B10000]",
+    Rejected: "bg-[#B10000]",
     Cancelled: "bg-[#ECD105]",
     CancelRequest: "bg-[#FF8400]",
     Done: "bg-[#2563EB]/20",
   };
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────
-
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
 
   const renderConfirmCancellationModal = () => (
     <Dialog
@@ -400,7 +399,7 @@ const ReservationPage = () => {
       { label: "Notes", value: selectedCancellation.notes ?? "N/A" },
       {
         label: "Requested At",
-        value: formatDate(selectedCancellation.createdAt), // ← same dash format
+        value: formatDashDate(selectedCancellation.createdAt), // ← same dash format
       },
     ];
 
@@ -416,7 +415,7 @@ const ReservationPage = () => {
               </span>
             </div>
             <span className="text-[#717171] text-[0.7rem] pr-1">
-              {formatDate(selectedCancellation.createdAt)}
+              {formatReadableDate(selectedCancellation.createdAt)}
             </span>
           </div>
           {selectedCancellation.notes && (
@@ -439,7 +438,7 @@ const ReservationPage = () => {
                       className={`inline-flex items-center rounded-2xl h-8 px-8
                         ${field.value === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
                         ${field.value === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
-                        ${field.value === "declined" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
+                        ${field.value === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
                       `}
                     >
                       {capitalizeWords(field.value as string)}
@@ -537,12 +536,66 @@ const ReservationPage = () => {
 
     const displayNonCancellationButton = () => (
       <div className="flex px-4 flex-col gap-3">
-        <button className="flex bg-[#009507] rounded-md w-full py-2 justify-center items-center">
+        <button
+          onClick={() => {
+            setReservationActions("accepted");
+            setOpenReservationStatusModal(true);
+          }}
+          className="flex bg-[#009507] rounded-md w-full py-2 justify-center items-center"
+        >
           <span className="text-[0.8rem]">Approve Reservation</span>
         </button>
-        <button className="flex bg-[#AA3131] rounded-md w-full py-2 justify-center items-center">
+        <button
+          onClick={() => {
+            setReservationActions("rejected");
+            setOpenReservationStatusModal(true);
+          }}
+          className="flex bg-[#AA3131] rounded-md w-full py-2 justify-center items-center"
+        >
           <span className="text-[0.8rem]">Decline Reservation</span>
         </button>
+
+        {/* Confirmation Modal */}
+        <Dialog
+          open={openReservationStatusModal}
+          onOpenChange={setOpenReservationStatusModal}
+        >
+          <DialogContent className="w-sm p-0 overflow-hidden font-poppins rounded-2xl border-none gap-0">
+            {/* Red header */}
+            <div className=" bg-red-900 px-6 py-5">
+              <DialogTitle className="text-white text-xl font-medium ">
+                Confirmation
+              </DialogTitle>
+            </div>
+
+            {/* Body */}
+            <div className="bg-white px-6 pt-6 pb-6 flex flex-col gap-4 text-sm">
+              <DialogDescription className="text-gray-600 text-md">
+                Are you sure you want to apply this changes?
+              </DialogDescription>
+
+              {/* Cancel / Yes, Cancel row */}
+              <div className="flex gap-3">
+                <DialogClose asChild>
+                  <Button className="flex-1 bg-[#1C1B1F] hover:bg-gray-900 text-white rounded-xl py-5 text-md">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  onClick={() => {
+                    updateReservationStatus(
+                      selectedReservation.reservationId,
+                      reservationActions,
+                    );
+                  }}
+                  className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
+                >
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
 
@@ -566,7 +619,7 @@ const ReservationPage = () => {
                       className={`inline-flex items-center rounded-2xl h-8 px-8
                         ${field.value === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
                         ${field.value === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
-                        ${field.value === "declined" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
+                        ${field.value === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
                         ${field.value === "cancelled" ? "bg-[#ECD105]/20 text-[#ECD105]" : ""}
                         ${field.value === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
                       `}
@@ -748,7 +801,7 @@ const ReservationPage = () => {
                           className={`inline-flex items-center rounded-lg py-0.5 h-8 px-8
                             ${cancellation.status === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
                             ${cancellation.status === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
-                            ${cancellation.status === "declined" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
+                            ${cancellation.status === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
                           `}
                         >
                           {capitalizeWords(cancellation.status)}
@@ -768,7 +821,7 @@ const ReservationPage = () => {
                       </TableCell>
                       {/* Requested At — same format as Reservation Date */}
                       <TableCell className="py-4 text-right">
-                        {formatDate(cancellation.createdAt)}
+                        {formatDashDate(cancellation.createdAt)}
                       </TableCell>
                     </TableRow>
                   ))
@@ -799,7 +852,7 @@ const ReservationPage = () => {
                         className={`inline-flex items-center rounded-lg py-0.5 h-8 px-8
                           ${reservation.reservationStatus === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
                           ${reservation.reservationStatus === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
-                          ${reservation.reservationStatus === "declined" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
+                          ${reservation.reservationStatus === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
                           ${reservation.reservationStatus === "cancelled" ? "bg-[#ECD105]/20 text-[#ECD105]" : ""}
                           ${reservation.reservationStatus === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
                           ${reservation.reservationStatus === "cancel_request" ? "bg-[#FF8400]/20 text-[#FF8400]" : ""}

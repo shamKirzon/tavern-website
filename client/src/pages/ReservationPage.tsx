@@ -22,12 +22,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { reservationsApi } from "@/api/reservations.api";
-import type { ReservationStatus } from "@/types/Reservation";
+import type {
+  CancellationStatus,
+  ReservationStatus,
+} from "@/types/Reservation";
 
 const ReservationPage = () => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [reservationActions, setReservationActions] =
     useState<ReservationStatus>("none");
+  const [cancellationAction, setCancellationAction] =
+    useState<CancellationStatus>("none");
 
   const [reservationCancellations, setReservationCancellations] = useState<
     any[]
@@ -116,6 +121,11 @@ const ReservationPage = () => {
     } catch (error) {
       console.log("Error uploading refund receipt:", error);
     } finally {
+      updateCancellationStatus(
+        selectedCancellation.reservationCancellationId,
+        cancellationAction,
+      );
+
       setIsUploadingReceipt(false);
     }
   };
@@ -132,11 +142,7 @@ const ReservationPage = () => {
       (c) => c.status === "pending",
     ).length;
 
-    // Cancelled = reservations cancelled + accepted cancellations
-    const acceptedCancellations = reservationCancellations.filter(
-      (c) => c.status === "accepted",
-    ).length;
-    const cancelledCount = countByStatus("cancelled") + acceptedCancellations;
+    const cancelledCount = countByStatus("cancelled");
 
     return [
       { count: reservations.length, name: "All" },
@@ -231,6 +237,27 @@ const ReservationPage = () => {
 
     setOpenReservationStatusModal(false);
   };
+
+  const updateCancellationStatus = async (
+    reservationCancellationId: string,
+    status: CancellationStatus,
+  ) => {
+    await reservationsApi.updateCancellationStatus(
+      reservationCancellationId,
+      status,
+    );
+
+    setReservationCancellations((prev) =>
+      prev.map((c) =>
+        c.reservationCancellationId === reservationCancellationId
+          ? { ...c, status: status }
+          : c,
+      ),
+    );
+
+    setOpenConfirmCancellationModal(false);
+  };
+
   // Styles Mapping
   const filterColors: Record<string, string> = {
     All: "bg-black/20 border-black",
@@ -476,7 +503,10 @@ const ReservationPage = () => {
           {selectedCancellation.status === "pending" && (
             <>
               <button
-                onClick={() => setOpenConfirmCancellationModal(true)}
+                onClick={() => {
+                  setCancellationAction("accepted");
+                  setOpenConfirmCancellationModal(true);
+                }}
                 className="flex bg-[#009507] rounded-md w-full py-2 justify-center items-center"
               >
                 <span className="text-[0.8rem]">Confirm Cancellation</span>
@@ -486,11 +516,7 @@ const ReservationPage = () => {
         </div>
       </div>
     );
-
-    // NEXT PLAN TO DO: CONFIRM CANCELLATION BUTTON FUNCTIONALITY.
   };
-
-  // ─── Reservation Details Panel ────────────────────────────────────────────
 
   const displayReservationDetails = () => {
     if (!selectedReservation) {

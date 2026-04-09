@@ -38,4 +38,4 @@ export type Cancellation = {
   refundReceiptUrl: string | null;
 };
 
-export type CancellationStatus = "pending" | "accepted" | "rejected";
+export type CancellationStatus = "pending" | "accepted" | "rejected" | "none";

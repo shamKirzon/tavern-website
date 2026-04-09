@@ -1,4 +1,7 @@
-import type { ReservationStatus } from "../types/Reservation";
+import type {
+  CancellationStatus,
+  ReservationStatus,
+} from "../types/Reservation";
 import { axiosInstance } from "./axios";
 
 export const reservationsApi = {
@@ -84,6 +87,28 @@ export const reservationsApi = {
       return res.data.message;
     } catch (error) {
       console.log("Error in reservationApi/updateReservationStatus(): ", error);
+    }
+  },
+  async updateCancellationStatus(
+    reservationCancellationId: string,
+    status: CancellationStatus,
+  ) {
+    try {
+      const res = await axiosInstance.post(
+        `/reservation/update-cancellation-status`,
+        {
+          reservationCancellationId,
+          status,
+        },
+      );
+      if (!res) return console.log("Can't update cancellation status.");
+
+      return res.data.message;
+    } catch (error) {
+      console.log(
+        "Error in reservationApi/updateCancellationStatus(): ",
+        error,
+      );
     }
   },
 

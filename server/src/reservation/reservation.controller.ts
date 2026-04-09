@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
 import { reservationService } from "./reservation.service";
+import { uploadImageWithUrl } from "../utils/uploadImageWithUrl";
+
+import multer from "multer";
+
+const upload = multer({ dest: "uploads/" });
+export const uploadMiddleware = upload.single("file");
 
 class ReservationController {
   async getReservationList(req: Request, res: Response) {
@@ -17,6 +23,27 @@ class ReservationController {
     } catch (error: any) {
       console.error("error from createReservation(): ", error);
       return res.status(400).json({ message: "can't create reservation" });
+    }
+  }
+
+  async getReservationCancellations(req: Request, res: Response) {
+    try {
+      const result = await reservationService.getReservationCancellations();
+
+      if (!result)
+        return res.status(400).json({
+          message: "There is no returned reservation cancellation list. ",
+        });
+
+      return res.status(200).json({
+        message: "Fetched reservation cancellation list successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getReservationCancellations(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't get reservation cancellations" });
     }
   }
 
@@ -84,8 +111,46 @@ class ReservationController {
       return res.status(400).json({ message: "can't create reservation" });
     }
   }
+  async getReservationById(req: Request, res: Response) {
+    try {
+      const { reservationId } = req.params;
+
+      if (!reservationId)
+        return res
+          .status(400)
+          .json({ message: "It must have a reservation id." });
+
+      const data = await reservationService.getReservationById(reservationId);
+
+      if (!data) return res.status(200).json({ message: "Can't get email." });
+
+      return res
+        .status(200)
+        .json({ message: "get information successfully", data });
+    } catch (error: any) {
+      console.error("error from getReservationById(): ", error);
+      return res.status(400).json({ message: "can't get reservation" });
+    }
+  }
+
+  async uploadImage(req: Request, res: Response) {
+    try {
+      if (!(req as any).file)
+        return res.status(400).json({ message: "no file uploaded" });
+
+      const localFile = (req as any).file;
+      const type = req.body.type;
+
+      const imageUrl = await uploadImageWithUrl({ localFile, type });
+
+      return res
+        .status(200)
+        .json({ message: "image uploaded successfully", imageUrl });
+    } catch (error: any) {
+      console.log("Error in uploadImage(): ", error);
+      return res.status(400).json({ message: "can't upload image" });
+    }
+  }
 }
 
 export const reservationController = new ReservationController();
-
-// LAST TOUCH: TESTING MO USING CONNECTING TO FRONTEND : )

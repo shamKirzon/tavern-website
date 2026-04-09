@@ -14,6 +14,23 @@ class ReservationRepository {
     }
   }
 
+  async getReservationCancellations() {
+    try {
+      const { data, error } = await supabase
+        .from("reservation_cancellations")
+        .select("*");
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error(
+        "Error in repository/getReservationCancellations():",
+        error,
+      );
+    }
+  }
+
   async updateReservationStatus(
     reservationId: string,
     status: ReservationStatus,
@@ -26,9 +43,9 @@ class ReservationRepository {
 
       if (error) throw error;
 
-      return { message: "Reservation status updated successfully. " };
+      return { message: "Reservation status updated successfully." };
     } catch (error) {
-      console.error("Error in repository/getReservationList():", error);
+      console.error("Error in repository/updateReservationStatus():", error);
     }
   }
 
@@ -43,7 +60,23 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getReservationList():", error);
+      console.error("Error in repository/getEmail():", error);
+      return null;
+    }
+  }
+  async getReservationById(reservationId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("reservations")
+        .select("*")
+        .eq("reservation_id", reservationId);
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error("Error in repository/getReservationById():", error);
+      return null;
     }
   }
 }

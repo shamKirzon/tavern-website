@@ -9,6 +9,14 @@ class ReservationService {
 
     return camelcaseKeys(dbResult ?? [], { deep: true });
   }
+
+  async getReservationCancellations() {
+    const dbResult = await reservationRepository.getReservationCancellations();
+    if (!dbResult) return;
+
+    return camelcaseKeys(dbResult ?? [], { deep: true });
+  }
+
   async updateReservationStatus(
     reservationId: string,
     status: ReservationStatus,
@@ -23,6 +31,12 @@ class ReservationService {
     const myEmail = await reservationRepository.getEmail(customerId);
     if (!myEmail) return;
     return myEmail[0]!.email;
+  }
+  async getReservationById(reservationId: string) {
+    const data = await reservationRepository.getReservationById(reservationId);
+    if (!data) return;
+
+    return camelcaseKeys(data ?? [], { deep: true });
   }
 
   async getReservationSummary() {

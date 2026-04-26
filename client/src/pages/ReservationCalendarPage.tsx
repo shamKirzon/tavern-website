@@ -211,8 +211,8 @@ const ReservationCalendarPage = () => {
         );
       case "Available Reservation":
         return (
-          <div className=" flex justify-center items-center p-1.5 bg-[#B10000]/20 rounded-lg ">
-            <AvailableReservation className="w-5 h-5" />
+          <div className=" flex justify-center items-center p-1.5 bg-[#10B981]/20 rounded-lg ">
+            <AvailableReservation className="w-5 h-5 text-[#059669]" />
           </div>
         );
       case "Exclusive Reservation":

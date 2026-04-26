@@ -288,16 +288,11 @@ const ReservationCalendarPage = () => {
 
         {/*Reservation Summary*/}
         <div className="w-100 h-115 bg-white mt-4 rounded-2xl  overflow-y-auto hide-scrollbar shadow-lg  ">
-          {/* Date & Date Visible */}
+          {/* Date */}
           <div className="flex flex-col pl-10 pt-5">
             <span className="text-lg font-medium">
-              {formatReadableDate(new Date())}
+              Month of {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })}
             </span>
-            {/* Date Visible */}
-            <div className="flex flex-row gap-1">
-              <DateVisible />
-              <span className="text-[0.8rem] text-[#717171]">Date visible</span>
-            </div>
           </div>
           <div className="px-6 pt-2.5">
             <Table>

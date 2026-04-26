@@ -5,6 +5,9 @@ import { orderApi } from "@/api/orders.api";
 import { reservationsApi } from "@/api/reservations.api";
 import { employeesApi } from "@/api/employees.api";
 import { capitalizeWords } from "@/utils/capitalizeWords";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+import { format } from "date-fns";
 
 // ── TYPES ──────────────────────────────────────────────────────────────────────
 interface OrderItem {
@@ -47,16 +50,14 @@ const statusStyles: Record<string, { badge: string; border: string }> = {
 
 const tabs = ["All", "Pending", "Served", "Cancelled"];
 
-// ─── HELPER ────────────────────────────────────────────────────────────────────
 const getVal = (obj: any, key: string) => obj?.attributes?.[key] ?? obj?.[key];
 
-// ─── ORDER DETAILS MODAL ───────────────────────────────────────────────────────
 const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
   order,
   onClose,
 }) => {
   const total = order.items.reduce((sum, i) => sum + i.price, 0);
-  const totalDue = total - order.alreadyCovered + order.vat;
+  const totalDue = total - order.alreadyCovered;
 
   return (
     <div
@@ -242,22 +243,33 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
             <div className="border border-gray-200 rounded-xl p-4 space-y-2.5">
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Total</span>
-                <span>₱{total.toLocaleString()}</span>
+                <span>₱{Math.abs(total).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Already Covered</span>
-                <span>₱{order.alreadyCovered.toLocaleString()}</span>
+                <span>₱{Math.abs(order.alreadyCovered).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600 pb-3 border-b border-dashed border-gray-200">
                 <span>VAT (12%)</span>
-                <span>₱{order.vat.toLocaleString()}</span>
+                <span>₱{Math.abs(order.vat).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center pt-1">
                 <span className="font-bold text-gray-900 text-base">
-                  Total Due
+                  {(() => {
+                    switch (order.status.toLowerCase()) {
+                      case "pending":
+                        return "Total Due";
+                      case "served":
+                        return "Total Paid";
+                      case "cancelled":
+                        return "Voided Amount";
+                      default:
+                        return "Total Due";
+                    }
+                  })()}
                 </span>
                 <span className="font-bold text-red-700 text-xl">
-                  ₱{totalDue.toLocaleString()}.00
+                  ₱{Math.abs(totalDue).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -376,6 +388,11 @@ const OrdersPage = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
   const [orders, setOrders] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
@@ -397,7 +414,6 @@ const OrdersPage = () => {
 
   const enrichedOrders = useMemo(() => {
     return orders.map((o) => {
-      // JSON reference keys with .attributes support as per instructions
       const orderId = getVal(o, "orderId");
       const createdAt = getVal(o, "createdAt");
       const total = getVal(o, "total") || 0;
@@ -408,7 +424,6 @@ const OrdersPage = () => {
       const qrCodeUrl = getVal(o, "qrCodeUrl");
       const assignedCashierId = getVal(o, "assignedCashierId");
 
-      // Normalize orderItems: handle both array (Default) and object (Additional) formats
       let normalizedItems: any[] = [];
       if (Array.isArray(rawOrderItems)) {
         normalizedItems = rawOrderItems;
@@ -419,11 +434,9 @@ const OrdersPage = () => {
       }
 
       const res = reservations.find((r) => r.reservationId === reservationId);
-      const cashier = employees.find(
-        (e) => e.employeeId === assignedCashierId
-      );
+      const cashier = employees.find((e) => e.employeeId === assignedCashierId);
       const security = employees.find(
-        (e) => e.employeeId === res?.assignedSecurityId
+        (e) => e.employeeId === res?.assignedSecurityId,
       );
 
       const statusMap: Record<string, string> = {
@@ -448,15 +461,16 @@ const OrdersPage = () => {
         name: res ? `${res.firstName} ${res.lastName}` : "Unknown Customer",
         email: res?.email || "N/A",
         type: res ? capitalizeWords(res.reservationType) : "N/A",
-        date: formatReadableDate(new Date(createdAt)),
-        status: statusMap[orderStatus.toLowerCase()] || capitalizeWords(orderStatus),
+        date: formatReadableDate(new Date(sessionExpiry)),
+        status:
+          statusMap[orderStatus.toLowerCase()] || capitalizeWords(orderStatus),
         itemCount: normalizedItems.length,
         items: normalizedItems.map((item: any) => ({
           name: item.orderName,
           qty: item.quantity,
           price: item.total || 0,
         })),
-        alreadyCovered: res?.reservationAmount || 0,
+        alreadyCovered: res?.reservationAmount / 2 || 0,
         vat: total * 0.12,
         cashierIncharge: cashier?.fullName || "Not Assigned",
         securityIncharge: security?.fullName || "Not Assigned",
@@ -464,13 +478,29 @@ const OrdersPage = () => {
     });
   }, [orders, reservations, employees]);
 
-  const filtered = enrichedOrders.filter((o) => {
-    const matchesTab = activeTab === "All" || o.status === activeTab;
-    const matchesSearch =
-      o.name.toLowerCase().includes(search.toLowerCase()) ||
-      o.email.toLowerCase().includes(search.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
+  const filtered = useMemo(() => {
+    const data = enrichedOrders.filter((o) => {
+      const matchesTab = activeTab === "All" || o.status === activeTab;
+      const matchesSearch =
+        o.name.toLowerCase().includes(search.toLowerCase()) ||
+        o.email.toLowerCase().includes(search.toLowerCase());
+
+      const orderDate = new Date(o.sessionExpiry);
+      const matchesDate =
+        !selectedDate ||
+        (orderDate.getFullYear() === selectedDate.getFullYear() &&
+          orderDate.getMonth() === selectedDate.getMonth() &&
+          orderDate.getDate() === selectedDate.getDate());
+
+      return matchesTab && matchesSearch && matchesDate;
+    });
+
+    return data.sort((a, b) => {
+      const dateA = new Date(a.sessionExpiry).getTime();
+      const dateB = new Date(b.sessionExpiry).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+  }, [enrichedOrders, activeTab, search, sortOrder, selectedDate]);
 
   return (
     <div className="font-poppins">
@@ -513,30 +543,127 @@ const OrdersPage = () => {
           ))}
         </div>
 
-        <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
-          <button className="hover:text-gray-900 text-lg leading-none">‹</button>
-          <span className="font-medium">Today</span>
-          <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-            TODAY
-          </span>
-          <button className="hover:text-gray-900 text-lg leading-none">›</button>
+        {/* Date Filter */}
+        <div className="relative">
+          <button
+            onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+            className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600 hover:bg-gray-50 transition font-medium"
+          >
+            <span>
+              {selectedDate
+                ? format(selectedDate, "eee, MMM. d, yyyy")
+                : "Select Date"}
+            </span>
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {dateDropdownOpen && (
+            <div className="absolute z-20 mt-1 bg-white shadow-xl rounded-xl p-1.5 ring-1 ring-black/5 border border-gray-100">
+              <DayPicker
+                mode="single"
+                selected={selectedDate || undefined}
+                onSelect={(date) => {
+                  setSelectedDate(date || null);
+                  setDateDropdownOpen(false);
+                }}
+                className="m-0 p-0 text-sm"
+                style={
+                  {
+                    "--rdp-day-width": "24px",
+                    "--rdp-day-height": "24px",
+                    "--rdp-accent-color": "#AA3131",
+                    "--rdp-accent-background-color": "#FFF5F5",
+                  } as React.CSSProperties
+                }
+              />
+
+              <div className="mt-1 pt-1 border-t border-gray-100 flex justify-between items-center">
+                <p className="text-xs text-gray-400 font-medium italic">
+                  Select date
+                </p>
+                <button
+                  className="text-sm font-bold text-red-700 hover:text-red-800 uppercase tracking-wider px-2 py-0.5 rounded hover:bg-red-50 transition"
+                  onClick={() => {
+                    setSelectedDate(null);
+                    setDateDropdownOpen(false);
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {/* Sort */}
+        <div className="relative">
+          <button
+            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+            className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600 hover:bg-gray-50 transition font-medium"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 7h18M6 12h12M9 17h6"
-            />
-          </svg>
-          <span>Newest</span>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 7h18M6 12h12M9 17h6"
+              />
+            </svg>
+            {sortOrder === "newest" ? "Newest" : "Oldest"}
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          {sortDropdownOpen && (
+            <div className="absolute z-10 mt-1 w-40 bg-white shadow-lg rounded-md py-1 ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <button
+                onClick={() => {
+                  setSortOrder("newest");
+                  setSortDropdownOpen(false);
+                }}
+                className="block w-full px-4 py-2 text-sm text-gray-700 text-left hover:bg-gray-100"
+              >
+                Newest
+              </button>
+              <button
+                onClick={() => {
+                  setSortOrder("oldest");
+                  setSortDropdownOpen(false);
+                }}
+                className="block w-full px-4 py-2 text-sm text-gray-700 text-left hover:bg-gray-100"
+              >
+                Oldest
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-[200px]">

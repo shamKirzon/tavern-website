@@ -20,6 +20,11 @@ reservationRoutes.get(
 );
 
 reservationRoutes.get(
+  "/calendar-summary",
+  reservationController.getReservationCalendarSummary,
+);
+
+reservationRoutes.get(
   "/get-reservation-cancellations",
   reservationController.getReservationCancellations,
 );

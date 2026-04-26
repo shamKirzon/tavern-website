@@ -69,6 +69,33 @@ class ReservationController {
     }
   }
 
+  async getReservationCalendarSummary(req: Request, res: Response) {
+    try {
+      const { year, month } = req.query;
+
+      if (!year || !month) {
+        return res
+          .status(400)
+          .json({ message: "Year and month are required." });
+      }
+
+      const result = await reservationService.getReservationCalendarSummary(
+        Number(year),
+        Number(month),
+      );
+
+      return res.status(200).json({
+        message: "Fetched reservation calendar summary successfully.",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getReservationCalendarSummary(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't fetch reservation calendar summary" });
+    }
+  }
+
   async updateReservationStatus(req: Request, res: Response) {
     try {
       const { reservationId, status } = req.body;

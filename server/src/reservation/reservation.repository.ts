@@ -100,6 +100,31 @@ class ReservationRepository {
       console.error("Error in repository/updateCancellationStatus():", error);
     }
   }
+  async getReservationCalendarSummary(year: number, month: number) {
+    const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
+
+    try {
+      const { data, error } = await supabase
+        .from("reservations")
+        .select("date")
+        .neq("reservation_status", "cancelled")
+        .gte("date", startDate)
+        .lte("date", endDate);
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error(
+        "Error in repository/getReservationCalendarSummary():",
+        error,
+      );
+      return null;
+    }
+  }
+
   async uploadRefundReceipt(reservationId: string, imageUrl: string) {
     try {
       const { data, error } = await supabase

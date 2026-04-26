@@ -1,5 +1,6 @@
 import { CancellationStatus, ReservationStatus } from "../types/Reservation";
 import { reservationRepository } from "./reservation.repository";
+import { bookingRepository } from "./booking.repository";
 import camelcaseKeys from "camelcase-keys";
 
 class ReservationService {
@@ -71,6 +72,54 @@ class ReservationService {
       reservationCancellationId,
       status,
     );
+  }
+
+  async getReservationCalendarSummary(year: number, month: number) {
+    const data = await reservationRepository.getReservationCalendarSummary(
+      year,
+      month,
+    );
+    if (!data) return [];
+
+    const summaryMap = data.reduce((acc: any, curr: any) => {
+      const date = curr.date;
+      if (!acc[date]) {
+        acc[date] = { date, count: 0 };
+      }
+      acc[date].count += 1;
+      return acc;
+    }, {});
+
+    const summary: any[] = Object.values(summaryMap);
+
+    // Sync Logic: Ensure booking_days table has records for these dates
+    const existingBookingDays = await bookingRepository.getBookingDaysByMonth(
+      year,
+      month,
+    );
+    const existingMap = (existingBookingDays || []).reduce(
+      (acc: any, curr: any) => {
+        acc[curr.date] = curr;
+        return acc;
+      },
+      {},
+    );
+
+    const upsertRecords = summary.map((s: any) => {
+      const existing = existingMap[s.date];
+      return {
+        date: s.date,
+        status: existing ? existing.status : "available",
+        total_slots: existing ? existing.total_slots : 100,
+        booked_slots: s.count,
+      };
+    });
+
+    if (upsertRecords.length > 0) {
+      await bookingRepository.upsertBookingRecords(upsertRecords);
+    }
+
+    return summary;
   }
 }
 

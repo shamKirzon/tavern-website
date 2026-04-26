@@ -7,6 +7,7 @@ import reservationRoutes from "./src/reservation/reservation.route";
 import orderRoutes from "./src/order/order.route";
 import employeeRoutes from "./src/employee/employee.route";
 import customerRoutes from "./src/customer/customer.route";
+import bookingRoutes from "./src/reservation/booking.route";
 
 const app = express();
 
@@ -34,5 +35,6 @@ app.use("/api/reservation", reservationRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/customer", customerRoutes);
+app.use("/api/booking-days", bookingRoutes);
 
 export default app;

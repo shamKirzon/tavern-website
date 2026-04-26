@@ -23,3 +23,13 @@ export type ReservationStatus =
   | "done";
 
 export type CancellationStatus = "pending" | "accepted" | "rejected";
+
+export type DayStatus = "available" | "fullyBooked" | "closed";
+
+export interface BookingInfo {
+  booked: number;
+  total: number;
+  status: DayStatus;
+}
+
+export type BookingData = Record<string, BookingInfo>;

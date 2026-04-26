@@ -41,15 +41,24 @@ class ReservationService {
 
   async getReservationSummary() {
     const data = await this.getReservationList();
+    const cancellations = await this.getReservationCancellations();
 
     const summary = data?.reduce((acc, curr) => {
       const status = curr.reservationStatus;
 
-      acc.reservationCount = (acc.total || 0) + 1;
+      acc.reservationCount = (acc.reservationCount || 0) + 1;
       acc[status] = (acc[status] || 0) + 1;
 
       return acc;
     }, {});
+
+    const enrichedCancellationsCount = cancellations?.filter(
+      (c) => c.status === "pending" || c.status === "accepted",
+    ).length || 0;
+
+    if (summary) {
+      summary.reservationCount = (summary.reservationCount || 0) + enrichedCancellationsCount;
+    }
 
     return summary;
   }

@@ -1,87 +1,42 @@
 import { SideBarOrder } from "@/assets/icons/icons";
 import { formatReadableDate } from "@/utils/date";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { orderApi } from "@/api/orders.api";
+import { reservationsApi } from "@/api/reservations.api";
+import { employeesApi } from "@/api/employees.api";
+import { capitalizeWords } from "@/utils/capitalizeWords";
 
-const ordersData = [
-  {
-    id: "ORD-008",
-    name: "Dannah Joyce Torres",
-    email: "dannahtorres12@gmail.com",
-    type: "Exclusive",
-    date: "February 19, 2026",
-    itemCount: 6,
-    status: "Pending",
-    items: [
-      { name: "Peppery Squid Fritters", qty: 1, price: 480 },
-      { name: "Beer", qty: 10, price: 500 },
-      { name: "Lechon Kawali", qty: 2, price: 1300 },
-      { name: "Sinigang na Baboy", qty: 2, price: 660 },
-      { name: "Nachos", qty: 3, price: 480 },
-      { name: "Premium Rum", qty: 1, price: 1200 },
-    ],
-    alreadyCovered: 3280,
-    vat: 250,
-  },
-  {
-    id: "ORD-008",
-    name: "Dannah Joyce Torres",
-    email: "dannahtorres12@gmail.com",
-    type: "Exclusive",
-    date: "February 19, 2026",
-    itemCount: 6,
-    status: "Declined",
-    items: [
-      { name: "Peppery Squid Fritters", qty: 1, price: 480 },
-      { name: "Beer", qty: 10, price: 500 },
-      { name: "Lechon Kawali", qty: 2, price: 1300 },
-      { name: "Sinigang na Baboy", qty: 2, price: 660 },
-      { name: "Nachos", qty: 3, price: 480 },
-      { name: "Premium Rum", qty: 1, price: 1200 },
-    ],
-    alreadyCovered: 3280,
-    vat: 250,
-  },
-  {
-    id: "ORD-008",
-    name: "Dannah Joyce Torres",
-    email: "dannahtorres12@gmail.com",
-    type: "Exclusive",
-    date: "February 19, 2026",
-    itemCount: 6,
-    status: "Served",
-    items: [
-      { name: "Peppery Squid Fritters", qty: 1, price: 480 },
-      { name: "Beer", qty: 10, price: 500 },
-      { name: "Lechon Kawali", qty: 2, price: 1300 },
-      { name: "Sinigang na Baboy", qty: 2, price: 660 },
-      { name: "Nachos", qty: 3, price: 480 },
-      { name: "Premium Rum", qty: 1, price: 1200 },
-    ],
-    alreadyCovered: 3280,
-    vat: 250,
-  },
-  {
-    id: "ORD-008",
-    name: "Dannah Joyce Torres",
-    email: "dannahtorres12@gmail.com",
-    type: "Exclusive",
-    date: "February 19, 2026",
-    itemCount: 6,
-    status: "Cancelled",
-    items: [
-      { name: "Peppery Squid Fritters", qty: 1, price: 480 },
-      { name: "Beer", qty: 10, price: 500 },
-      { name: "Lechon Kawali", qty: 2, price: 1300 },
-      { name: "Sinigang na Baboy", qty: 2, price: 660 },
-      { name: "Nachos", qty: 3, price: 480 },
-      { name: "Premium Rum", qty: 1, price: 1200 },
-    ],
-    alreadyCovered: 3280,
-    vat: 250,
-  },
-];
+// ── TYPES ──────────────────────────────────────────────────────────────────────
+interface OrderItem {
+  orderName: string;
+  quantity: number;
+  total: number;
+  price: number;
+}
 
-type Order = (typeof ordersData)[0];
+interface Order {
+  orderId: string;
+  createdAt: string;
+  total: number;
+  sessionExpiry: string;
+  reservationId: string;
+  orderStatus: string;
+  orderItems: OrderItem[];
+  qrCodeUrl: string;
+  assignedCashierId: string;
+  // Enriched fields
+  name: string;
+  email: string;
+  type: string;
+  date: string;
+  status: string;
+  alreadyCovered: number;
+  vat: number;
+  items: { name: string; qty: number; price: number }[];
+  itemCount: number;
+  cashierIncharge: string;
+  securityIncharge: string;
+}
 
 const statusStyles: Record<string, { badge: string; border: string }> = {
   Pending: { badge: "bg-yellow-400 text-white", border: "border-yellow-400" },
@@ -91,6 +46,9 @@ const statusStyles: Record<string, { badge: string; border: string }> = {
 };
 
 const tabs = ["All", "Pending", "Served", "Cancelled"];
+
+// ─── HELPER ────────────────────────────────────────────────────────────────────
+const getVal = (obj: any, key: string) => obj?.attributes?.[key] ?? obj?.[key];
 
 // ─── ORDER DETAILS MODAL ───────────────────────────────────────────────────────
 const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
@@ -139,7 +97,6 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
           {/* ── CUSTOMER INFORMATION ── */}
           <div>
             <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
-              {/* person icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -190,7 +147,6 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
           {/* ── STAFF INCHARGE ── */}
           <div>
             <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
-              {/* badge/staff icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -211,7 +167,7 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
                 <div className="p-4">
                   <p className="text-xs text-gray-400 mb-1">Cashier Incharge</p>
                   <p className="text-sm font-medium text-gray-800">
-                    Maria Santos
+                    {order.cashierIncharge}
                   </p>
                 </div>
                 <div className="p-4">
@@ -219,7 +175,7 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
                     Security Incharge
                   </p>
                   <p className="text-sm font-medium text-gray-800">
-                    Juan dela Cruz
+                    {order.securityIncharge}
                   </p>
                 </div>
               </div>
@@ -229,7 +185,6 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
           {/* ── ORDER ITEMS ── */}
           <div>
             <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
-              {/* clipboard icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -246,7 +201,6 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
               Order Items
             </div>
             <div className="border border-gray-200 rounded-xl overflow-hidden">
-              {/* Table header */}
               <div className="grid grid-cols-3 bg-yellow-400 px-4 py-2.5 text-xs font-bold text-gray-800 uppercase tracking-wide">
                 <span>Item</span>
                 <span className="text-center">QTY</span>
@@ -270,7 +224,6 @@ const OrderDetailsModal: React.FC<{ order: Order; onClose: () => void }> = ({
           {/* ── PAYABLE SUMMARY ── */}
           <div>
             <div className="flex items-center gap-2 text-red-700 text-xs font-bold uppercase tracking-wide mb-3">
-              {/* card icon */}
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -320,11 +273,10 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
   order,
   onClick,
 }) => {
-  const styles = statusStyles[order.status];
+  const styles = statusStyles[order.status] || statusStyles.Pending;
   const previewItems = order.items.slice(0, 3);
   const extraCount = order.items.length - 3;
 
-  // "more item" text color: yellow for Pending/Served, red for Declined, gray for Cancelled
   const moreColor =
     order.status === "Pending" || order.status === "Served"
       ? "text-yellow-500"
@@ -337,7 +289,6 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
       className={`bg-white rounded-xl shadow-sm border-t-4 ${styles.border} p-5 cursor-pointer hover:shadow-md transition-shadow`}
       onClick={onClick}
     >
-      {/* Card top: name + badge */}
       <div className="flex items-start justify-between mb-0.5">
         <div>
           <h3 className="font-bold text-gray-900 text-base leading-tight">
@@ -352,10 +303,8 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
         </span>
       </div>
 
-      {/* Type + item count */}
       <div className="flex items-center gap-3 mt-2 mb-4 text-xs text-gray-500">
         <span className="flex items-center gap-1">
-          {/* star/sparkle icon */}
           <svg
             className="w-3.5 h-3.5"
             fill="none"
@@ -372,7 +321,6 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
           {order.type}
         </span>
         <span className="flex items-center gap-1">
-          {/* clipboard icon */}
           <svg
             className="w-3.5 h-3.5"
             fill="none"
@@ -390,7 +338,6 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
         </span>
       </div>
 
-      {/* Item list preview */}
       <div className="space-y-2 mb-1">
         {previewItems.map((item, i) => (
           <div key={i} className="flex justify-between text-sm text-gray-700">
@@ -411,13 +358,12 @@ const OrderCard: React.FC<{ order: Order; onClick: () => void }> = ({
         </p>
       )}
 
-      {/* Footer */}
       <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-3">
-        <span className="text-xs text-gray-400">{order.id}</span>
+        <span className="text-xs text-gray-400">{order.orderId}</span>
         <div className="text-right">
           <p className="text-xs text-gray-400">Total</p>
           <p className="text-red-700 font-bold text-base">
-            ₱{order.items.reduce((s, i) => s + i.price, 0).toLocaleString()}.00
+            ₱{order.total.toLocaleString()}.00
           </p>
         </div>
       </div>
@@ -431,7 +377,94 @@ const OrdersPage = () => {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const filtered = ordersData.filter((o) => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [orderList, resList, empList] = await Promise.all([
+        orderApi.getOrderList(),
+        reservationsApi.getReservationList(),
+        employeesApi.getEmployeeList(),
+      ]);
+      if (orderList) setOrders(orderList);
+      if (resList) setReservations(resList);
+      if (empList) setEmployees(empList);
+    };
+    fetchData();
+  }, []);
+
+  const enrichedOrders = useMemo(() => {
+    return orders.map((o) => {
+      // JSON reference keys with .attributes support as per instructions
+      const orderId = getVal(o, "orderId");
+      const createdAt = getVal(o, "createdAt");
+      const total = getVal(o, "total") || 0;
+      const sessionExpiry = getVal(o, "sessionExpiry");
+      const reservationId = getVal(o, "reservationId");
+      const orderStatus = getVal(o, "orderStatus");
+      const rawOrderItems = getVal(o, "orderItems") || [];
+      const qrCodeUrl = getVal(o, "qrCodeUrl");
+      const assignedCashierId = getVal(o, "assignedCashierId");
+
+      // Normalize orderItems: handle both array (Default) and object (Additional) formats
+      let normalizedItems: any[] = [];
+      if (Array.isArray(rawOrderItems)) {
+        normalizedItems = rawOrderItems;
+      } else if (rawOrderItems && typeof rawOrderItems === "object") {
+        const newItems = rawOrderItems.newOrders?.items || [];
+        const originalItems = rawOrderItems.originalOrders?.items || [];
+        normalizedItems = [...originalItems, ...newItems];
+      }
+
+      const res = reservations.find((r) => r.reservationId === reservationId);
+      const cashier = employees.find(
+        (e) => e.employeeId === assignedCashierId
+      );
+      const security = employees.find(
+        (e) => e.employeeId === res?.assignedSecurityId
+      );
+
+      const statusMap: Record<string, string> = {
+        pending: "Pending",
+        served: "Served",
+        done: "Served",
+        cancelled: "Cancelled",
+        declined: "Declined",
+      };
+
+      return {
+        orderId,
+        createdAt,
+        total,
+        sessionExpiry,
+        reservationId,
+        orderStatus,
+        qrCodeUrl,
+        assignedCashierId,
+        orderItems: normalizedItems,
+        // Enriched
+        name: res ? `${res.firstName} ${res.lastName}` : "Unknown Customer",
+        email: res?.email || "N/A",
+        type: res ? capitalizeWords(res.reservationType) : "N/A",
+        date: formatReadableDate(new Date(createdAt)),
+        status: statusMap[orderStatus.toLowerCase()] || capitalizeWords(orderStatus),
+        itemCount: normalizedItems.length,
+        items: normalizedItems.map((item: any) => ({
+          name: item.orderName,
+          qty: item.quantity,
+          price: item.total || 0,
+        })),
+        alreadyCovered: res?.reservationAmount || 0,
+        vat: total * 0.12,
+        cashierIncharge: cashier?.fullName || "Not Assigned",
+        securityIncharge: security?.fullName || "Not Assigned",
+      };
+    });
+  }, [orders, reservations, employees]);
+
+  const filtered = enrichedOrders.filter((o) => {
     const matchesTab = activeTab === "All" || o.status === activeTab;
     const matchesSearch =
       o.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -440,7 +473,7 @@ const OrdersPage = () => {
   });
 
   return (
-    <div className=" font-poppins">
+    <div className="font-poppins">
       {/* Header */}
       <div
         className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl mb-6"
@@ -464,7 +497,6 @@ const OrdersPage = () => {
 
       {/* FILTERS */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Status tabs */}
         <div className="flex bg-white rounded-lg shadow overflow-hidden">
           {tabs.map((tab) => (
             <button
@@ -481,21 +513,15 @@ const OrdersPage = () => {
           ))}
         </div>
 
-        {/* Date navigator */}
         <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
-          <button className="hover:text-gray-900 text-lg leading-none">
-            ‹
-          </button>
+          <button className="hover:text-gray-900 text-lg leading-none">‹</button>
           <span className="font-medium">Today</span>
           <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
             TODAY
           </span>
-          <button className="hover:text-gray-900 text-lg leading-none">
-            ›
-          </button>
+          <button className="hover:text-gray-900 text-lg leading-none">›</button>
         </div>
 
-        {/* Sort */}
         <div className="flex items-center bg-white rounded-lg shadow px-3 py-2 gap-2 text-sm text-gray-600">
           <svg
             className="w-4 h-4"
@@ -513,7 +539,6 @@ const OrdersPage = () => {
           <span>Newest</span>
         </div>
 
-        {/* Search */}
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
             <svg
@@ -540,7 +565,6 @@ const OrdersPage = () => {
         </div>
       </div>
 
-      {/* ORDER CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filtered.map((order, i) => (
           <OrderCard
@@ -557,7 +581,6 @@ const OrdersPage = () => {
         </div>
       )}
 
-      {/* MODAL */}
       {selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}

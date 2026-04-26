@@ -130,22 +130,40 @@ const ReservationPage = () => {
     }
   };
 
+  // ─── Filter type helpers ────────────────────────────────────────────────────
+  // These filters show cancellation rows (from reservationCancellations)
+  const CANCELLATION_FILTERS = ["Cancel Request", "Cancelled"];
+  // "All" shows both reservation rows + cancellation rows
   const isCancelRequestView = filterActive === "Cancel Request";
+  const isCancelledView = filterActive === "Cancelled";
+  const isAllView = filterActive === "All";
+  // True when the table should show cancellation rows
+  const isCancellationView = isCancelRequestView || isCancelledView;
 
-  // Reservation Filters
+  // ─── Reservation Filters ────────────────────────────────────────────────────
   const reservationFilters = useMemo(() => {
+    // Reservation-side counts (pending / accepted / rejected / done)
     const countByStatus = (status: string) =>
       reservations.filter((r) => r.reservationStatus === status).length;
 
-    // Cancel Request = pending cancellations
+    // Cancellation-side counts
     const pendingCancellations = reservationCancellations.filter(
       (c) => c.status === "pending",
     ).length;
+    // "Cancelled" = cancellations that the admin has confirmed (status === "accepted")
+    const cancelledCount = reservationCancellations.filter(
+      (c) => c.status === "accepted",
+    ).length;
 
-    const cancelledCount = countByStatus("cancelled");
+    // "All" = all reservations (pending/accepted/rejected/done) + all cancellations (pending/accepted)
+    const allCount =
+      reservations.length +
+      reservationCancellations.filter(
+        (c) => c.status === "pending" || c.status === "accepted",
+      ).length;
 
     return [
-      { count: reservations.length, name: "All" },
+      { count: allCount, name: "All" },
       { count: countByStatus("pending"), name: "Pending" },
       { count: pendingCancellations, name: "Cancel Request" },
       { count: countByStatus("accepted"), name: "Accepted" },
@@ -155,7 +173,19 @@ const ReservationPage = () => {
     ];
   }, [reservations, reservationCancellations]);
 
-  // Filtered Reservations
+  // ─── Enriched cancellations (Cancel Request = pending, Cancelled = accepted) ─
+  const enrichedCancellations = useMemo(() => {
+    return reservationCancellations
+      .filter((c) => c.status === "pending" || c.status === "accepted")
+      .map((c) => {
+        const parentReservation = reservations.find(
+          (r) => r.reservationId === c.reservationId,
+        );
+        return { ...c, reservation: parentReservation ?? null };
+      });
+  }, [reservationCancellations, reservations]);
+
+  // ─── Filtered Reservations (Pending / Accepted / Rejected / Done) ───────────
   const filteredReservations = useMemo(() => {
     return reservations.filter((r) => {
       const filterStatusMap: Record<string, string> = {
@@ -164,8 +194,9 @@ const ReservationPage = () => {
       const mappedStatus =
         filterStatusMap[filterActive] ?? filterActive.toLowerCase();
 
+      // In "All" view, only show reservation-side statuses
       const matchesFilter =
-        filterActive === "All" ||
+        isAllView ||
         r.reservationStatus.toLowerCase() === mappedStatus.toLowerCase();
 
       const q = searchQuery.toLowerCase();
@@ -179,39 +210,46 @@ const ReservationPage = () => {
 
       return matchesFilter && matchesSearch;
     });
-  }, [reservations, filterActive, searchQuery]);
+  }, [reservations, filterActive, searchQuery, isAllView]);
 
-  const enrichedCancellations = useMemo(() => {
-    return reservationCancellations
-      .filter((c) => c.status === "pending")
-      .map((c) => {
-        const parentReservation = reservations.find(
-          (r) => r.reservationId === c.reservationId,
-        );
-        return { ...c, reservation: parentReservation ?? null };
-      });
-  }, [reservationCancellations, reservations]);
-
-  // Filtered Cancellations
+  // ─── Filtered Cancellations (Cancel Request = pending, Cancelled = accepted) ─
   const filteredCancellations = useMemo(() => {
     const q = searchQuery.toLowerCase();
+
     return enrichedCancellations.filter((c) => {
+      // In "Cancel Request" view: only pending; in "Cancelled" view: only accepted
+      const matchesFilter =
+        isAllView ||
+        (isCancelRequestView && c.status === "pending") ||
+        (isCancelledView && c.status === "accepted");
+
       const fullName = c.reservation
         ? `${c.reservation.firstName} ${c.reservation.lastName}`.toLowerCase()
         : "";
-      return (
+      const matchesSearch =
         q === "" ||
         fullName.includes(q) ||
         c.reason?.toLowerCase().includes(q) ||
-        c.status?.toLowerCase().includes(q)
-      );
-    });
-  }, [enrichedCancellations, searchQuery]);
+        c.status?.toLowerCase().includes(q);
 
-  // Row Click
-  const handleRowClick = (item: any, index: number) => {
+      return matchesFilter && matchesSearch;
+    });
+  }, [
+    enrichedCancellations,
+    searchQuery,
+    isAllView,
+    isCancelRequestView,
+    isCancelledView,
+  ]);
+
+  // ─── Row Click ───────────────────────────────────────────────────────────────
+  const handleRowClick = (
+    item: any,
+    index: number,
+    isCancellation: boolean,
+  ) => {
     setSelectedRow(index);
-    if (isCancelRequestView) {
+    if (isCancellation) {
       setSelectedCancellation(item);
       setSelectedReservation(null);
     } else {
@@ -257,7 +295,7 @@ const ReservationPage = () => {
     setOpenConfirmCancellationModal(false);
   };
 
-  // Styles Mapping
+  // ─── Styles Mapping ──────────────────────────────────────────────────────────
   const filterColors: Record<string, string> = {
     All: "bg-black/20 border-black",
     Pending: "bg-[#A6902A]/20 border-[#A6902A]",
@@ -408,7 +446,7 @@ const ReservationPage = () => {
       },
       { label: "Name", value: r ? `${r.firstName} ${r.lastName}` : "N/A" },
       { label: "Contact Number", value: r?.mobileNumber ?? "N/A" },
-      { label: "Reservation Date", value: r?.date ?? "N/A" },
+      { label: "Reservation Date", value: formatDashDate(r?.date) ?? "N/A" },
       {
         label: "Reservation Type",
         value: r ? capitalizeWords(r.reservationType) : "N/A",
@@ -426,6 +464,9 @@ const ReservationPage = () => {
         value: formatDashDate(selectedCancellation.createdAt),
       },
     ];
+
+    // This is a confirmed cancellation (status === "accepted") — show refund receipt
+    const isConfirmedCancellation = selectedCancellation.status === "accepted";
 
     return (
       <div className="p-2">
@@ -496,18 +537,29 @@ const ReservationPage = () => {
             </div>
           )}
 
+          {/* View Refund Receipt — only shown for confirmed cancellations (Cancelled filter) */}
+          {isConfirmedCancellation && selectedCancellation.refundReceiptUrl && (
+            <button
+              onClick={() =>
+                handleOpenImage(selectedCancellation.refundReceiptUrl)
+              }
+              className="flex bg-[#1a5c1a] rounded-md w-full py-2 justify-center items-center"
+            >
+              <span className="text-[0.8rem]">View Refund Receipt</span>
+            </button>
+          )}
+
+          {/* Confirm Cancellation — only shown for pending cancellations (Cancel Request filter) */}
           {selectedCancellation.status === "pending" && (
-            <>
-              <button
-                onClick={() => {
-                  setCancellationAction("accepted");
-                  setOpenConfirmCancellationModal(true);
-                }}
-                className="flex bg-[#009507] rounded-md w-full py-2 justify-center items-center"
-              >
-                <span className="text-[0.8rem]">Confirm Cancellation</span>
-              </button>
-            </>
+            <button
+              onClick={() => {
+                setCancellationAction("accepted");
+                setOpenConfirmCancellationModal(true);
+              }}
+              className="flex bg-[#009507] rounded-md w-full py-2 justify-center items-center"
+            >
+              <span className="text-[0.8rem]">Confirm Cancellation</span>
+            </button>
           )}
         </div>
       </div>
@@ -525,10 +577,6 @@ const ReservationPage = () => {
       );
     }
 
-    const linkedCancellation = reservationCancellations.find(
-      (c) => c.reservationId === selectedReservation.reservationId,
-    );
-
     const reservationFields = [
       { label: "Status", value: selectedReservation.reservationStatus },
       {
@@ -536,7 +584,7 @@ const ReservationPage = () => {
         value: `${selectedReservation.firstName} ${selectedReservation.lastName}`,
       },
       { label: "Contact Number", value: selectedReservation.mobileNumber },
-      { label: "Date", value: selectedReservation.date },
+      { label: "Date", value: formatDashDate(selectedReservation.date) },
       {
         label: "Reservation Type",
         value: capitalizeWords(selectedReservation.reservationType),
@@ -587,20 +635,17 @@ const ReservationPage = () => {
           onOpenChange={setOpenReservationStatusModal}
         >
           <DialogContent className="w-sm p-0 overflow-hidden font-poppins rounded-2xl border-none gap-0">
-            {/* Red header */}
             <div className="bg-red-900 px-6 py-5">
               <DialogTitle className="text-white text-xl font-medium">
                 Confirmation
               </DialogTitle>
             </div>
 
-            {/* Body */}
             <div className="bg-white px-6 pt-6 pb-6 flex flex-col gap-4 text-sm">
               <DialogDescription className="text-gray-600 text-md">
                 Are you sure you want to apply this changes?
               </DialogDescription>
 
-              {/* Cancel / Confirm row */}
               <div className="flex gap-3">
                 <DialogClose asChild>
                   <Button className="flex-1 bg-[#1C1B1F] hover:bg-gray-900 text-white rounded-xl py-5 text-md">
@@ -646,7 +691,6 @@ const ReservationPage = () => {
                         ${field.value === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
                         ${field.value === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
                         ${field.value === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
-                        ${field.value === "cancelled" ? "bg-[#ECD105]/20 text-[#ECD105]" : ""}
                         ${field.value === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
                       `}
                     >
@@ -675,25 +719,32 @@ const ReservationPage = () => {
             </button>
           </div>
 
-          {linkedCancellation?.refundReceiptUrl && (
-            <div className="flex gap-3 justify-center mt-2">
-              <button
-                onClick={() =>
-                  handleOpenImage(linkedCancellation.refundReceiptUrl)
-                }
-                className="bg-[#1a5c1a] rounded-xl w-full mx-4 py-2"
-              >
-                <span className="text-[0.8rem]">View Refund Receipt</span>
-              </button>
-            </div>
-          )}
-
           {selectedReservation.reservationStatus === "pending" &&
             displayNonCancellationButton()}
         </div>
       </div>
     );
   };
+
+  // ─── Determine what the details panel shows ──────────────────────────────────
+  const showCancellationDetails = selectedCancellation !== null;
+
+  // ─── Total count shown in header ─────────────────────────────────────────────
+  const totalDisplayed = isCancellationView
+    ? filteredCancellations.length
+    : isAllView
+      ? filteredReservations.length + filteredCancellations.length
+      : filteredReservations.length;
+
+  const totalSource = isCancellationView
+    ? enrichedCancellations.filter(
+        (c) =>
+          (isCancelRequestView && c.status === "pending") ||
+          (isCancelledView && c.status === "accepted"),
+      ).length
+    : isAllView
+      ? reservations.length + enrichedCancellations.length
+      : reservations.length;
 
   return (
     <div>
@@ -721,15 +772,12 @@ const ReservationPage = () => {
       {/* Search and Statuses Container */}
       <div className="flex flex-col w-full p-4 gap-2 bg-white mt-4 rounded-2xl shadow-lg font-poppins">
         <span className="text-sm text-[#717171]">
-          Showing{" "}
+          Showing {totalDisplayed} of {totalSource}{" "}
           {isCancelRequestView
-            ? filteredCancellations.length
-            : filteredReservations.length}{" "}
-          of{" "}
-          {isCancelRequestView
-            ? enrichedCancellations.length
-            : reservations.length}{" "}
-          {isCancelRequestView ? "Cancellation Requests" : "Reservations"}
+            ? "Cancellation Requests"
+            : isCancelledView
+              ? "Cancelled Reservations"
+              : "Reservations"}
         </span>
 
         <div className="flex flex-row gap-2">
@@ -792,13 +840,21 @@ const ReservationPage = () => {
             <TableHeader>
               <TableRow className="border-[#D9D9D9]">
                 <TableHead className="w-2.5"></TableHead>
-                {isCancelRequestView ? (
+                {isCancellationView ? (
                   <>
                     <TableHead className="w-50">Name</TableHead>
                     <TableHead className="w-50">Cancellation Status</TableHead>
                     <TableHead className="w-30">Reason</TableHead>
                     <TableHead>Reservation Date</TableHead>
                     <TableHead className="text-right">Requested At</TableHead>
+                  </>
+                ) : isAllView ? (
+                  <>
+                    <TableHead className="w-50">Name</TableHead>
+                    <TableHead className="w-50">Status</TableHead>
+                    <TableHead className="w-30">Type / Reason</TableHead>
+                    <TableHead>Pax</TableHead>
+                    <TableHead className="text-right">Date</TableHead>
                   </>
                 ) : (
                   <>
@@ -812,23 +868,28 @@ const ReservationPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isCancelRequestView ? (
-                filteredCancellations.length === 0 ? (
+              {/* Cancellation-only views */}
+              {isCancellationView &&
+                (filteredCancellations.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
                       className="text-center py-10 text-gray-400"
                     >
-                      No cancellation requests found.
+                      No{" "}
+                      {isCancelRequestView
+                        ? "cancellation requests"
+                        : "cancelled reservations"}{" "}
+                      found.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredCancellations.map((cancellation, index) => (
                     <TableRow
-                      onClick={() => handleRowClick(cancellation, index)}
+                      onClick={() => handleRowClick(cancellation, index, true)}
                       key={cancellation.reservationCancellationId}
                       className={`py-4 border-[#D9D9D9] cursor-pointer hover:bg-[#AA3131]/10
-                        ${selectedRow === index ? "bg-[#AA3131]/20" : ""}`}
+                        ${selectedRow === index && showCancellationDetails ? "bg-[#AA3131]/20" : ""}`}
                     >
                       <TableCell className="py-4">{index + 1}</TableCell>
                       <TableCell className="py-4 font-medium wrap-break-word whitespace-normal w-[100px]">
@@ -856,59 +917,159 @@ const ReservationPage = () => {
                         </span>
                       </TableCell>
                       <TableCell className="py-4">
-                        {cancellation.reservation?.date ?? "N/A"}
+                        {formatDashDate(cancellation.reservation?.date) ??
+                          "N/A"}
                       </TableCell>
                       <TableCell className="py-4 text-right">
                         {formatDashDate(cancellation.createdAt)}
                       </TableCell>
                     </TableRow>
                   ))
-                )
-              ) : filteredReservations.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-10 text-gray-400"
-                  >
-                    No reservations found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredReservations.map((reservation, index) => (
-                  <TableRow
-                    onClick={() => handleRowClick(reservation, index)}
-                    key={reservation.reservationId}
-                    className={`py-4 border-[#D9D9D9] cursor-pointer hover:bg-[#AA3131]/10
-                      ${selectedRow === index ? "bg-[#AA3131]/20" : ""}`}
-                  >
-                    <TableCell className="py-4">{index + 1}</TableCell>
-                    <TableCell className="py-4 font-medium wrap-break-word whitespace-normal w-[100px]">
-                      {reservation.firstName} {reservation.lastName}
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <span
-                        className={`inline-flex items-center rounded-lg py-0.5 h-8 px-8
-                          ${reservation.reservationStatus === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
-                          ${reservation.reservationStatus === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
-                          ${reservation.reservationStatus === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
-                          ${reservation.reservationStatus === "cancelled" ? "bg-[#ECD105]/20 text-[#ECD105]" : ""}
-                          ${reservation.reservationStatus === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
-                          ${reservation.reservationStatus === "cancel_request" ? "bg-[#FF8400]/20 text-[#FF8400]" : ""}
-                        `}
-                      >
-                        {capitalizeWords(reservation.reservationStatus)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      {capitalizeWords(reservation.reservationType)}
-                    </TableCell>
-                    <TableCell className="py-4">{reservation.pax}</TableCell>
-                    <TableCell className="py-4 text-right">
-                      {reservation.date}
+                ))}
+
+              {/* Reservation-only views (Pending / Accepted / Rejected / Done) */}
+              {!isCancellationView &&
+                !isAllView &&
+                (filteredReservations.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-10 text-gray-400"
+                    >
+                      No reservations found.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ) : (
+                  filteredReservations.map((reservation, index) => (
+                    <TableRow
+                      onClick={() => handleRowClick(reservation, index, false)}
+                      key={reservation.reservationId}
+                      className={`py-4 border-[#D9D9D9] cursor-pointer hover:bg-[#AA3131]/10
+                        ${selectedRow === index && !showCancellationDetails ? "bg-[#AA3131]/20" : ""}`}
+                    >
+                      <TableCell className="py-4">{index + 1}</TableCell>
+                      <TableCell className="py-4 font-medium wrap-break-word whitespace-normal w-[100px]">
+                        {reservation.firstName} {reservation.lastName}
+                      </TableCell>
+                      <TableCell className="py-4">
+                        <span
+                          className={`inline-flex items-center rounded-lg py-0.5 h-8 px-8
+                            ${reservation.reservationStatus === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
+                            ${reservation.reservationStatus === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
+                            ${reservation.reservationStatus === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
+                            ${reservation.reservationStatus === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
+                          `}
+                        >
+                          {capitalizeWords(reservation.reservationStatus)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-4">
+                        {capitalizeWords(reservation.reservationType)}
+                      </TableCell>
+                      <TableCell className="py-4">{reservation.pax}</TableCell>
+                      <TableCell className="py-4 text-right">
+                        {formatDashDate(reservation.date)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ))}
+
+              {/* All view — reservations first, then cancellations */}
+              {isAllView &&
+                (filteredReservations.length === 0 &&
+                filteredCancellations.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center py-10 text-gray-400"
+                    >
+                      No records found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <>
+                    {filteredReservations.map((reservation, index) => (
+                      <TableRow
+                        onClick={() =>
+                          handleRowClick(reservation, index, false)
+                        }
+                        key={reservation.reservationId}
+                        className={`py-4 border-[#D9D9D9] cursor-pointer hover:bg-[#AA3131]/10
+                          ${selectedRow === index && !showCancellationDetails ? "bg-[#AA3131]/20" : ""}`}
+                      >
+                        <TableCell className="py-4">{index + 1}</TableCell>
+                        <TableCell className="py-4 font-medium wrap-break-word whitespace-normal w-[100px]">
+                          {reservation.firstName} {reservation.lastName}
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <span
+                            className={`inline-flex items-center rounded-lg py-0.5 h-8 px-8
+                              ${reservation.reservationStatus === "accepted" ? "bg-[#009507]/20 text-[#009507]" : ""}
+                              ${reservation.reservationStatus === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : ""}
+                              ${reservation.reservationStatus === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
+                              ${reservation.reservationStatus === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
+                            `}
+                          >
+                            {capitalizeWords(reservation.reservationStatus)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          {capitalizeWords(reservation.reservationType)}
+                        </TableCell>
+                        <TableCell className="py-4">
+                          {reservation.pax}
+                        </TableCell>
+                        <TableCell className="py-4 text-right">
+                          {formatDashDate(reservation.date)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredCancellations.map((cancellation, index) => {
+                      const globalIndex = filteredReservations.length + index;
+                      return (
+                        <TableRow
+                          onClick={() =>
+                            handleRowClick(cancellation, globalIndex, true)
+                          }
+                          key={cancellation.reservationCancellationId}
+                          className={`py-4 border-[#D9D9D9] cursor-pointer hover:bg-[#FF8400]/10
+                            ${selectedRow === globalIndex && showCancellationDetails ? "bg-[#FF8400]/20" : ""}`}
+                        >
+                          <TableCell className="py-4">
+                            {globalIndex + 1}
+                          </TableCell>
+                          <TableCell className="py-4 font-medium wrap-break-word whitespace-normal w-[100px]">
+                            {cancellation.reservation
+                              ? `${cancellation.reservation.firstName} ${cancellation.reservation.lastName}`
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <span className="inline-flex items-center rounded-lg py-0.5 h-8 px-8 bg-[#FF8400]/20 text-[#FF8400]">
+                              {cancellation.status === "pending"
+                                ? "Cancel Request"
+                                : "Cancelled"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-4 max-w-[120px]">
+                            <span
+                              className="block truncate"
+                              title={cancellation.reason ?? "N/A"}
+                            >
+                              {cancellation.reason ?? "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            {formatDashDate(cancellation.reservation?.date) ??
+                              "N/A"}
+                          </TableCell>
+                          <TableCell className="py-4 text-right">
+                            {formatDashDate(cancellation.createdAt)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </>
+                ))}
             </TableBody>
           </Table>
         </div>
@@ -916,12 +1077,12 @@ const ReservationPage = () => {
         {/* Details Panel */}
         <div className="flex flex-col w-100 h-115 bg-white mt-4 rounded-2xl shadow-lg font-poppins">
           <div className="flex h-15 rounded-t-2xl text-xl text-white pl-4 items-center bg-linear-to-r from-[#AA3131] via-[#AA3131] to-[#770B0B]">
-            {isCancelRequestView
+            {showCancellationDetails
               ? "Cancellation Details"
               : "Reservation Details"}
           </div>
           <div className="flex-1 overflow-y-auto">
-            {isCancelRequestView
+            {showCancellationDetails
               ? displayCancellationDetails()
               : displayReservationDetails()}
           </div>

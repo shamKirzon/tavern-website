@@ -15,22 +15,63 @@ import { Switch } from "@/components/ui/switch";
 
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import React from "react";
 import { BookingCalendar } from "@/components/ui/booking-calendar";
+import { reservationsApi } from "@/api/reservations.api";
+import type { BookingData, DayStatus } from "@/types/Reservation";
 
 const ReservationCalendarPage = () => {
-  // Calendar UI:
-  const [date, setDate] = React.useState<Date | undefined>(
-    new Date(new Date().getFullYear(), 1, 12),
-  );
-  const [currentMonth, setCurrentMonth] = React.useState<Date>(
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  );
+  // Calendar Data:
+  const [bookingData, setBookingData] = useState<BookingData>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
 
   // others:
   const [isOpenForReservations, setIsOpenForReservation] =
     useState<boolean>(false);
+
+  const fetchBookingData = useCallback(async (year: number, month: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await reservationsApi.getBookingDaysByMonth(year, month);
+      setBookingData(data);
+    } catch (err) {
+      setError("Failed to fetch booking data.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBookingData(currentYear, currentMonth);
+  }, [currentYear, currentMonth, fetchBookingData]);
+
+  const handleUpdateBookingDays = async (
+    dates: string[],
+    status: DayStatus,
+  ) => {
+    setIsLoading(true);
+    try {
+      await reservationsApi.updateBookingDays(dates, status);
+      await fetchBookingData(currentYear, currentMonth);
+    } catch (err) {
+      setError("Failed to update booking days.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMonthChange = (year: number, month: number) => {
+    setCurrentYear(year);
+    setCurrentMonth(month);
+  };
 
   useEffect(() => {
     if (isOpenForReservations) {
@@ -124,13 +165,19 @@ const ReservationCalendarPage = () => {
     return formattedDate;
   };
 
-  const fetchReservationDetails = (reservationId: string) => {
-    //get data from backend
-  };
-
   return (
     // Main container
     <div className="font-poppins">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg mb-4 flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="font-bold">
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header Container */}
       <div
         className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
@@ -151,8 +198,15 @@ const ReservationCalendarPage = () => {
       {/* Calendar & Reservation Summary Container*/}
       <div className="flex flex-row gap-5">
         {/* Calendar*/}
-        <div className="w-200  bg-white p-3 mt-4 rounded-2xl shadow-lg">
-          <BookingCalendar />
+        <div className="w-200  bg-white p-3 mt-4 rounded-2xl shadow-lg h-[650px]">
+          <BookingCalendar
+            externalBookingData={bookingData}
+            isLoading={isLoading}
+            onMonthChange={handleMonthChange}
+            onApply={(dates) => handleUpdateBookingDays(dates, "available")}
+            onOpenAll={(dates) => handleUpdateBookingDays(dates, "available")}
+            onCloseAll={(dates) => handleUpdateBookingDays(dates, "closed")}
+          />
         </div>
 
         {/*Reservation Summary*/}

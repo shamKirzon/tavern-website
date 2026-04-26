@@ -8,27 +8,13 @@ import {
   DialogTitle,
 } from "./dialog";
 import { Button } from "./button";
+import type { BookingData, BookingInfo, DayStatus } from "@/types/Reservation";
 
 const DAYS_OF_WEEK = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
-
-type DayStatus = "available" | "fullyBooked" | "closed";
-
-interface BookingInfo {
-  booked: number;
-  total: number;
-  status: DayStatus;
-}
-
-type BookingData = Record<string, BookingInfo>;
 
 interface StatusStyle {
   cell: string;
   text: string;
-}
-
-interface LegendItemProps {
-  color: string;
-  label: string;
 }
 
 interface BookingCalendarProps {
@@ -36,6 +22,11 @@ interface BookingCalendarProps {
   onDayClick?: (dateKey: string, info: BookingInfo) => void;
   // Parent can supply its own booking data to override or seed the calendar
   externalBookingData?: BookingData;
+  onApply?: (dates: string[]) => void;
+  onOpenAll?: (dates: string[]) => void;
+  onCloseAll?: (dates: string[]) => void;
+  onMonthChange?: (year: number, month: number) => void;
+  isLoading?: boolean;
 }
 
 function getDaysInMonth(year: number, month: number): number {
@@ -44,26 +35,6 @@ function getDaysInMonth(year: number, month: number): number {
 
 function getFirstDayOfMonth(year: number, month: number): number {
   return new Date(year, month, 1).getDay();
-}
-
-function generateMockData(year: number, month: number): BookingData {
-  const data: BookingData = {};
-  const daysInMonth = getDaysInMonth(year, month);
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const rand = Math.random();
-    if (rand < 0.3) {
-      // no status
-    } else if (rand < 0.6) {
-      const booked = Math.floor(Math.random() * 90) + 5;
-      data[key] = { booked, total: 100, status: "available" };
-    } else if (rand < 0.8) {
-      data[key] = { booked: 100, total: 100, status: "fullyBooked" };
-    } else {
-      data[key] = { booked: 100, total: 100, status: "closed" };
-    }
-  }
-  return data;
 }
 
 const STATUS_STYLES: Record<DayStatus, StatusStyle> = {
@@ -84,29 +55,25 @@ const STATUS_STYLES: Record<DayStatus, StatusStyle> = {
 export function BookingCalendar({
   onDayClick,
   externalBookingData,
+  onApply,
+  onOpenAll,
+  onCloseAll,
+  onMonthChange,
+  isLoading,
 }: BookingCalendarProps) {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
 
-  const [closedEvery, setClosedEvery] = useState<string>("Day");
   const [openConfirmationDialog, setOpenConfirmationDialog] =
     useState<boolean>(false);
   const [confirmationAction, setConfirmationAction] = useState<
     "apply" | "closedAll" | "openAll" | undefined
   >();
 
-  const [isConfirm, setIsConfirm] = useState<boolean>(false);
-
-  const [internalBookingData, setBookingData] = useState<BookingData>(() =>
-    generateMockData(today.getFullYear(), today.getMonth()),
-  );
-
-  // Merge: parent's externalBookingData overrides internal data for any matching keys
-  const bookingData: BookingData = externalBookingData
-    ? { ...internalBookingData, ...externalBookingData }
-    : internalBookingData;
+  // Use only external data
+  const bookingData: BookingData = externalBookingData ?? {};
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
@@ -129,22 +96,32 @@ export function BookingCalendar({
 
   function prevMonth(): void {
     setSelectedDays(new Set());
+    let newYear = currentYear;
+    let newMonth = currentMonth;
     if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
+      newMonth = 11;
+      newYear = currentYear - 1;
     } else {
-      setCurrentMonth((m) => m - 1);
+      newMonth = currentMonth - 1;
     }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    onMonthChange?.(newYear, newMonth);
   }
 
   function nextMonth(): void {
     setSelectedDays(new Set());
+    let newYear = currentYear;
+    let newMonth = currentMonth;
     if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
+      newMonth = 0;
+      newYear = currentYear + 1;
     } else {
-      setCurrentMonth((m) => m + 1);
+      newMonth = currentMonth + 1;
     }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    onMonthChange?.(newYear, newMonth);
   }
 
   const cells: (number | null)[] = [];
@@ -196,68 +173,39 @@ export function BookingCalendar({
     }
   }
 
-  //Magseset lang sa available yung mga date na walang status
-  function handleApply(): void {
-    setOpenConfirmationDialog(true);
-    if (selectedDays.size === 0) return;
-    setBookingData((prev) => {
-      const next = { ...prev };
-      selectedDays.forEach((key) => {
-        // Skip if the day already has any status
-        if (next[key]?.status) return;
-        next[key] = { booked: 0, total: 100, status: "available" };
-      });
-      return next;
-    });
-    setSelectedDays(new Set());
-  }
-
-  function handleCloseAll(): void {
-    setBookingData((prev) => {
-      const next = { ...prev };
-      for (let d = 1; d <= daysInMonth; d++) {
-        const key = getDayKey(d);
-        const existing = next[key];
-        next[key] = {
-          booked: existing?.booked ?? 100,
-          total: existing?.total ?? 100,
-          status: "closed",
-        };
-      }
-      return next;
-    });
-    setSelectedDays(new Set());
-  }
-
-  // Open All: mark every day in the current month as available
-  function handleOpenAll(): void {
-    setBookingData((prev) => {
-      const next = { ...prev };
-      for (let d = 1; d <= daysInMonth; d++) {
-        const key = getDayKey(d);
-        const existing = next[key];
-        next[key] = {
-          booked: existing?.booked ?? 0,
-          total: existing?.total ?? 100,
-          status: "available",
-        };
-      }
-      return next;
-    });
-    setSelectedDays(new Set());
-  }
-
   // for dialog result - confirm
   const handleConfirmDialog = () => {
     switch (confirmationAction) {
       case "apply":
-        handleApply();
+        {
+          const applyDates = [...selectedDays].filter(
+            (key) => !bookingData[key]?.status,
+          );
+          if (applyDates.length > 0) {
+            onApply?.(applyDates);
+          }
+        }
+        setSelectedDays(new Set());
         break;
       case "closedAll":
-        handleCloseAll();
+        {
+          const allDates: string[] = [];
+          for (let d = 1; d <= daysInMonth; d++) {
+            allDates.push(getDayKey(d));
+          }
+          onCloseAll?.(allDates);
+        }
+        setSelectedDays(new Set());
         break;
       case "openAll":
-        handleOpenAll();
+        {
+          const allDates: string[] = [];
+          for (let d = 1; d <= daysInMonth; d++) {
+            allDates.push(getDayKey(d));
+          }
+          onOpenAll?.(allDates);
+        }
+        setSelectedDays(new Set());
         break;
 
       default:
@@ -267,7 +215,12 @@ export function BookingCalendar({
   };
 
   return (
-    <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden h-full">
+    <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden h-full relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/50 z-50 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#AA3131] border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
       {/* Legend */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2 text-sm text-gray-600 border-b border-[#D9D9D9] flex-shrink-0">
         <span className="text-[#717171]">
@@ -331,7 +284,6 @@ export function BookingCalendar({
                   : null;
                 const todayCell = isToday(d);
                 const selected = selectedDays.has(key);
-                const hasStatus = !!status;
 
                 return (
                   <button
@@ -459,7 +411,7 @@ export function BookingCalendar({
   );
 }
 
-function LegendItem({ color, label }: LegendItemProps) {
+function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <div className={`w-4 h-4 rounded-sm ${color}`} />

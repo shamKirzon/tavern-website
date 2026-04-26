@@ -39,3 +39,13 @@ export type Cancellation = {
 };
 
 export type CancellationStatus = "pending" | "accepted" | "rejected" | "none";
+
+export type DayStatus = "available" | "fullyBooked" | "closed";
+
+export interface BookingInfo {
+  booked: number;
+  total: number;
+  status: DayStatus;
+}
+
+export type BookingData = Record<string, BookingInfo>;

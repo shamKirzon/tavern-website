@@ -1,10 +1,41 @@
 import type {
+  BookingData,
   CancellationStatus,
+  DayStatus,
   ReservationStatus,
 } from "../types/Reservation";
 import { axiosInstance } from "./axios";
 
 export const reservationsApi = {
+  async getBookingDaysByMonth(
+    year: number,
+    month: number,
+  ): Promise<BookingData> {
+    try {
+      const res = await axiosInstance.get("/booking-days", {
+        params: { year, month: month + 1 },
+      });
+      if (!res) return {};
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in reservationApi/getBookingDaysByMonth(): ", error);
+      return {};
+    }
+  },
+
+  async updateBookingDays(dates: string[], status: DayStatus): Promise<void> {
+    try {
+      const res = await axiosInstance.patch("/booking-days", {
+        dates,
+        status,
+      });
+      if (!res) return console.log("Can't update booking days.");
+    } catch (error) {
+      console.log("Error in reservationApi/updateBookingDays(): ", error);
+    }
+  },
+
   async getReservationList() {
     try {
       const res = await axiosInstance.get("/reservation/get-reservation-list");

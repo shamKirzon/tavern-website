@@ -24,6 +24,26 @@ export const reservationsApi = {
     }
   },
 
+  async getReservationCalendarSummary(
+    year: number,
+    month: number,
+  ): Promise<{ date: string; count: number }[]> {
+    try {
+      const res = await axiosInstance.get("/reservation/calendar-summary", {
+        params: { year, month: month + 1 },
+      });
+      if (!res) return [];
+
+      return res.data.result;
+    } catch (error) {
+      console.log(
+        "Error in reservationApi/getReservationCalendarSummary(): ",
+        error,
+      );
+      return [];
+    }
+  },
+
   async updateBookingDays(dates: string[], status: DayStatus): Promise<void> {
     try {
       const res = await axiosInstance.patch("/booking-days", {

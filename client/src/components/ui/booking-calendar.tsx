@@ -18,8 +18,8 @@ interface StatusStyle {
 }
 
 interface BookingCalendarProps {
-  // Called when a day WITH a status is clicked; receives the date key (e.g. "2026-03-04")
-  onDayClick?: (dateKey: string, info: BookingInfo) => void;
+  // Called when a day click occurs; receives the date key or null if selection is cleared/blank
+  onDayClick?: (dateKey: string | null, info?: BookingInfo) => void;
   // Parent can supply its own booking data to override or seed the calendar
   externalBookingData?: BookingData;
   onApply?: (dates: string[]) => void;
@@ -153,11 +153,15 @@ export function BookingCalendar({
     if (info?.status) {
       // Has status → single-select only: clear all others, select just this one
       // Clicking the same already-selected day deselects it
-      setSelectedDays((prev) =>
-        prev.size === 1 && prev.has(key) ? new Set() : new Set([key]),
-      );
-      console.log("Day clicked:", { date: key, ...info });
-      onDayClick?.(key, info);
+      setSelectedDays((prev) => {
+        const isDeselecting = prev.size === 1 && prev.has(key);
+        if (isDeselecting) {
+          onDayClick?.(null);
+          return new Set();
+        }
+        onDayClick?.(key, info);
+        return new Set([key]);
+      });
     } else {
       // No status → multi-select toggle, but clear any previously selected status-day first
       setSelectedDays((prev) => {
@@ -168,6 +172,7 @@ export function BookingCalendar({
         } else {
           next.add(key);
         }
+        onDayClick?.(null);
         return next;
       });
     }
@@ -215,7 +220,7 @@ export function BookingCalendar({
   };
 
   return (
-    <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden h-full relative">
+    <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden relative">
       {isLoading && (
         <div className="absolute inset-0 bg-white/50 z-50 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-[#AA3131] border-t-transparent rounded-full animate-spin" />
@@ -224,9 +229,9 @@ export function BookingCalendar({
       {/* Legend */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2 text-sm text-gray-600 border-b border-[#D9D9D9] flex-shrink-0">
         <span className="text-[#717171]">
-          Total Month Reservation:{" "}
+          Total Reservations This Month:{" "}
           <span>
-            {totalBooked} out of {totalCapacity}
+            {totalBooked} Reservation{totalBooked !== 1 ? "s" : ""}
           </span>
         </span>
         <div className="flex items-center gap-4 text-xs font-medium">
@@ -366,7 +371,7 @@ export function BookingCalendar({
         </DialogContent>
       </Dialog>
 
-      <div className="flex shrink-0  items-center justify-between px-4 py-3 border-t border-[#D9D9D9] gap-2 flex-wrap bg-white">
+      <div className="flex shrink-0  items-center justify-between px-4 py-3 border-t border-[#D9D9D9] gap-2 flex-wrap bg-whit">
         <button
           onClick={() => {
             setConfirmationAction("openAll");

@@ -14,32 +14,81 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 import { useEffect, useState, useCallback } from "react";
 import React from "react";
 import { BookingCalendar } from "@/components/ui/booking-calendar";
 import { reservationsApi } from "@/api/reservations.api";
-import type { BookingData, DayStatus } from "@/types/Reservation";
+import type { BookingData, DayStatus, BookingInfo } from "@/types/Reservation";
+
+// Converts the API summary into BookingData format the calendar understands
+function buildBookingDataFromSummary(
+  summary: { date: string; count: number }[],
+): BookingData {
+  const result: BookingData = {};
+  summary.forEach(({ date, count }) => {
+    result[date] = {
+      booked: count,
+      total: 100,
+      status: "available",
+    };
+  });
+  return result;
+}
+
+// Merges DB-configured statuses with real reservation counts
+// DB status always wins, but booked count comes from real reservations
+function mergeCalendarData(
+  dbData: BookingData,
+  reservationData: BookingData,
+): BookingData {
+  const merged: BookingData = { ...dbData };
+  Object.entries(reservationData).forEach(([date, resInfo]) => {
+    if (merged[date]) {
+      merged[date] = { ...merged[date], booked: resInfo.booked };
+    } else {
+      merged[date] = resInfo;
+    }
+  });
+  return merged;
+}
 
 const ReservationCalendarPage = () => {
   // Calendar Data:
   const [bookingData, setBookingData] = useState<BookingData>({});
+  const [reservations, setReservations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // others:
-  const [isOpenForReservations, setIsOpenForReservation] =
-    useState<boolean>(false);
+  // selection state:
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
 
   const fetchBookingData = useCallback(async (year: number, month: number) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await reservationsApi.getBookingDaysByMonth(year, month);
-      setBookingData(data);
+      const [dbDays, summary, allReservations] = await Promise.all([
+        reservationsApi.getBookingDaysByMonth(year, month),
+        reservationsApi.getReservationCalendarSummary(year, month),
+        reservationsApi.getReservationList(),
+      ]);
+
+      const reservationData = buildBookingDataFromSummary(summary);
+      const merged = mergeCalendarData(dbDays, reservationData);
+      setBookingData(merged);
+      setReservations(allReservations || []);
     } catch (err) {
       setError("Failed to fetch booking data.");
       console.error(err);
@@ -50,7 +99,9 @@ const ReservationCalendarPage = () => {
 
   useEffect(() => {
     fetchBookingData(currentYear, currentMonth);
-  }, [currentYear, currentMonth, fetchBookingData]);
+  }, [currentYear, currentMonth, refreshKey, fetchBookingData]);
+
+  const triggerRefresh = () => setRefreshKey((k) => k + 1);
 
   const handleUpdateBookingDays = async (
     dates: string[],
@@ -59,7 +110,7 @@ const ReservationCalendarPage = () => {
     setIsLoading(true);
     try {
       await reservationsApi.updateBookingDays(dates, status);
-      await fetchBookingData(currentYear, currentMonth);
+      triggerRefresh();
     } catch (err) {
       setError("Failed to update booking days.");
       console.error(err);
@@ -71,44 +122,71 @@ const ReservationCalendarPage = () => {
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
+    setSelectedDateKey(null); // Clear selection when month changes
   };
 
-  useEffect(() => {
-    if (isOpenForReservations) {
-      console.log("BINUKSAN KO ANG BUTTON HEHE");
-    }
-  }, [isOpenForReservations]);
+  const reservationSummaryItems = React.useMemo(() => {
+    const filtered = reservations.filter((r) => {
+      const rDate = new Date(r.date);
+      return (
+        rDate.getFullYear() === currentYear && rDate.getMonth() === currentMonth
+      );
+    });
 
-  const reservationSummaryItems = [
-    {
-      label: "Pending Reservation",
-      count: 67,
-    },
-    {
-      label: "Total Reservation",
-      count: 81,
-    },
-    {
-      label: "Approved Reservation",
-      count: 14,
-    },
-    {
-      label: "Available Reservation",
-      count: 19,
-    },
-    {
-      label: "Exclusive Reservation",
-      count: 50,
-    },
-    {
-      label: "Regular Reservation",
-      count: 31,
-    },
-    {
-      label: "Total Earnings",
-      count: 52301,
-    },
-  ];
+    const pending = filtered.filter((r) => r.reservationStatus === "pending")
+      .length;
+    const approved = filtered.filter((r) => r.reservationStatus === "accepted")
+      .length;
+    const total = filtered.length;
+    const exclusive = filtered.filter((r) => r.reservationType === "exclusive")
+      .length;
+    const regular = filtered.filter((r) => r.reservationType === "inclusive")
+      .length;
+    const earnings = filtered
+      .filter((r) => r.reservationStatus === "done")
+      .reduce((sum, r) => sum + (Number(r.reservationAmount) || 0), 0);
+
+    // Available formula: (days open * 100) - total reservations in month
+    // "Open" days are those with status 'available' or 'fullyBooked'
+    const openDaysCount = Object.values(bookingData).filter(
+      (d) => d.status === "available" || d.status === "fullyBooked",
+    ).length;
+    const available = Math.max(0, openDaysCount * 100 - total);
+
+    return [
+      {
+        label: "Pending Reservation",
+        count: pending,
+      },
+      {
+        label: "Total Reservation",
+        count: total,
+      },
+      {
+        label: "Approved Reservation",
+        count: approved,
+      },
+      {
+        label: "Available Reservation",
+        count: available,
+      },
+      {
+        label: "Exclusive Reservation",
+        count: exclusive,
+      },
+      {
+        label: "Regular Reservation",
+        count: regular,
+      },
+      {
+        label: "Total Earnings",
+        count: "₱ " + earnings.toLocaleString(),
+      },
+    ];
+  }, [reservations, bookingData, currentYear, currentMonth]);
+
+  // Derived state for the switch
+  const selectedInfo = selectedDateKey ? bookingData[selectedDateKey] : null;
 
   // Functions:
   const reservationSummaryBadge = (label: string) => {
@@ -160,10 +238,6 @@ const ReservationCalendarPage = () => {
         break;
     }
   };
-  const getCurrentDate = () => {
-    const formattedDate = formatReadableDate(new Date());
-    return formattedDate;
-  };
 
   return (
     // Main container
@@ -191,18 +265,21 @@ const ReservationCalendarPage = () => {
         </div>
         <div className="ml-5 text-white">
           <h1 className=" text-[38px] font-bold leading-tight">Calendar</h1>
-          <p className=" text-[13px] mt-0.5 opacity-85">{getCurrentDate()}</p>
+          <p className=" text-[13px] mt-0.5 opacity-85">
+            {formatReadableDate(new Date())}
+          </p>
         </div>
       </div>
 
       {/* Calendar & Reservation Summary Container*/}
       <div className="flex flex-row gap-5">
         {/* Calendar*/}
-        <div className="w-200  bg-white p-3 mt-4 rounded-2xl shadow-lg h-[650px]">
+        <div className="w-200  bg-white p-3 mt-4 rounded-2xl shadow-lg h-fit">
           <BookingCalendar
             externalBookingData={bookingData}
             isLoading={isLoading}
             onMonthChange={handleMonthChange}
+            onDayClick={(key) => setSelectedDateKey(key)}
             onApply={(dates) => handleUpdateBookingDays(dates, "available")}
             onOpenAll={(dates) => handleUpdateBookingDays(dates, "available")}
             onCloseAll={(dates) => handleUpdateBookingDays(dates, "closed")}
@@ -213,7 +290,9 @@ const ReservationCalendarPage = () => {
         <div className="w-100 h-115 bg-white mt-4 rounded-2xl  overflow-y-auto hide-scrollbar shadow-lg  ">
           {/* Date & Date Visible */}
           <div className="flex flex-col pl-10 pt-5">
-            <span className="text-lg font-medium">{getCurrentDate()}</span>
+            <span className="text-lg font-medium">
+              {formatReadableDate(new Date())}
+            </span>
             {/* Date Visible */}
             <div className="flex flex-row gap-1">
               <DateVisible />
@@ -225,13 +304,31 @@ const ReservationCalendarPage = () => {
               <TableBody>
                 <TableRow className="border-[#D9D9D9] text-black text-sm">
                   <TableCell className="py-2">
-                    <div className="flex items-center gap-2">
+                    <div
+                      className={`flex items-center gap-2 ${!selectedDateKey ? "text-gray-400" : "text-black"}`}
+                    >
                       <Switch
-                        checked={isOpenForReservations}
-                        onCheckedChange={setIsOpenForReservation}
-                        className="data-[state=checked]:bg-[#009507] data-[state=unchecked]:bg-gray-300"
+                        disabled={!selectedDateKey}
+                        checked={
+                          selectedInfo?.status === "available" ||
+                          selectedInfo?.status === "fullyBooked"
+                        }
+                        onCheckedChange={async (checked) => {
+                          const status = checked ? "available" : "closed";
+                          if (selectedDateKey) {
+                            await handleUpdateBookingDays(
+                              [selectedDateKey],
+                              status,
+                            );
+                          }
+                        }}
+                        className="data-[state=checked]:bg-[#009507] data-[state=unchecked]:bg-gray-300 disabled:opacity-30 cursor-default"
                       />
-                      <span>Open for reservations</span>
+                      <span
+                        className={!selectedDateKey ? "text-gray-400" : ""}
+                      >
+                        Open for reservations
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>

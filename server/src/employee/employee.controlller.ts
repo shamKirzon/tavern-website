@@ -58,6 +58,56 @@ class EmployeeController {
       return res.status(400).json({ message: `Can't get the ${role} name.` });
     }
   }
+
+  async addEmployee(req: Request, res: Response) {
+    try {
+      const result = await employeeService.addEmployee(req.body);
+
+      if (!result)
+        return res.status(400).json({ message: "Can't add employee. " });
+
+      return res
+        .status(200)
+        .json({ message: "Employee added successfully. ", result });
+    } catch (error: any) {
+      console.error("error from addEmployee(): ", error);
+      return res.status(400).json({ message: "Can't add employee" });
+    }
+  }
+
+  async updateEmployee(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const result = await employeeService.updateEmployee(id, req.body);
+
+      if (!result)
+        return res.status(400).json({ message: "Can't update employee. " });
+
+      return res
+        .status(200)
+        .json({ message: "Employee updated successfully. ", result });
+    } catch (error: any) {
+      console.error("error from updateEmployee(): ", error);
+      return res.status(400).json({ message: "Can't update employee" });
+    }
+  }
+
+  async deleteEmployee(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const result = await employeeService.deleteEmployee(id);
+
+      if (!result)
+        return res.status(400).json({ message: "Can't delete employee. " });
+
+      return res
+        .status(200)
+        .json({ message: "Employee deleted successfully. " });
+    } catch (error: any) {
+      console.error("error from deleteEmployee(): ", error);
+      return res.status(400).json({ message: "Can't delete employee" });
+    }
+  }
 }
 
 export const employeeController = new EmployeeController();

@@ -45,6 +45,49 @@ class EmployeeRepository {
       console.error("Error in repository/getSecurityName():", error);
     }
   }
+
+  async addEmployee(employeeData: any) {
+    try {
+      const { data, error } = await supabase
+        .from("employees")
+        .insert(employeeData)
+        .select();
+
+      if (error) throw error;
+      return data[0];
+    } catch (error) {
+      console.error("Error in repository/addEmployee():", error);
+    }
+  }
+
+  async updateEmployee(employeeId: string, employeeData: any) {
+    try {
+      const { data, error } = await supabase
+        .from("employees")
+        .update(employeeData)
+        .eq("employee_id", employeeId)
+        .select();
+
+      if (error) throw error;
+      return data[0];
+    } catch (error) {
+      console.error("Error in repository/updateEmployee():", error);
+    }
+  }
+
+  async deleteEmployee(employeeId: string) {
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .delete()
+        .eq("employee_id", employeeId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Error in repository/deleteEmployee():", error);
+    }
+  }
 }
 
 export const employeeRepository = new EmployeeRepository();

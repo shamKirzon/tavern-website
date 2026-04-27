@@ -14,12 +14,32 @@ import {
   IconEngineering,
 } from "@/assets/icons/icons";
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
+import { capitalizeWords } from "@/utils/capitalizeWords";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const ROLE_FILTERS = ["All", "Server", "Cashier", "Security Guard"];
-const EMPLOYEE_TYPES = ["Server", "Cashier", "Security Guard"];
-const ROLE_ORDER = ["SERVER", "CASHIER", "SECURITY GUARD"];
-const ROLES_WITH_PIN = ["CASHIER", "SECURITY GUARD"];
+const ROLE_FILTERS = [
+  "All",
+  "Bartender",
+  "Waiter",
+  "Kitchen Staff",
+  "Cashier",
+  "Security",
+];
+const EMPLOYEE_TYPES = [
+  "Bartender",
+  "Waiter",
+  "Kitchen Staff",
+  "Cashier",
+  "Security",
+];
+const ROLE_ORDER = [
+  "BARTENDER",
+  "WAITER",
+  "KITCHEN STAFF",
+  "CASHIER",
+  "SECURITY",
+];
+const ROLES_WITH_PIN = ["CASHIER", "SECURITY"];
 const DAY_KEYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 const DAY_ALIASES: Record<string, string> = {
@@ -96,15 +116,23 @@ const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
 }) => {
   const [name, setName] = useState(employee?.fullName ?? "");
   const [type, setType] = useState(
-    employee
-      ? employee.employeeRole.charAt(0).toUpperCase() +
-          employee.employeeRole.slice(1).toLowerCase()
-      : "",
+    employee ? capitalizeWords(employee.employeeRole) : "",
   );
 
   const matchTime = (t?: string) => {
     if (!t) return "";
-    return TIME_OPTIONS.find((o) => o === t.trim()) ?? "";
+    const trimmed = t.trim().toUpperCase();
+    // Normalize "08:00 AM" to "8:00 AM" for matching if needed
+    return (
+      TIME_OPTIONS.find((o) => o.toUpperCase() === trimmed) ??
+      TIME_OPTIONS.find((o) => {
+        const [time, suffix] = o.split(" ");
+        const [h, m] = time.split(":");
+        const normalized = `${parseInt(h)}:${m} ${suffix}`;
+        return normalized.toUpperCase() === trimmed;
+      }) ??
+      ""
+    );
   };
 
   const [shiftStart, setShiftStart] = useState(matchTime(employee?.shiftStart));
@@ -170,7 +198,7 @@ const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
       : "border-gray-300 focus:border-[#AA3131]";
 
   const labelCls =
-    "flex items-center gap-1.5 text-xs font-bold text-[#AA3131] uppercase tracking-wide mb-2";
+    "flex items-center gap-1.5 text-xs font-medium text-[#AA3131] uppercase tracking-wide mb-2";
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -296,7 +324,7 @@ const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
             <label
               className={`${labelCls} ${errors.days ? "text-red-500" : ""}`}
             >
-              Shift Days
+              Shift
             </label>
             <div className="flex gap-2 flex-wrap">
               {DAY_KEYS.map((day) => (
@@ -439,57 +467,58 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   onDelete,
 }) => {
   const [showPin, setShowPin] = useState(false);
-  const roleLabel =
-    employee.employeeRole.charAt(0).toUpperCase() +
-    employee.employeeRole.slice(1).toLowerCase();
+  const roleLabel = capitalizeWords(employee.employeeRole);
   const normalizedDays = (employee.shiftDay ?? []).map(normalizeDay);
   const hasPinRole = roleHasPin(employee.employeeRole);
 
-  const badgeCls =
-    employee.employeeRole.toUpperCase() === "SERVER"
-      ? "bg-[#EFD974] text-[#111]"
-      : "bg-[#AA3131] text-white";
+  const badgeCls = ["WAITER", "BARTENDER"].includes(
+    employee.employeeRole.toUpperCase(),
+  )
+    ? "bg-[#EFD974] text-[#111]"
+    : "bg-[#AA3131] text-white";
 
   return (
     <div className="bg-white border-[1.5px] border-[#111] rounded-2xl p-4 flex flex-col gap-3">
       {/* Top row */}
       <div className="flex justify-between items-start">
         <div className="flex gap-3 items-center">
-          <div className="w-12 h-12 rounded-xl bg-[#555] flex items-center justify-center text-white font-bold text-sm shrink-0">
+          <div className="w-15 h-15 rounded-xl bg-[#555] flex items-center justify-center text-white font-bold text-xl shrink-0">
             {getInitials(employee.fullName)}
           </div>
           <div>
-            <p className="font-bold text-sm text-[#111] leading-tight">
+            <p className="font-medium text-lg text-[#111] leading-tight">
               {employee.fullName}
             </p>
             <span
-              className={`inline-block mt-1 px-3 py-0.5 rounded-full text-xs font-semibold ${badgeCls}`}
+              className={`inline-block mt-1 px-3 py-0.5 rounded-full text-xs font-medium ${badgeCls}`}
             >
               {roleLabel}
             </span>
           </div>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2 mr-5">
           <button
             onClick={() => onEdit(employee)}
-            className="w-8 h-8 rounded-lg bg-[#111] flex items-center justify-center hover:bg-gray-800 transition cursor-pointer border-none"
+            className="w-9 h-9 rounded-lg bg-[#111] flex items-center justify-center hover:bg-gray-800 transition cursor-pointer border-none"
           >
             <IconEdit />
           </button>
           <button
             onClick={() => onDelete(employee)}
-            className="w-8 h-8 rounded-lg bg-[#111] flex items-center justify-center hover:bg-gray-800 transition cursor-pointer border-none"
+            className="w-9 h-9 rounded-lg bg-[#111] flex items-center justify-center hover:bg-gray-800 transition cursor-pointer border-none"
           >
             <IconDelete />
           </button>
         </div>
       </div>
 
+      <div className="border-t  border border-gray-100 w-full" />
+
       {/* Shift time */}
       <div className="flex items-center gap-2 text-xs text-[#555]">
         <IconSchedule />
         <span>Shift</span>
-        <span className="font-semibold">
+        <span className="font-medium">
           {employee.shiftStart} – {employee.shiftEnd}
         </span>
       </div>
@@ -502,7 +531,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           {normalizedDays.map((day) => (
             <span
               key={day}
-              className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#AA3131] text-white"
+              className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#AA3131] text-white"
             >
               {day}
             </span>
@@ -547,34 +576,38 @@ const EmployeeManagement: React.FC = () => {
     fetchEmployees();
   }, []);
 
-  const handleAddEmployee = (data: Partial<Employee>) => {
-    const newEmp: Employee = {
-      employeeId: Date.now().toString(),
-      fullName: data.fullName ?? "",
-      employeeRole: data.employeeRole ?? "SERVER",
-      shiftStart: data.shiftStart ?? "",
-      shiftEnd: data.shiftEnd ?? "",
-      shiftDay: data.shiftDay ?? [],
-      pin: data.pin ?? "",
-      imageUrl: null,
-    };
-    setEmployeeList((prev) => [...prev, newEmp]);
+  const handleAddEmployee = async (data: Partial<Employee>) => {
+    const newEmp = await employeesApi.addEmployee(data);
+    if (newEmp) {
+      setEmployeeList((prev) => [...prev, newEmp]);
+    }
   };
 
-  const handleEditEmployee = (data: Partial<Employee>) => {
+  const handleEditEmployee = async (data: Partial<Employee>) => {
     if (!editEmployee) return;
-    setEmployeeList((prev) =>
-      prev.map((e) =>
-        e.employeeId === editEmployee.employeeId ? { ...e, ...data } : e,
-      ),
+    const updated = await employeesApi.updateEmployee(
+      editEmployee.employeeId,
+      data,
     );
+    if (updated) {
+      setEmployeeList((prev) =>
+        prev.map((e) =>
+          e.employeeId === editEmployee.employeeId ? { ...e, ...updated } : e,
+        ),
+      );
+    }
   };
 
-  const handleDeleteEmployee = () => {
+  const handleDeleteEmployee = async () => {
     if (!deleteEmployee) return;
-    setEmployeeList((prev) =>
-      prev.filter((e) => e.employeeId !== deleteEmployee.employeeId),
+    const success = await employeesApi.deleteEmployee(
+      deleteEmployee.employeeId,
     );
+    if (success) {
+      setEmployeeList((prev) =>
+        prev.filter((e) => e.employeeId !== deleteEmployee.employeeId),
+      );
+    }
   };
 
   const filteredAndSorted = employeeList
@@ -596,7 +629,7 @@ const EmployeeManagement: React.FC = () => {
     );
 
   return (
-    <div>
+    <div className="font-poppins">
       {/* ── Header Banner ── */}
       <div
         className="w-full rounded-2xl px-6 py-4 flex items-center justify-between mb-6"
@@ -628,8 +661,8 @@ const EmployeeManagement: React.FC = () => {
       </div>
 
       {/* ── Filters Row ── */}
-      <div className="flex gap-3 mb-5 flex-wrap items-center">
-        <div className="relative w-64">
+      <div className="grid grid-cols-2 gap-4 mb-5 items-center">
+        <div className="relative">
           <Search
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -639,11 +672,11 @@ const EmployeeManagement: React.FC = () => {
             placeholder="Search by name or type"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 pl-9 pr-4 text-sm outline-none bg-white font-sans focus:border-[#AA3131] transition"
+            className="w-full border-[1.5px] border-gray-300 rounded-2xl py-2.5 pl-9 pr-4 text-sm outline-none bg-white font-sans focus:border-[#AA3131] transition"
           />
         </div>
 
-        <div className="flex gap-1 flex-wrap bg-white rounded-xl border border-gray-200 px-2 py-1.5 shadow-sm">
+        <div className="flex gap-1 flex-wrap bg-white rounded-xl border border-gray-200 px-2 py-1.5 shadow-sm justify-center">
           {ROLE_FILTERS.map((role) => (
             <button
               key={role}
@@ -661,10 +694,7 @@ const EmployeeManagement: React.FC = () => {
       </div>
 
       {/* ── Employee Cards Grid ── */}
-      <div
-        className="grid gap-4"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}
-      >
+      <div className="grid grid-cols-2 gap-4">
         {filteredAndSorted.map((employee) => (
           <EmployeeCard
             key={employee.employeeId}

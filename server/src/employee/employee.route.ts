@@ -16,4 +16,8 @@ employeeRoutes.post(
   employeeController.getCashierName,
 );
 
+employeeRoutes.post("/add-employee", employeeController.addEmployee);
+employeeRoutes.put("/update-employee/:id", employeeController.updateEmployee);
+employeeRoutes.delete("/delete-employee/:id", employeeController.deleteEmployee);
+
 export default employeeRoutes;

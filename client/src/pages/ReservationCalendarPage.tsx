@@ -15,15 +15,6 @@ import { Switch } from "@/components/ui/switch";
 
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-
 import { useEffect, useState, useCallback } from "react";
 import React from "react";
 import { BookingCalendar } from "@/components/ui/booking-calendar";

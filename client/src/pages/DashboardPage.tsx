@@ -66,7 +66,7 @@ const statCards = [
     Icon: IconCreditCardGear,
   },
   {
-    label: "Total Orders Today",
+    label: "Total Orders ",
     value: orderSummary.orderCount,
     iconBg: "rgba(149,0,82,0.12)",
     iconColor: "#950052",

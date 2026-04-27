@@ -77,6 +77,7 @@ class EmployeeController {
 
   async updateEmployee(req: Request, res: Response) {
     const { id } = req.params;
+    if (!id) return;
     try {
       const result = await employeeService.updateEmployee(id, req.body);
 
@@ -94,6 +95,8 @@ class EmployeeController {
 
   async deleteEmployee(req: Request, res: Response) {
     const { id } = req.params;
+    if (!id) return;
+
     try {
       const result = await employeeService.deleteEmployee(id);
 

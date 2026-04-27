@@ -47,7 +47,8 @@ class EmployeeService {
       image_url: employeeData.imageUrl,
     };
     const result = await employeeRepository.addEmployee(dbData);
-    return camelcaseKeys(result ?? {}, { deep: true });
+    if (!result) return null;
+    return camelcaseKeys(result, { deep: true });
   }
 
   async updateEmployee(employeeId: string, employeeData: any) {
@@ -63,7 +64,8 @@ class EmployeeService {
       dbData.image_url = employeeData.imageUrl;
 
     const result = await employeeRepository.updateEmployee(employeeId, dbData);
-    return camelcaseKeys(result ?? {}, { deep: true });
+    if (!result) return null;
+    return camelcaseKeys(result, { deep: true });
   }
 
   async deleteEmployee(employeeId: string) {

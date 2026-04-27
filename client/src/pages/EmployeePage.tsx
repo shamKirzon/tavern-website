@@ -176,12 +176,13 @@ const EmployeeFormModal: React.FC<EmployeeFormModalProps> = ({
 
     onSave({
       fullName: name,
-      employeeRole: type.toUpperCase(),
+      employeeRole: type.toLowerCase(),
       shiftStart,
       shiftEnd,
       shiftDay: days,
       pin: needsPin ? pin : "",
     });
+
     onClose();
   };
 
@@ -467,7 +468,9 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   onDelete,
 }) => {
   const [showPin, setShowPin] = useState(false);
-  const roleLabel = capitalizeWords(employee.employeeRole);
+  const roleLabel =
+    employee.employeeRole.charAt(0).toUpperCase() +
+    employee.employeeRole.slice(1).toLowerCase();
   const normalizedDays = (employee.shiftDay ?? []).map(normalizeDay);
   const hasPinRole = roleHasPin(employee.employeeRole);
 

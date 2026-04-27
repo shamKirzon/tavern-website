@@ -7,6 +7,10 @@ class BookingRepository {
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
 
+    return await this.getBookingDaysInRange(startDate, endDate);
+  }
+
+  async getBookingDaysInRange(startDate: string, endDate: string) {
     try {
       const { data, error } = await supabase
         .from("booking_days")
@@ -17,7 +21,7 @@ class BookingRepository {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error("Error in BookingRepository/getBookingDaysByMonth:", error);
+      console.error("Error in BookingRepository/getBookingDaysInRange:", error);
       return null;
     }
   }

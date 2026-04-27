@@ -40,7 +40,7 @@ export type Cancellation = {
 
 export type CancellationStatus = "pending" | "accepted" | "rejected" | "none";
 
-export type DayStatus = "available" | "fullyBooked" | "closed";
+export type DayStatus = "available" | "fullyBooked" | "closed" | "done";
 
 export interface BookingInfo {
   booked: number;

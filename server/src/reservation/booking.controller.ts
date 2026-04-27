@@ -24,6 +24,28 @@ class BookingController {
     }
   }
 
+  async getBookingDaysInRange(req: Request, res: Response) {
+    try {
+      const { startDate, endDate } = req.query;
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "startDate and endDate are required." });
+      }
+
+      const result = await bookingService.getBookingDaysInRange(
+        String(startDate),
+        String(endDate)
+      );
+
+      return res.status(200).json({
+        message: "Fetched booking days in range successfully.",
+        result,
+      });
+    } catch (error) {
+      console.error("Error in BookingController/getBookingDaysInRange:", error);
+      return res.status(500).json({ message: "Internal server error." });
+    }
+  }
+
   async updateBookingDays(req: Request, res: Response) {
     try {
       const { dates, status } = req.body;

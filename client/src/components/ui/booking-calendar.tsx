@@ -50,6 +50,10 @@ const STATUS_STYLES: Record<DayStatus, StatusStyle> = {
     cell: "bg-red-100 border-red-300",
     text: "text-red-700",
   },
+  done: {
+    cell: "bg-gray-100 border-gray-300 opacity-60",
+    text: "text-gray-500",
+  },
 };
 
 export function BookingCalendar({
@@ -146,7 +150,15 @@ export function BookingCalendar({
     );
   }
 
+  function isPastDate(d: number): boolean {
+    const checkDate = new Date(currentYear, currentMonth, d);
+    checkDate.setHours(0, 0, 0, 0);
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return checkDate < todayDate;
+  }
+
   function handleDayClick(d: number): void {
+    if (isPastDate(d)) return;
     const key = getDayKey(d);
     const info = bookingData[key];
 
@@ -204,11 +216,16 @@ export function BookingCalendar({
         break;
       case "openAll":
         {
-          const allDates: string[] = [];
-          for (let d = 1; d <= daysInMonth; d++) {
-            allDates.push(getDayKey(d));
+          const next14Days = getNext14DaysKeys();
+          // Filter out those already open to only send gaps
+          const datesToOpen = next14Days.filter(
+            (key) =>
+              bookingData[key]?.status !== "available" &&
+              bookingData[key]?.status !== "fullyBooked",
+          );
+          if (datesToOpen.length > 0) {
+            onOpenAll?.(datesToOpen);
           }
-          onOpenAll?.(allDates);
         }
         setSelectedDays(new Set());
         break;
@@ -218,6 +235,29 @@ export function BookingCalendar({
     }
     setOpenConfirmationDialog(false);
   };
+
+  const getNext14DaysKeys = () => {
+    const keys: string[] = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    // Start from tomorrow
+    start.setDate(start.getDate() + 1);
+
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      keys.push(key);
+    }
+    return keys;
+  };
+
+  const next14DaysKeys = getNext14DaysKeys();
+  const isAll14DaysOpen = next14DaysKeys.every(
+    (key) =>
+      bookingData[key]?.status === "available" ||
+      bookingData[key]?.status === "fullyBooked",
+  );
 
   return (
     <div className="flex flex-col font-poppins bg-white rounded-2xl overflow-hidden relative">
@@ -283,7 +323,8 @@ export function BookingCalendar({
 
                 const key = getDayKey(d);
                 const info: BookingInfo | undefined = bookingData[key];
-                const status: DayStatus | undefined = info?.status;
+                const isPast = isPastDate(d);
+                const status: DayStatus | undefined = isPast ? "done" : info?.status;
                 const styles: StatusStyle | null = status
                   ? STATUS_STYLES[status]
                   : null;
@@ -294,12 +335,14 @@ export function BookingCalendar({
                   <button
                     key={di}
                     onClick={() => handleDayClick(d)}
+                    disabled={isPast}
                     className={`
                       relative flex flex-col items-center justify-center rounded-xl border-2 transition-all
                       text-gray-800 cursor-pointer select-none h-16
                       ${styles ? styles.cell : "bg-white border-gray-200 hover:border-gray-400"}
                       ${todayCell && !status ? "border-[#c9a800] border-2" : ""}
                       ${selected ? "ring-2 ring-blue-400 ring-offset-1" : ""}
+                      ${isPast ? "cursor-not-allowed" : ""}
                       py-1
                     `}
                   >
@@ -317,9 +360,9 @@ export function BookingCalendar({
                     >
                       {d}
                     </span>
-                    {info && styles && (
+                    {info && (
                       <span
-                        className={`text-[10px] font-semibold mt-0.5 ${styles.text}`}
+                        className={`text-[10px] font-semibold mt-0.5 ${styles ? styles.text : "text-gray-400"}`}
                       >
                         {info.booked}/{info.total}
                       </span>
@@ -377,10 +420,11 @@ export function BookingCalendar({
             setConfirmationAction("openAll");
             setOpenConfirmationDialog(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 font-medium bg-[#D9D9D9]/31 border border-[#D9D9D9] rounded-2xl text-sm"
+          disabled={isAll14DaysOpen}
+          className="flex items-center gap-2 px-4 py-2 font-medium bg-[#D9D9D9]/31 border border-[#D9D9D9] rounded-2xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <OpenAll />
-          <span>Open All {daysInMonth} Days</span>
+          <span>Open All 14 Days</span>
         </button>
         <button
           onClick={() => {

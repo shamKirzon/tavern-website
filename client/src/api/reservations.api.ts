@@ -24,6 +24,23 @@ export const reservationsApi = {
     }
   },
 
+  async getBookingDaysInRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<BookingData> {
+    try {
+      const res = await axiosInstance.get("/booking-days/range", {
+        params: { startDate, endDate },
+      });
+      if (!res) return {};
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in reservationApi/getBookingDaysInRange(): ", error);
+      return {};
+    }
+  },
+
   async getReservationCalendarSummary(
     year: number,
     month: number,

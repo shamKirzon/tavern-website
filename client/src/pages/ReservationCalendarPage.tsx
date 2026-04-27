@@ -14,6 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+
 import {
   Dialog,
   DialogClose,
@@ -51,6 +52,10 @@ function mergeCalendarData(
   reservationData: BookingData,
 ): BookingData {
   const merged: BookingData = { ...dbData };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // First, ensure all reservation data counts are reflected
   Object.entries(reservationData).forEach(([date, resInfo]) => {
     if (merged[date]) {
       merged[date] = { ...merged[date], booked: resInfo.booked };
@@ -58,6 +63,15 @@ function mergeCalendarData(
       merged[date] = resInfo;
     }
   });
+
+  // Then, override status for past dates to 'done'
+  Object.keys(merged).forEach((dateKey) => {
+    const checkDate = new Date(dateKey);
+    if (checkDate < today) {
+      merged[dateKey] = { ...merged[dateKey], status: "done" };
+    }
+  });
+
   return merged;
 }
 
@@ -79,14 +93,31 @@ const ReservationCalendarPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const [dbDays, summary, allReservations] = await Promise.all([
-        reservationsApi.getBookingDaysByMonth(year, month),
-        reservationsApi.getReservationCalendarSummary(year, month),
-        reservationsApi.getReservationList(),
-      ]);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const endRange = new Date();
+      endRange.setDate(endRange.getDate() + 14);
+
+      const formatDate = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      const [dbDays, summary, allReservations, next14DaysData] =
+        await Promise.all([
+          reservationsApi.getBookingDaysByMonth(year, month),
+          reservationsApi.getReservationCalendarSummary(year, month),
+          reservationsApi.getReservationList(),
+          reservationsApi.getBookingDaysInRange(
+            formatDate(tomorrow),
+            formatDate(endRange),
+          ),
+        ]);
 
       const reservationData = buildBookingDataFromSummary(summary);
-      const merged = mergeCalendarData(dbDays, reservationData);
+      let merged = mergeCalendarData(dbDays, reservationData);
+
+      // Merge next 14 days data as well to ensure calendar has them for the button logic
+      merged = { ...merged, ...next14DaysData };
+
       setBookingData(merged);
       setReservations(allReservations || []);
     } catch (err) {
@@ -133,15 +164,19 @@ const ReservationCalendarPage = () => {
       );
     });
 
-    const pending = filtered.filter((r) => r.reservationStatus === "pending")
-      .length;
-    const approved = filtered.filter((r) => r.reservationStatus === "accepted")
-      .length;
+    const pending = filtered.filter(
+      (r) => r.reservationStatus === "pending",
+    ).length;
+    const approved = filtered.filter(
+      (r) => r.reservationStatus === "accepted",
+    ).length;
     const total = filtered.length;
-    const exclusive = filtered.filter((r) => r.reservationType === "exclusive")
-      .length;
-    const regular = filtered.filter((r) => r.reservationType === "inclusive")
-      .length;
+    const exclusive = filtered.filter(
+      (r) => r.reservationType === "exclusive",
+    ).length;
+    const regular = filtered.filter(
+      (r) => r.reservationType === "inclusive",
+    ).length;
     const earnings = filtered
       .filter((r) => r.reservationStatus === "done")
       .reduce((sum, r) => sum + (Number(r.reservationAmount) || 0), 0);
@@ -291,7 +326,10 @@ const ReservationCalendarPage = () => {
           {/* Date */}
           <div className="flex flex-col pl-10 pt-5">
             <span className="text-lg font-medium">
-              Month of {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })}
+              Month of{" "}
+              {new Date(currentYear, currentMonth).toLocaleString("default", {
+                month: "long",
+              })}
             </span>
           </div>
           <div className="px-6 pt-2.5">
@@ -319,9 +357,7 @@ const ReservationCalendarPage = () => {
                         }}
                         className="data-[state=checked]:bg-[#009507] data-[state=unchecked]:bg-gray-300 disabled:opacity-30 cursor-default"
                       />
-                      <span
-                        className={!selectedDateKey ? "text-gray-400" : ""}
-                      >
+                      <span className={!selectedDateKey ? "text-gray-400" : ""}>
                         Open for reservations
                       </span>
                     </div>

@@ -329,6 +329,8 @@ const ReportsAnalyticsPage: React.FC = () => {
                     fill: "#9ca3af",
                     fontFamily: "Poppins",
                   }}
+                  allowDecimals={false}
+                  interval="preserveStartEnd"
                 />
                 <ChartTooltip
                   cursor={false}
@@ -555,6 +557,8 @@ const ReportsAnalyticsPage: React.FC = () => {
                     fill: "#9ca3af",
                     fontFamily: "Poppins",
                   }}
+                  allowDecimals={false}
+                  interval="preserveStartEnd"
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar

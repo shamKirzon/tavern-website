@@ -321,6 +321,8 @@ const ReportsAnalyticsPage: React.FC = () => {
                     fontFamily: "Poppins",
                   }}
                 />
+
+                {/* testing */}
                 <YAxis
                   tickLine={false}
                   axisLine={false}

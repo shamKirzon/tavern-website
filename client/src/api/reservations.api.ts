@@ -7,14 +7,27 @@ import type {
 import { axiosInstance } from "./axios";
 
 export const reservationsApi = {
-  async getReservationTrends() {
+  async getReservationTrends(year?: number) {
     try {
-      const res = await axiosInstance.get("/reservation/get-reservation-trends");
+      const res = await axiosInstance.get("/reservation/get-reservation-trends", {
+        params: { year },
+      });
       if (!res) return console.log("Can't get reservation trends.");
 
       return res.data.result;
     } catch (error) {
       console.log("Error in reservationApi/getReservationTrends(): ", error);
+    }
+  },
+
+  async getAvailableYears() {
+    try {
+      const res = await axiosInstance.get("/reservation/get-available-years");
+      if (!res) return console.log("Can't get available years.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in reservationApi/getAvailableYears(): ", error);
     }
   },
 

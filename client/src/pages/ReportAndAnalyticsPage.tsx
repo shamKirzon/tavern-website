@@ -120,12 +120,88 @@ const SectionHeader = ({
   </div>
 );
 
+const FilterDropdown = ({
+  options,
+  selected,
+  onChange,
+}: {
+  options: { label: string; value: string }[];
+  selected: string;
+  onChange: (value: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selectedLabel =
+    options.find((o) => o.value === selected)?.label ?? selected;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="border border-gray-200 text-[11px] font-poppins px-3 py-1.5 rounded-lg text-gray-600 flex items-center gap-1.5 hover:bg-gray-50 shadow-sm select-none"
+      >
+        {selectedLabel}
+        <svg
+          className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 mt-1.5 w-32 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden"
+          style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}
+        >
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2 text-[12px] font-poppins transition-colors
+                ${
+                  selected === opt.value
+                    ? "bg-red-50 text-[#AA3131] font-semibold"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const ReportsAnalyticsPage: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [cancellations, setCancellations] = useState<Cancellation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [years, setYears] = useState<number[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("all");
 
   const [reservationTrends, setReservationTrends] = useState<
     { date: string; approved: number; cancelled: number }[]
@@ -134,14 +210,14 @@ const ReportsAnalyticsPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resData, cancelData, trendsData] = await Promise.all([
+        const [resData, cancelData, yearsData] = await Promise.all([
           reservationsApi.getReservationList(),
           reservationsApi.getReservationCancellations(),
-          reservationsApi.getReservationTrends(),
+          reservationsApi.getAvailableYears(),
         ]);
         if (resData) setReservations(resData);
         if (cancelData) setCancellations(cancelData);
-        if (trendsData) setReservationTrends(trendsData);
+        if (yearsData) setYears(yearsData);
       } catch (error) {
         console.error("Error fetching report data:", error);
       } finally {
@@ -150,6 +226,15 @@ const ReportsAnalyticsPage: React.FC = () => {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchTrends = async () => {
+        const year = selectedYear === "all" ? undefined : Number(selectedYear);
+        const trendsData = await reservationsApi.getReservationTrends(year);
+        if (trendsData) setReservationTrends(trendsData);
+    };
+    fetchTrends();
+  }, [selectedYear]);
 
   const reservationMetrics = useMemo(() => {
     const done = reservations.filter((r) => r.reservationStatus === "done");
@@ -295,12 +380,24 @@ const ReportsAnalyticsPage: React.FC = () => {
             className="bg-white rounded-2xl border border-gray-100 p-5"
             style={{ boxShadow: cardShadow }}
           >
-            <p className="font-bold text-gray-900 text-[15px] mb-1">
-              Booking Trends
-            </p>
-            <p className="text-gray-400 text-[11px] mb-4">
-              Approved vs Cancelled per day
-            </p>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="font-bold text-gray-900 text-[15px] mb-1">
+                  Booking Trends
+                </p>
+                <p className="text-gray-400 text-[11px]">
+                  Approved vs Cancelled per day
+                </p>
+              </div>
+              <FilterDropdown
+                options={[
+                  { label: "All Years", value: "all" },
+                  ...years.map((y) => ({ label: y.toString(), value: y.toString() })),
+                ]}
+                selected={selectedYear}
+                onChange={setSelectedYear}
+              />
+            </div>
             <ChartContainer
               config={bookingTrendsChartConfig}
               className="h-[260px] w-full"

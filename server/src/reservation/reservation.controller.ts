@@ -11,7 +11,10 @@ export const uploadMiddleware = upload.single("file");
 class ReservationController {
   async getReservationTrends(req: Request, res: Response) {
     try {
-      const result = await reservationService.getReservationTrends();
+      const { year } = req.query;
+      const result = await reservationService.getReservationTrends(
+        year ? Number(year) : undefined,
+      );
       return res.status(200).json({
         message: "Fetched reservation trends successfully.",
         result,
@@ -19,6 +22,19 @@ class ReservationController {
     } catch (error: any) {
       console.error("error from getReservationTrends(): ", error);
       return res.status(400).json({ message: "can't fetch reservation trends" });
+    }
+  }
+
+  async getAvailableYears(req: Request, res: Response) {
+    try {
+      const result = await reservationService.getAvailableYears();
+      return res.status(200).json({
+        message: "Fetched available years successfully.",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getAvailableYears(): ", error);
+      return res.status(400).json({ message: "can't fetch available years" });
     }
   }
 

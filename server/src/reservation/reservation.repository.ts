@@ -2,9 +2,17 @@ import { supabase } from "../lib/supabase-client";
 import { CancellationStatus, ReservationStatus } from "../types/Reservation";
 
 class ReservationRepository {
-  async getReservationList() {
+  async getReservationList(year?: number) {
     try {
-      const { data, error } = await supabase.from("reservations").select("*");
+      let query = supabase.from("reservations").select("*");
+      
+      if (year) {
+        const start = `${year}-01-01`;
+        const end = `${year}-12-31`;
+        query = query.gte("date", start).lte("date", end);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

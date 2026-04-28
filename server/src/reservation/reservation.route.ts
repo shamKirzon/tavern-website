@@ -13,6 +13,11 @@ reservationRoutes.get(
   reservationController.getReservationTrends,
 );
 
+reservationRoutes.get(
+  "/get-available-years",
+  reservationController.getAvailableYears,
+);
+
 // GET
 reservationRoutes.get(
   "/get-reservation-list",

@@ -4,8 +4,8 @@ import { bookingRepository } from "./booking.repository";
 import camelcaseKeys from "camelcase-keys";
 
 class ReservationService {
-  async getReservationTrends() {
-    const reservations = await this.getReservationList();
+  async getReservationTrends(year?: number) {
+    const reservations = await this.getReservationList(year);
     const cancellations = await this.getReservationCancellations();
 
     const trendMap: Record<string, { approved: number; cancelled: number }> = {};
@@ -41,8 +41,16 @@ class ReservationService {
     }));
   }
 
-  async getReservationList() {
-    const dbResult = await reservationRepository.getReservationList();
+  async getAvailableYears() {
+    const reservations = await this.getReservationList();
+    if (!reservations) return [];
+
+    const years = new Set(reservations.map((r) => new Date(r.date).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a);
+  }
+
+  async getReservationList(year?: number) {
+    const dbResult = await reservationRepository.getReservationList(year);
     if (!dbResult) return;
 
     return camelcaseKeys(dbResult ?? [], { deep: true });

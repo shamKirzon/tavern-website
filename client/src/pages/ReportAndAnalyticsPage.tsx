@@ -301,8 +301,13 @@ const ReportsAnalyticsPage: React.FC = () => {
     () => [
       {
         name: "Approved",
-        value: reservationMetrics.approvedCount + reservationMetrics.doneCount,
+        value: reservationMetrics.approvedCount,
         color: "#4CAF50",
+      },
+      {
+        name: "Cancelled",
+        value: reservationMetrics.cancelledCount,
+        color: "#4A78E3",
       },
       {
         name: "Pending",
@@ -310,14 +315,14 @@ const ReportsAnalyticsPage: React.FC = () => {
         color: "#EAC54F",
       },
       {
+        name: "Done",
+        value: reservationMetrics.doneCount,
+        color: "#6366F1",
+      },
+      {
         name: "Rejected",
         value: reservationMetrics.rejectedCount,
         color: "#C0392B",
-      },
-      {
-        name: "Cancelled",
-        value: reservationMetrics.cancelledCount,
-        color: "#4A78E3",
       },
     ],
     [reservationMetrics],
@@ -521,15 +526,15 @@ const ReportsAnalyticsPage: React.FC = () => {
                 onChange={setSelectedStatusYear}
               />
             </div>
-            <div className="h-[260px] w-full flex items-center justify-center">
-              <PieChart width={340} height={260}>
+            <div className="h-[200px] w-full flex items-center justify-center gap-4">
+              <PieChart width={200} height={200}>
                 <Pie
                   data={statusData}
                   dataKey="value"
                   cx="50%"
-                  cy="45%"
-                  innerRadius={70}
-                  outerRadius={100}
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
                   paddingAngle={0}
                   stroke="none"
                 >
@@ -537,17 +542,18 @@ const ReportsAnalyticsPage: React.FC = () => {
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
-                <Legend
-                  verticalAlign="bottom"
-                  align="center"
-                  iconType="square"
-                  wrapperStyle={{
-                    paddingTop: 20,
-                    fontFamily: "Poppins",
-                    fontSize: 11,
-                  }}
-                />
               </PieChart>
+              <Legend
+                layout="vertical"
+                verticalAlign="middle"
+                align="right"
+                iconType="square"
+                wrapperStyle={{
+                  fontFamily: "Poppins",
+                  fontSize: 11,
+                  paddingLeft: "10px",
+                }}
+              />
             </div>
           </div>
         </div>

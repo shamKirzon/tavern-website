@@ -1,6 +1,6 @@
 import { SideBarReportsAndAnalytics } from "@/assets/icons/icons";
 import { formatReadableDate } from "@/utils/date";
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -24,25 +24,10 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { reservationsApi } from "@/api/reservations.api";
+import type { Reservation, Cancellation } from "@/types/Reservation";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-
-const trendData = [
-  { day: "Mon", approved: 9, cancelled: 4 },
-  { day: "Tue", approved: 1, cancelled: 8 },
-  { day: "Wed", approved: 5, cancelled: 4 },
-  { day: "Thu", approved: 4, cancelled: 3 },
-  { day: "Fri", approved: 10, cancelled: 7 },
-  { day: "Sat", approved: 3, cancelled: 10 },
-  { day: "Sun", approved: 9, cancelled: 6 },
-];
-
-const statusData = [
-  { name: "Approved", value: 143, color: "#4CAF50" },
-  { name: "Pending", value: 40, color: "#EAC54F" },
-  { name: "Rejected", value: 20, color: "#C0392B" },
-  { name: "Cancelled", value: 88, color: "#4A78E3" },
-];
 
 const revenueData = [
   { day: "Mon", revenue: 22000, orders: 33 },
@@ -138,6 +123,125 @@ const SectionHeader = ({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const ReportsAnalyticsPage: React.FC = () => {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [cancellations, setCancellations] = useState<Cancellation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [reservationTrends, setReservationTrends] = useState<
+    { date: string; approved: number; cancelled: number }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [resData, cancelData, trendsData] = await Promise.all([
+          reservationsApi.getReservationList(),
+          reservationsApi.getReservationCancellations(),
+          reservationsApi.getReservationTrends(),
+        ]);
+        if (resData) setReservations(resData);
+        if (cancelData) setCancellations(cancelData);
+        if (trendsData) setReservationTrends(trendsData);
+      } catch (error) {
+        console.error("Error fetching report data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const reservationMetrics = useMemo(() => {
+    const done = reservations.filter((r) => r.reservationStatus === "done");
+    const accepted = reservations.filter(
+      (r) => r.reservationStatus === "accepted",
+    );
+    const pending = reservations.filter(
+      (r) => r.reservationStatus === "pending",
+    );
+    const rejected = reservations.filter(
+      (r) => r.reservationStatus === "rejected",
+    );
+
+    const cancelledCount = cancellations.filter(
+      (c) => c.status === "accepted",
+    ).length;
+
+    const totalRevenue = done.reduce(
+      (sum, r) => sum + (Number(r.reservationAmount) || 0),
+      0,
+    );
+
+    return {
+      totalRevenue,
+      approvedCount: accepted.length,
+      cancelledCount: cancelledCount,
+      pendingCount: pending.length,
+      rejectedCount: rejected.length,
+      doneCount: done.length,
+    };
+  }, [reservations, cancellations]);
+
+  const trendData = useMemo(() => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const dayMap = days.reduce(
+      (acc, day) => {
+        acc[day] = { day, approved: 0, cancelled: 0 };
+        return acc;
+      },
+      {} as Record<
+        string,
+        { day: string; approved: number; cancelled: number }
+      >,
+    );
+
+    reservationTrends.forEach((t) => {
+      const date = new Date(t.date);
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const dayName = dayNames[date.getDay()];
+      if (dayMap[dayName]) {
+        dayMap[dayName].approved += Math.floor(t.approved);
+        dayMap[dayName].cancelled += Math.floor(t.cancelled);
+      }
+    });
+
+    return days.map((day) => dayMap[day]);
+  }, [reservationTrends]);
+
+  const statusData = useMemo(
+    () => [
+      {
+        name: "Approved",
+        value: reservationMetrics.approvedCount + reservationMetrics.doneCount,
+        color: "#4CAF50",
+      },
+      {
+        name: "Pending",
+        value: reservationMetrics.pendingCount,
+        color: "#EAC54F",
+      },
+      {
+        name: "Rejected",
+        value: reservationMetrics.rejectedCount,
+        color: "#C0392B",
+      },
+      {
+        name: "Cancelled",
+        value: reservationMetrics.cancelledCount,
+        color: "#4A78E3",
+      },
+    ],
+    [reservationMetrics],
+  );
+
+  const formatRevenue = (value: number) => {
+    if (value >= 1000) {
+      const truncated = Math.floor((value / 1000) * 10) / 10;
+      return `₱${truncated.toFixed(1)}K`;
+    }
+    return `₱${value.toLocaleString()}`;
+  };
+
   return (
     <div className="flex flex-col gap-5 font-poppins">
       {/* Header */}
@@ -168,18 +272,18 @@ const ReportsAnalyticsPage: React.FC = () => {
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
           <StatCard
-            label="Total Reservation"
-            value={143}
+            label="Total Reservation Revenue"
+            value={formatRevenue(reservationMetrics.totalRevenue)}
             accentBg="rgba(0,149,7,0.15)"
           />
           <StatCard
             label="Approved Reservations"
-            value={143}
+            value={reservationMetrics.approvedCount}
             accentBg="rgba(0,17,255,0.12)"
           />
           <StatCard
             label="Cancelled Reservations"
-            value={88}
+            value={reservationMetrics.cancelledCount}
             accentBg="rgba(239,217,116,0.45)"
           />
         </div>

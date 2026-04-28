@@ -7,6 +7,17 @@ import type {
 import { axiosInstance } from "./axios";
 
 export const reservationsApi = {
+  async getReservationTrends() {
+    try {
+      const res = await axiosInstance.get("/reservation/get-reservation-trends");
+      if (!res) return console.log("Can't get reservation trends.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in reservationApi/getReservationTrends(): ", error);
+    }
+  },
+
   async getBookingDaysByMonth(
     year: number,
     month: number,

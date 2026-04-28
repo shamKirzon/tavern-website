@@ -1,6 +1,6 @@
 import { SideBarReportsAndAnalytics } from "@/assets/icons/icons";
 import { formatReadableDate } from "@/utils/date";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -229,9 +229,9 @@ const ReportsAnalyticsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchTrends = async () => {
-        const year = selectedYear === "all" ? undefined : Number(selectedYear);
-        const trendsData = await reservationsApi.getReservationTrends(year);
-        if (trendsData) setReservationTrends(trendsData);
+      const year = selectedYear === "all" ? undefined : Number(selectedYear);
+      const trendsData = await reservationsApi.getReservationTrends(year);
+      if (trendsData) setReservationTrends(trendsData);
     };
     fetchTrends();
   }, [selectedYear]);
@@ -392,7 +392,10 @@ const ReportsAnalyticsPage: React.FC = () => {
               <FilterDropdown
                 options={[
                   { label: "All Years", value: "all" },
-                  ...years.map((y) => ({ label: y.toString(), value: y.toString() })),
+                  ...years.map((y) => ({
+                    label: y.toString(),
+                    value: y.toString(),
+                  })),
                 ]}
                 selected={selectedYear}
                 onChange={setSelectedYear}
@@ -402,10 +405,36 @@ const ReportsAnalyticsPage: React.FC = () => {
               config={bookingTrendsChartConfig}
               className="h-[260px] w-full"
             >
-              <LineChart
+              <AreaChart
                 data={trendData}
-                margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
               >
+                <defs>
+                  <linearGradient id="fillApproved" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-approved)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-approved)"
+                      stopOpacity={0.05}
+                    />
+                  </linearGradient>
+                  <linearGradient id="fillCancelled" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-cancelled)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-cancelled)"
+                      stopOpacity={0.05}
+                    />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid vertical={false} stroke="#f0f0f0" />
                 <XAxis
                   dataKey="day"
@@ -418,8 +447,6 @@ const ReportsAnalyticsPage: React.FC = () => {
                     fontFamily: "Poppins",
                   }}
                 />
-
-                {/* testing */}
                 <YAxis
                   tickLine={false}
                   axisLine={false}
@@ -435,28 +462,28 @@ const ReportsAnalyticsPage: React.FC = () => {
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}
                 />
-                <Line
-                  type="monotone"
+                <Area
                   dataKey="approved"
+                  type="natural"
+                  fill="url(#fillApproved)"
                   stroke="var(--color-approved)"
                   strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 6 }}
+                  isAnimationActive={false}
                 />
-                <Line
-                  type="monotone"
+                <Area
                   dataKey="cancelled"
+                  type="natural"
+                  fill="url(#fillCancelled)"
                   stroke="var(--color-cancelled)"
                   strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{ r: 6 }}
+                  isAnimationActive={false}
                 />
                 <ChartLegend
                   content={<ChartLegendContent payload={[]} />}
                   wrapperStyle={{ paddingTop: "16px" }}
                   verticalAlign="bottom"
                 />
-              </LineChart>
+              </AreaChart>
             </ChartContainer>
           </div>
 

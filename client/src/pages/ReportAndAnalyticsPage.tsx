@@ -468,7 +468,6 @@ const ReportsAnalyticsPage: React.FC = () => {
                   fill="url(#fillApproved)"
                   stroke="var(--color-approved)"
                   strokeWidth={2.5}
-                  isAnimationActive={false}
                 />
                 <Area
                   dataKey="cancelled"
@@ -476,7 +475,6 @@ const ReportsAnalyticsPage: React.FC = () => {
                   fill="url(#fillCancelled)"
                   stroke="var(--color-cancelled)"
                   strokeWidth={2.5}
-                  isAnimationActive={false}
                 />
                 <ChartLegend
                   content={<ChartLegendContent payload={[]} />}

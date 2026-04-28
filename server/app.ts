@@ -13,7 +13,7 @@ const app = express();
 
 const rateLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 1000,
   message: { message: "Too many request from this IP, please try again later" },
   standardHeaders: true,
   legacyHeaders: true,

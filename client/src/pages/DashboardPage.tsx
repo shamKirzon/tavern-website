@@ -32,55 +32,6 @@ import { orderApi } from "@/api/orders.api";
 import { employeesApi } from "@/api/employees.api";
 import { customerApi } from "@/api/customers.api";
 
-const reservationSummary = await reservationsApi.getReservationSummary();
-const orderSummary = await orderApi.getOrderSummary();
-const employeeSummary = await employeesApi.getEmployeeSummary();
-
-const statCards = [
-  {
-    label: "Total Reservations",
-    value: reservationSummary.reservationCount,
-    iconBg: "rgba(0,149,7,0.15)",
-    iconColor: "#009507",
-    Icon: IconCalendarToday,
-  },
-  {
-    label: "Approved Reservations",
-    value: reservationSummary.accepted,
-    iconBg: "rgba(0,17,255,0.12)",
-    iconColor: "#2D37C2",
-    Icon: IconCalendarCheck,
-  },
-  {
-    label: "Pending Reservations",
-    value: reservationSummary.pending,
-    iconBg: "rgba(239,217,116,0.45)",
-    iconColor: "#A6902A",
-    Icon: IconCalendarClock,
-  },
-  {
-    label: "Total Earnings",
-    value: "₱ " + parseInt(orderSummary.totalEarnings).toLocaleString(),
-    iconBg: "rgba(149,50,0,0.12)",
-    iconColor: "#AD7434",
-    Icon: IconCreditCardGear,
-  },
-  {
-    label: "Total Orders ",
-    value: orderSummary.orderCount,
-    iconBg: "rgba(149,0,82,0.12)",
-    iconColor: "#950052",
-    Icon: IconFastFood,
-  },
-  {
-    label: "Available Staff",
-    value: employeeSummary.employeeCount,
-    iconBg: "rgba(0,157,255,0.15)",
-    iconColor: "#087DC7",
-    Icon: IconFace,
-  },
-];
-
 // ─── Dynamic chart config based on period ────────────────────────────────────
 
 const getRevenueChartConfig = (period: string): ChartConfig => {
@@ -234,6 +185,28 @@ const DashboardPage = () => {
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [customerData, setCustomerData] = useState<any[]>([]);
 
+  const [reservationSummary, setReservationSummary] = useState<any>(null);
+  const [orderSummary, setOrderSummary] = useState<any>(null);
+  const [employeeSummary, setEmployeeSummary] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        const [resSum, ordSum, empSum] = await Promise.all([
+          reservationsApi.getReservationSummary(),
+          orderApi.getOrderSummary(),
+          employeesApi.getEmployeeSummary(),
+        ]);
+        setReservationSummary(resSum);
+        setOrderSummary(ordSum);
+        setEmployeeSummary(empSum);
+      } catch (error) {
+        console.error("Error fetching summaries:", error);
+      }
+    };
+    fetchSummaries();
+  }, []);
+
   useEffect(() => {
     orderApi.getTotalRevenue(revenuePeriod).then(setRevenueData);
   }, [revenuePeriod]);
@@ -248,8 +221,55 @@ const DashboardPage = () => {
   const revenueXKey = revenuePeriod === "yearly" ? "year" : "month";
   const revenueChartConfig = getRevenueChartConfig(revenuePeriod);
 
-  // Customer chart: "day" key for weekly, "month" for monthly  ← THE FIX
+  // Customer chart: "day" key for weekly, "month" for monthly
   const customerXKey = customerMapPeriod === "weekly" ? "day" : "month";
+
+  const statCards = [
+    {
+      label: "Total Reservations",
+      value: reservationSummary?.reservationCount ?? 0,
+      iconBg: "rgba(0,149,7,0.15)",
+      iconColor: "#009507",
+      Icon: IconCalendarToday,
+    },
+    {
+      label: "Approved Reservations",
+      value: reservationSummary?.accepted ?? 0,
+      iconBg: "rgba(0,17,255,0.12)",
+      iconColor: "#2D37C2",
+      Icon: IconCalendarCheck,
+    },
+    {
+      label: "Pending Reservations",
+      value: reservationSummary?.pending ?? 0,
+      iconBg: "rgba(239,217,116,0.45)",
+      iconColor: "#A6902A",
+      Icon: IconCalendarClock,
+    },
+    {
+      label: "Total Order Revenue",
+      value: orderSummary
+        ? "₱ " + parseInt(orderSummary.totalEarnings).toLocaleString()
+        : "₱ 0",
+      iconBg: "rgba(149,50,0,0.12)",
+      iconColor: "#AD7434",
+      Icon: IconCreditCardGear,
+    },
+    {
+      label: "Total Orders ",
+      value: orderSummary?.orderCount ?? 0,
+      iconBg: "rgba(149,0,82,0.12)",
+      iconColor: "#950052",
+      Icon: IconFastFood,
+    },
+    {
+      label: "Available Staff",
+      value: employeeSummary?.employeeCount ?? 0,
+      iconBg: "rgba(0,157,255,0.15)",
+      iconColor: "#087DC7",
+      Icon: IconFace,
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-5">

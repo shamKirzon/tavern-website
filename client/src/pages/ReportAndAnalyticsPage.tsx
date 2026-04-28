@@ -23,6 +23,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { reservationsApi } from "@/api/reservations.api";
+import { orderApi } from "@/api/orders.api";
 import type { Reservation, Cancellation } from "@/types/Reservation";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -184,29 +185,91 @@ const FilterDropdown = ({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const ReportsAnalyticsPage: React.FC = () => {
+  const currentYear = new Date().getFullYear();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [cancellations, setCancellations] = useState<Cancellation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [years, setYears] = useState<number[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [selectedStatusYear, setSelectedStatusYear] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
+  const [selectedStatusYear, setSelectedStatusYear] = useState<string>(currentYear.toString());
 
   const [reservationTrends, setReservationTrends] = useState<
     { date: string; approved: number; cancelled: number }[]
   >([]);
 
+  const [orderMetrics, setOrderMetrics] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    ordersPerDay: 0,
+  });
+
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      try {
+        const list = await orderApi.getOrderList();
+        if (list && list.length > 0) {
+          const filteredOrders = list.filter((order: any) => {
+            const orderYear = new Date(order.createdAt).getFullYear();
+            return orderYear === currentYear && order.orderStatus === "done";
+          });
+
+          const totalRevenue = filteredOrders.reduce(
+            (sum: number, order: any) => sum + (Number(order.total) || 0),
+            0,
+          );
+          const totalOrders = filteredOrders.length;
+
+          const allDates = filteredOrders.map((order: any) =>
+            new Date(order.createdAt).getTime(),
+          );
+
+          let diffDays = 1;
+          if (allDates.length > 0) {
+            const minDate = new Date(Math.min(...allDates));
+            const maxDate = new Date(Math.max(...allDates));
+
+            const start = new Date(
+              minDate.getFullYear(),
+              minDate.getMonth(),
+              minDate.getDate(),
+            );
+            const end = new Date(
+              maxDate.getFullYear(),
+              maxDate.getMonth(),
+              maxDate.getDate(),
+            );
+
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          }
+
+          setOrderMetrics({
+            totalRevenue,
+            totalOrders,
+            ordersPerDay: totalOrders / diffDays,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching order data:", error);
+      }
+    };
+    fetchOrderData();
+  }, [currentYear]);
+
   useEffect(() => {
     const fetchBaseData = async () => {
       try {
         const yearsData = await reservationsApi.getAvailableYears();
-        if (yearsData) setYears(yearsData);
+        if (yearsData) {
+          setYears(yearsData.filter((y: number) => y >= currentYear));
+        }
       } catch (error) {
         console.error("Error fetching years:", error);
       }
     };
     fetchBaseData();
-  }, []);
+  }, [currentYear]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -254,10 +317,13 @@ const ReportsAnalyticsPage: React.FC = () => {
       (c) => c.status === "accepted",
     ).length;
 
-    const totalRevenue = done.reduce(
-      (sum, r) => sum + (Number(r.reservationAmount) || 0),
-      0,
-    );
+    const totalRevenue = done.reduce((sum, r) => {
+      const resYear = Number(r.date.split("-")[0]);
+      if (resYear === currentYear) {
+        return sum + (Number(r.reservationAmount) || 0);
+      }
+      return sum;
+    }, 0);
 
     return {
       totalRevenue,
@@ -267,7 +333,7 @@ const ReportsAnalyticsPage: React.FC = () => {
       rejectedCount: rejected.length,
       doneCount: done.length,
     };
-  }, [reservations, cancellations]);
+  }, [reservations, cancellations, currentYear]);
 
   const trendData = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -283,7 +349,6 @@ const ReportsAnalyticsPage: React.FC = () => {
     );
 
     reservationTrends.forEach((t) => {
-      // Parse YYYY-MM-DD manually to avoid timezone shifting
       const [year, month, day] = t.date.split("-").map(Number);
       const date = new Date(year, month - 1, day);
       const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -566,18 +631,18 @@ const ReportsAnalyticsPage: React.FC = () => {
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
           <StatCard
-            label="Total Revenue"
-            value="₱123.7K"
+            label="Total Order Revenue"
+            value={formatRevenue(orderMetrics.totalRevenue)}
             accentBg="rgba(0,149,7,0.15)"
           />
           <StatCard
             label="Total Orders"
-            value={143}
+            value={orderMetrics.totalOrders}
             accentBg="rgba(0,17,255,0.12)"
           />
           <StatCard
             label="Orders per Day"
-            value={88}
+            value={orderMetrics.ordersPerDay.toFixed(1)}
             accentBg="rgba(239,217,116,0.45)"
           />
         </div>

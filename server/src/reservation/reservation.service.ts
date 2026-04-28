@@ -8,14 +8,15 @@ class ReservationService {
     const reservations = await this.getReservationList(year);
     const cancellations = await this.getReservationCancellations();
 
-    const trendMap: Record<string, { approved: number; cancelled: number }> = {};
+    const trendMap: Record<string, { approved: number; cancelled: number }> =
+      {};
 
     reservations?.forEach((r) => {
       const date = r.date;
       if (!trendMap[date]) {
         trendMap[date] = { approved: 0, cancelled: 0 };
       }
-      if (r.reservationStatus === "accepted" || r.reservationStatus === "done") {
+      if (r.reservationStatus === "accepted") {
         trendMap[date].approved += 1;
       }
     });
@@ -45,7 +46,9 @@ class ReservationService {
     const reservations = await this.getReservationList();
     if (!reservations) return [];
 
-    const years = new Set(reservations.map((r) => new Date(r.date).getFullYear()));
+    const years = new Set(
+      reservations.map((r) => new Date(r.date).getFullYear()),
+    );
     return Array.from(years).sort((a, b) => b - a);
   }
 
@@ -98,12 +101,14 @@ class ReservationService {
       return acc;
     }, {});
 
-    const enrichedCancellationsCount = cancellations?.filter(
-      (c) => c.status === "pending" || c.status === "accepted",
-    ).length || 0;
+    const enrichedCancellationsCount =
+      cancellations?.filter(
+        (c) => c.status === "pending" || c.status === "accepted",
+      ).length || 0;
 
     if (summary) {
-      summary.reservationCount = (summary.reservationCount || 0) + enrichedCancellationsCount;
+      summary.reservationCount =
+        (summary.reservationCount || 0) + enrichedCancellationsCount;
     }
 
     return summary;

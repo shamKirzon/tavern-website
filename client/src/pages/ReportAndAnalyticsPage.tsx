@@ -2,8 +2,6 @@ import { SideBarReportsAndAnalytics } from "@/assets/icons/icons";
 import { formatReadableDate } from "@/utils/date";
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -28,16 +26,6 @@ import { reservationsApi } from "@/api/reservations.api";
 import type { Reservation, Cancellation } from "@/types/Reservation";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-
-const revenueData = [
-  { day: "Mon", revenue: 22000, orders: 33 },
-  { day: "Tue", revenue: 3000, orders: 12 },
-  { day: "Wed", revenue: 12000, orders: 42 },
-  { day: "Thu", revenue: 15000, orders: 61 },
-  { day: "Fri", revenue: 25000, orders: 5 },
-  { day: "Sat", revenue: 10000, orders: 27 },
-  { day: "Sun", revenue: 23000, orders: 40 },
-];
 
 const employees = [
   { name: "Dannah Torres", type: "Full-time" },
@@ -422,7 +410,13 @@ const ReportsAnalyticsPage: React.FC = () => {
                       stopOpacity={0.05}
                     />
                   </linearGradient>
-                  <linearGradient id="fillCancelled" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient
+                    id="fillCancelled"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
                     <stop
                       offset="5%"
                       stopColor="var(--color-cancelled)"

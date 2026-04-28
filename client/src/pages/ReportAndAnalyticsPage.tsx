@@ -302,7 +302,7 @@ const ReportsAnalyticsPage: React.FC = () => {
       {
         name: "Approved",
         value: reservationMetrics.approvedCount,
-        color: "#4CAF50",
+        color: "#16a34a",
       },
       {
         name: "Cancelled",
@@ -312,12 +312,12 @@ const ReportsAnalyticsPage: React.FC = () => {
       {
         name: "Pending",
         value: reservationMetrics.pendingCount,
-        color: "#EAC54F",
+        color: "#fde047",
       },
       {
         name: "Done",
         value: reservationMetrics.doneCount,
-        color: "#6366F1",
+        color: "#ea580c",
       },
       {
         name: "Rejected",
@@ -526,13 +526,13 @@ const ReportsAnalyticsPage: React.FC = () => {
                 onChange={setSelectedStatusYear}
               />
             </div>
-            <div className="h-[200px] w-full flex items-center justify-center gap-4">
-              <PieChart width={200} height={200}>
+            <div className="h-[200px] w-full flex items-center justify-center mt-8 ">
+              <PieChart width={500} height={200}>
                 <Pie
                   data={statusData}
                   dataKey="value"
                   cx="50%"
-                  cy="50%"
+                  cy="45%"
                   innerRadius={50}
                   outerRadius={80}
                   paddingAngle={0}
@@ -542,28 +542,18 @@ const ReportsAnalyticsPage: React.FC = () => {
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
+                <Legend
+                  layout="horizontal"
+                  verticalAlign="bottom"
+                  align="center"
+                  iconType="square"
+                  wrapperStyle={{
+                    fontFamily: "Poppins",
+                    fontSize: 11,
+                    paddingLeft: "10px",
+                  }}
+                />
               </PieChart>
-              <Legend
-                layout="vertical"
-                verticalAlign="middle"
-                align="right"
-                iconType="square"
-                content={
-                  <ul className="flex flex-col gap-1">
-                    {statusData.map((entry, index) => (
-                      <li key={index} className="flex items-center gap-2 text-[11px] font-poppins text-gray-600">
-                        <div className="w-3 h-3" style={{ backgroundColor: entry.color }} />
-                        {entry.name}
-                      </li>
-                    ))}
-                  </ul>
-                }
-                wrapperStyle={{
-                  fontFamily: "Poppins",
-                  fontSize: 11,
-                  paddingLeft: "10px",
-                }}
-              />
             </div>
           </div>
         </div>
@@ -616,7 +606,10 @@ const ReportsAnalyticsPage: React.FC = () => {
               config={revenueChartConfig}
               className="h-[260px] w-full"
             >
-              <AreaChart data={[]} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart
+                data={[]}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop
@@ -695,7 +688,10 @@ const ReportsAnalyticsPage: React.FC = () => {
               config={ordersChartConfig}
               className="h-[260px] w-full"
             >
-              <BarChart data={[]} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <BarChart
+                data={[]}
+                margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+              >
                 <CartesianGrid vertical={false} stroke="#f0f0f0" />
                 <XAxis
                   dataKey="day"

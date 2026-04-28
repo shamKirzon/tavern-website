@@ -4,6 +4,43 @@ import { bookingRepository } from "./booking.repository";
 import camelcaseKeys from "camelcase-keys";
 
 class ReservationService {
+  async getReservationTrends() {
+    const reservations = await this.getReservationList();
+    const cancellations = await this.getReservationCancellations();
+
+    const trendMap: Record<string, { approved: number; cancelled: number }> = {};
+
+    reservations?.forEach((r) => {
+      const date = r.date;
+      if (!trendMap[date]) {
+        trendMap[date] = { approved: 0, cancelled: 0 };
+      }
+      if (r.reservationStatus === "accepted" || r.reservationStatus === "done") {
+        trendMap[date].approved += 1;
+      }
+    });
+
+    cancellations?.forEach((c) => {
+      if (c.status === "accepted") {
+        const res = reservations?.find(
+          (r) => r.reservationId === c.reservationId,
+        );
+        if (res) {
+          const date = res.date;
+          if (!trendMap[date]) {
+            trendMap[date] = { approved: 0, cancelled: 0 };
+          }
+          trendMap[date].cancelled += 1;
+        }
+      }
+    });
+
+    return Object.entries(trendMap).map(([date, counts]) => ({
+      date,
+      ...counts,
+    }));
+  }
+
   async getReservationList() {
     const dbResult = await reservationRepository.getReservationList();
     if (!dbResult) return;

@@ -8,6 +8,11 @@ import { reservationService } from "./reservation.service";
 
 const reservationRoutes = Router();
 
+reservationRoutes.get(
+  "/get-reservation-trends",
+  reservationController.getReservationTrends,
+);
+
 // GET
 reservationRoutes.get(
   "/get-reservation-list",

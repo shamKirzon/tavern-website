@@ -9,6 +9,19 @@ const upload = multer({ dest: "uploads/" });
 export const uploadMiddleware = upload.single("file");
 
 class ReservationController {
+  async getReservationTrends(req: Request, res: Response) {
+    try {
+      const result = await reservationService.getReservationTrends();
+      return res.status(200).json({
+        message: "Fetched reservation trends successfully.",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getReservationTrends(): ", error);
+      return res.status(400).json({ message: "can't fetch reservation trends" });
+    }
+  }
+
   async getReservationList(req: Request, res: Response) {
     try {
       const result = await reservationService.getReservationList();

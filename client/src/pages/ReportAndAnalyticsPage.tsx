@@ -548,6 +548,16 @@ const ReportsAnalyticsPage: React.FC = () => {
                 verticalAlign="middle"
                 align="right"
                 iconType="square"
+                content={
+                  <ul className="flex flex-col gap-1">
+                    {statusData.map((entry, index) => (
+                      <li key={index} className="flex items-center gap-2 text-[11px] font-poppins text-gray-600">
+                        <div className="w-3 h-3" style={{ backgroundColor: entry.color }} />
+                        {entry.name}
+                      </li>
+                    ))}
+                  </ul>
+                }
                 wrapperStyle={{
                   fontFamily: "Poppins",
                   fontSize: 11,

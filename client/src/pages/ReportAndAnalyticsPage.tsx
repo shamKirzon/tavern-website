@@ -278,6 +278,7 @@ const ReportsAnalyticsPage: React.FC = () => {
       }
     });
 
+    console.info(Object.values(dayMap));
     return days.map((day) => dayMap[day]);
   }, [reservationTrends]);
 
@@ -569,10 +570,7 @@ const ReportsAnalyticsPage: React.FC = () => {
               config={revenueChartConfig}
               className="h-[260px] w-full"
             >
-              <AreaChart
-                data={revenueData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-              >
+              <AreaChart margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop
@@ -651,10 +649,7 @@ const ReportsAnalyticsPage: React.FC = () => {
               config={ordersChartConfig}
               className="h-[260px] w-full"
             >
-              <BarChart
-                data={revenueData}
-                margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
-              >
+              <BarChart margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="#f0f0f0" />
                 <XAxis
                   dataKey="day"

@@ -22,11 +22,19 @@ class ReservationRepository {
     }
   }
 
-  async getReservationCancellations() {
+  async getReservationCancellations(year?: number) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("reservation_cancellations")
-        .select("*");
+        .select("*, reservations!inner(date)");
+
+      if (year) {
+        const start = `${year}-01-01`;
+        const end = `${year}-12-31`;
+        query = query.gte("reservations.date", start).lte("reservations.date", end);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

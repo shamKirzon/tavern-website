@@ -59,8 +59,8 @@ class ReservationService {
     return camelcaseKeys(dbResult ?? [], { deep: true });
   }
 
-  async getReservationCancellations() {
-    const dbResult = await reservationRepository.getReservationCancellations();
+  async getReservationCancellations(year?: number) {
+    const dbResult = await reservationRepository.getReservationCancellations(year);
     if (!dbResult) return;
 
     return camelcaseKeys(dbResult ?? [], { deep: true });

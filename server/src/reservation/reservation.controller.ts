@@ -40,7 +40,10 @@ class ReservationController {
 
   async getReservationList(req: Request, res: Response) {
     try {
-      const result = await reservationService.getReservationList();
+      const { year } = req.query;
+      const result = await reservationService.getReservationList(
+        year ? Number(year) : undefined,
+      );
 
       if (!result)
         return res
@@ -51,14 +54,17 @@ class ReservationController {
         .status(200)
         .json({ message: "Fetched reservation list successfully. ", result });
     } catch (error: any) {
-      console.error("error from createReservation(): ", error);
-      return res.status(400).json({ message: "can't create reservation" });
+      console.error("error from getReservationList(): ", error);
+      return res.status(400).json({ message: "can't fetch reservation list" });
     }
   }
 
   async getReservationCancellations(req: Request, res: Response) {
     try {
-      const result = await reservationService.getReservationCancellations();
+      const { year } = req.query;
+      const result = await reservationService.getReservationCancellations(
+        year ? Number(year) : undefined,
+      );
 
       if (!result)
         return res.status(400).json({

@@ -190,22 +190,36 @@ const ReportsAnalyticsPage: React.FC = () => {
 
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedStatusYear, setSelectedStatusYear] = useState<string>("all");
 
   const [reservationTrends, setReservationTrends] = useState<
     { date: string; approved: number; cancelled: number }[]
   >([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBaseData = async () => {
       try {
-        const [resData, cancelData, yearsData] = await Promise.all([
-          reservationsApi.getReservationList(),
-          reservationsApi.getReservationCancellations(),
-          reservationsApi.getAvailableYears(),
+        const yearsData = await reservationsApi.getAvailableYears();
+        if (yearsData) setYears(yearsData);
+      } catch (error) {
+        console.error("Error fetching years:", error);
+      }
+    };
+    fetchBaseData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const year =
+          selectedStatusYear === "all" ? undefined : Number(selectedStatusYear);
+        const [resData, cancelData] = await Promise.all([
+          reservationsApi.getReservationList(year),
+          reservationsApi.getReservationCancellations(year),
         ]);
         if (resData) setReservations(resData);
         if (cancelData) setCancellations(cancelData);
-        if (yearsData) setYears(yearsData);
       } catch (error) {
         console.error("Error fetching report data:", error);
       } finally {
@@ -213,7 +227,7 @@ const ReportsAnalyticsPage: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedStatusYear]);
 
   useEffect(() => {
     const fetchTrends = async () => {
@@ -486,12 +500,27 @@ const ReportsAnalyticsPage: React.FC = () => {
             className="bg-white rounded-2xl border border-gray-100 p-5"
             style={{ boxShadow: cardShadow }}
           >
-            <p className="font-bold text-gray-900 text-[15px] mb-1">
-              Booking Status
-            </p>
-            <p className="text-gray-400 text-[11px] mb-4">
-              Distribution of reservation statuses
-            </p>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="font-bold text-gray-900 text-[15px] mb-1">
+                  Booking Status
+                </p>
+                <p className="text-gray-400 text-[11px]">
+                  Distribution of reservation statuses
+                </p>
+              </div>
+              <FilterDropdown
+                options={[
+                  { label: "All Years", value: "all" },
+                  ...years.map((y) => ({
+                    label: y.toString(),
+                    value: y.toString(),
+                  })),
+                ]}
+                selected={selectedStatusYear}
+                onChange={setSelectedStatusYear}
+              />
+            </div>
             <div className="h-[260px] w-full flex items-center justify-center">
               <PieChart width={340} height={260}>
                 <Pie
@@ -501,7 +530,7 @@ const ReportsAnalyticsPage: React.FC = () => {
                   cy="45%"
                   innerRadius={70}
                   outerRadius={100}
-                  paddingAngle={3}
+                  paddingAngle={0}
                   stroke="none"
                 >
                   {statusData.map((entry, index) => (

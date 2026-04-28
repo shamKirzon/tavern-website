@@ -97,9 +97,11 @@ export const reservationsApi = {
     }
   },
 
-  async getReservationList() {
+  async getReservationList(year?: number) {
     try {
-      const res = await axiosInstance.get("/reservation/get-reservation-list");
+      const res = await axiosInstance.get("/reservation/get-reservation-list", {
+        params: { year },
+      });
       if (!res) return console.log("Can't get reservation list.");
 
       return res.data.result;
@@ -108,10 +110,11 @@ export const reservationsApi = {
     }
   },
 
-  async getReservationCancellations() {
+  async getReservationCancellations(year?: number) {
     try {
       const res = await axiosInstance.get(
         "/reservation/get-reservation-cancellations",
+        { params: { year } },
       );
       if (!res) return console.log("Can't get reservation cancellations.");
 

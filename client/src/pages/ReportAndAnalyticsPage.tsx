@@ -188,8 +188,12 @@ const ReportsAnalyticsPage: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [cancellations, setCancellations] = useState<Cancellation[]>([]);
-  const [summaryReservations, setSummaryReservations] = useState<Reservation[]>([]);
-  const [summaryCancellations, setSummaryCancellations] = useState<Cancellation[]>([]);
+  const [summaryReservations, setSummaryReservations] = useState<Reservation[]>(
+    [],
+  );
+  const [summaryCancellations, setSummaryCancellations] = useState<
+    Cancellation[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [years, setYears] = useState<number[]>([]);
@@ -213,43 +217,33 @@ const ReportsAnalyticsPage: React.FC = () => {
   useEffect(() => {
     const fetchOrderData = async () => {
       try {
-        const [list, summary] = await Promise.all([
+        const [list, summary, allRes] = await Promise.all([
           orderApi.getOrderList(),
           orderApi.getOrderSummary(),
+          reservationsApi.getReservationList(),
         ]);
 
-        if (summary) {
-          let ordersPerDay = 0;
-          if (list && list.length > 0) {
-            const allDates = list.map((order: any) =>
-              new Date(order.createdAt).getTime(),
-            );
+        if (summary && list && allRes) {
+          const resMap = new Map(allRes.map((r: any) => [r.reservationId, r]));
 
-            let diffDays = 1;
-            if (allDates.length > 0) {
-              const minDate = new Date(Math.min(...allDates));
-              const maxDate = new Date(Math.max(...allDates));
+          const currentYearOrders = list.filter((order: any) => {
+            const res: any = resMap.get(order.reservationId);
 
-              const start = new Date(
-                minDate.getFullYear(),
-                minDate.getMonth(),
-                minDate.getDate(),
-              );
-              const end = new Date(
-                maxDate.getFullYear(),
-                maxDate.getMonth(),
-                maxDate.getDate(),
-              );
+            return new Date(res.date).getFullYear() === currentYear;
+          });
 
-              const diffTime = Math.abs(end.getTime() - start.getTime());
-              diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            }
-            ordersPerDay = (summary.orderCount || 0) / diffDays;
-          }
+          const currentYearOrderCount = currentYearOrders.length;
+          const totalOrders = summary.orderCount || 0;
+
+          // orders per day = total orders / current year order count
+          const ordersPerDay =
+            currentYearOrderCount > 0
+              ? Math.round(totalOrders / currentYearOrderCount)
+              : 0;
 
           setOrderMetrics({
             totalRevenue: Number(summary.totalEarnings) || 0,
-            totalOrders: summary.orderCount || 0,
+            totalOrders: totalOrders,
             ordersPerDay,
           });
         }
@@ -339,7 +333,9 @@ const ReportsAnalyticsPage: React.FC = () => {
   }, [reservations, cancellations]);
 
   const summaryMetrics = useMemo(() => {
-    const done = summaryReservations.filter((r) => r.reservationStatus === "done");
+    const done = summaryReservations.filter(
+      (r) => r.reservationStatus === "done",
+    );
     const accepted = summaryReservations.filter(
       (r) => r.reservationStatus === "accepted",
     );
@@ -661,7 +657,7 @@ const ReportsAnalyticsPage: React.FC = () => {
           />
           <StatCard
             label="Orders per Day"
-            value={orderMetrics.ordersPerDay.toFixed(1)}
+            value={orderMetrics.ordersPerDay}
             accentBg="rgba(239,217,116,0.45)"
           />
         </div>

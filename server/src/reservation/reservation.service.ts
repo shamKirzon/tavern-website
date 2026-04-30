@@ -44,6 +44,7 @@ class ReservationService {
 
   async getAvailableYears() {
     const reservations = await this.getReservationList();
+
     if (!reservations) return [];
 
     const years = new Set(
@@ -60,7 +61,8 @@ class ReservationService {
   }
 
   async getReservationCancellations(year?: number) {
-    const dbResult = await reservationRepository.getReservationCancellations(year);
+    const dbResult =
+      await reservationRepository.getReservationCancellations(year);
     if (!dbResult) return;
 
     return camelcaseKeys(dbResult ?? [], { deep: true });

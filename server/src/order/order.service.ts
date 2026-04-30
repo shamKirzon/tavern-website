@@ -18,7 +18,11 @@ class OrderService {
       const status = curr.orderStatus;
       const year = new Date(curr.sessionExpiry).getFullYear().toString();
 
-      acc.orderCount = (acc.orderCount || 0) + 1;
+      const sessionQuantity = (curr.orderItems || []).reduce(
+        (sum: number, item: any) => sum + (item.quantity || 0),
+        0,
+      );
+      acc.orderCount = (acc.orderCount || 0) + sessionQuantity;
       acc[status] = (acc[status] || 0) + 1;
 
       if (status === "done" && year === currentYear.toString()) {

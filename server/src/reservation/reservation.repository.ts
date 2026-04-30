@@ -5,7 +5,7 @@ class ReservationRepository {
   async getReservationList(year?: number) {
     try {
       let query = supabase.from("reservations").select("*");
-      
+
       if (year) {
         const start = `${year}-01-01`;
         const end = `${year}-12-31`;
@@ -26,19 +26,28 @@ class ReservationRepository {
     try {
       let query = supabase
         .from("reservation_cancellations")
-        .select("*, reservations!inner(date)");
+        .select("*, reservations!inner(date)")
+        .eq("status", "accepted");
 
       if (year) {
         const start = `${year}-01-01`;
         const end = `${year}-12-31`;
-        query = query.gte("reservations.date", start).lte("reservations.date", end);
+        query = query
+          .gte("reservations.date", start)
+          .lte("reservations.date", end);
       }
 
-      const { data, error } = await query;
+      const { data: cancellations, error } = await query;
 
       if (error) throw error;
 
-      return data;
+      const result = (cancellations || []).map((c: any) => ({
+        ...c,
+        date: c.reservations?.date,
+      }));
+
+      console.log("RESERVATION CANCELLATION: ", result);
+      return result;
     } catch (error) {
       console.error(
         "Error in repository/getReservationCancellations():",

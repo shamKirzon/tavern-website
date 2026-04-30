@@ -46,7 +46,6 @@ class ReservationRepository {
         date: c.reservations?.date,
       }));
 
-      console.log("RESERVATION CANCELLATION: ", result);
       return result;
     } catch (error) {
       console.error(

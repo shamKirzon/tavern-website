@@ -1,11 +1,16 @@
 import { orderRepository } from "../order/order.repository";
 import { orderService } from "../order/order.service";
+import { reservationService } from "../reservation/reservation.service";
 import { ReservationStatus } from "../types/Reservation";
 import camelcaseKeys from "camelcase-keys";
 
 class CustomerService {
   async getCustomerCountsByPeriod(period: string) {
     const data = (await orderService.getOrderList()) ?? [];
+    const reservations = await reservationService.getReservationList();
+    const reservationMap = new Map(
+      reservations?.map((r: any) => [r.reservationId, r]),
+    );
 
     if (period === "monthly") {
       const monthOrder = [
@@ -33,13 +38,16 @@ class CustomerService {
           const date = new Date(curr.sessionExpiry);
           const month = monthOrder[date.getMonth()];
 
+          const res = reservationMap.get(curr.reservationId);
+          const pax = res?.pax ?? 0;
+
           let existing = acc.find((item: any) => item.month === month);
           if (!existing) {
             existing = { month, customers: 0 };
             acc.push(existing);
           }
 
-          existing.customers += 1;
+          existing.customers += pax;
           return acc;
         }, [] as any[]);
 
@@ -81,13 +89,16 @@ class CustomerService {
           const date = new Date(curr.sessionExpiry);
           const day = getDayLabel(date);
 
+          const res = reservationMap.get(curr.reservationId);
+          const pax = res?.pax ?? 0;
+
           let existing = acc.find((item: any) => item.day === day);
           if (!existing) {
             existing = { day, customers: 0 };
             acc.push(existing);
           }
 
-          existing.customers += 1;
+          existing.customers += pax;
           return acc;
         }, [] as any[]);
 

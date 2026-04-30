@@ -18,10 +18,18 @@ class OrderService {
       const status = curr.orderStatus;
       const year = new Date(curr.sessionExpiry).getFullYear().toString();
 
-      const sessionQuantity = (curr.orderItems || []).reduce(
-        (sum: number, item: any) => sum + (item.quantity || 0),
-        0,
-      );
+      const items =
+        typeof curr.orderItems === "string"
+          ? JSON.parse(curr.orderItems)
+          : curr.orderItems || [];
+
+      const sessionQuantity = Array.isArray(items)
+        ? items.reduce(
+            (sum: number, item: any) => sum + (item.quantity || 0),
+            0,
+          )
+        : 0;
+
       acc.orderCount = (acc.orderCount || 0) + sessionQuantity;
       acc[status] = (acc[status] || 0) + 1;
 
@@ -30,7 +38,7 @@ class OrderService {
       }
 
       return acc;
-    }, {});
+    }, {} as any);
 
     return summary;
   }

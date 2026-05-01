@@ -4,7 +4,7 @@ import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
 import tavernLogo from "../assets/logo/tavern-logo.png";
 import { toast } from "sonner";
-import { LoginPassword } from "@/assets/icons/icons";
+import { authApi } from "@/api/auth.api";
 
 const NewPasswordPage = () => {
   const navigate = useNavigate();
@@ -56,24 +56,39 @@ const NewPasswordPage = () => {
 
     try {
       setLoading(true);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await authApi.updatePassword(passwordData.password);
 
-      // Success logic
-      toast.success("Password updated successfully!", {
+      if (response && response.status === "success") {
+        // Success logic
+        toast.success("Password updated successfully!", {
+          style: {
+            background: "#009507",
+            color: "#fff",
+            border: "1px solid #007d06",
+          },
+        });
+
+        // Redirect to login after success
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        toast.error("Failed to update password. Please try again.", {
+          style: {
+            background: "#8B1A1A",
+            color: "#fff",
+            border: "1px solid #6e1414",
+          },
+        });
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.", {
         style: {
-          background: "#009507",
+          background: "#8B1A1A",
           color: "#fff",
-          border: "1px solid #007d06",
+          border: "1px solid #6e1414",
         },
       });
-
-      // Redirect to login after success
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-    } catch (error) {
-      toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

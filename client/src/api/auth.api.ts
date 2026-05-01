@@ -37,4 +37,18 @@ export const authApi = {
       throw error;
     }
   },
+
+  async updatePassword(password: string) {
+    try {
+      const res = await axiosInstance.post("/auth/update-password", {
+        password,
+      });
+      if (!res) return console.log("Can't update password.");
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in authApi/updatePassword(): ", error);
+      throw error;
+    }
+  },
 };

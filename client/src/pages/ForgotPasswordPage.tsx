@@ -203,6 +203,7 @@ const EnterOtpForm = ({
   onBack: () => void;
   expectedOtp: string;
 }) => {
+  const navigate = useNavigate();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -257,7 +258,10 @@ const EnterOtpForm = ({
     }
 
     toast.success("Code verified!");
-    <Link to="/new-password" />;
+    
+    setTimeout(() => {
+      navigate("/new-password");
+    }, 2000);
   };
 
   return (

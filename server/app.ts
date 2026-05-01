@@ -8,6 +8,7 @@ import orderRoutes from "./src/order/order.route";
 import employeeRoutes from "./src/employee/employee.route";
 import customerRoutes from "./src/customer/customer.route";
 import bookingRoutes from "./src/reservation/booking.route";
+import authRoutes from "./src/auth/auth.route";
 
 const app = express();
 
@@ -36,5 +37,6 @@ app.use("/api/order", orderRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/booking-days", bookingRoutes);
+app.use("/api/auth", authRoutes);
 
 export default app;

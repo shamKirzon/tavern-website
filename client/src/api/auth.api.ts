@@ -25,4 +25,16 @@ export const authApi = {
       throw error;
     }
   },
+
+  async sendOtp() {
+    try {
+      const res = await axiosInstance.post("/auth/send-otp");
+      if (!res) return console.log("Can't send OTP.");
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in authApi/sendOtp(): ", error);
+      throw error;
+    }
+  },
 };

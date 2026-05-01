@@ -113,7 +113,7 @@ const ForgotPasswordForm = ({
     }
 
     try {
-      const response = await authApi.generateOtp();
+      const response = await authApi.sendOtp();
       if (response && response.otp) {
         toast.success("Verification code sent!");
         onSuccess(response.otp);

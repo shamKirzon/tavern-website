@@ -68,6 +68,7 @@ const ForgotPasswordForm = ({
   setUsername: (val: string) => void;
   onSuccess: (otp: string) => void;
 }) => {
+  const [loading, setLoading] = useState(false);
   const formSchema = z.object({
     username: z.string().min(1, "Email is required"),
   });
@@ -113,6 +114,7 @@ const ForgotPasswordForm = ({
     }
 
     try {
+      setLoading(true);
       const response = await authApi.sendOtp();
       if (response && response.otp) {
         toast.success("Verification code sent!");
@@ -122,6 +124,8 @@ const ForgotPasswordForm = ({
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,15 +153,43 @@ const ForgotPasswordForm = ({
               onChange={(e) => setUsername(e.target.value)}
               placeholder="admin@account.com"
               className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400"
+              disabled={loading}
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-[#AA3131] hover:bg-[#6e1414] text-white font-semibold py-3 rounded-md transition-colors text-sm tracking-wide uppercase"
+          disabled={loading}
+          className={`w-full ${loading ? "bg-gray-400" : "bg-[#AA3131] hover:bg-[#6e1414]"} text-white font-semibold py-3 rounded-md transition-colors text-sm tracking-wide uppercase flex items-center justify-center gap-2`}
         >
-          Send Verification Code
+          {loading ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Sending...
+            </>
+          ) : (
+            "Send Verification Code"
+          )}
         </button>
       </form>
     </>
@@ -212,7 +244,7 @@ const EnterOtpForm = ({
     }
 
     if (code !== expectedOtp) {
-      toast.error("incorrect otp, try again.", {
+      toast.error("The OTP entered is incorrect. Please try again.", {
         style: {
           background: "#8B1A1A",
           color: "#fff",
@@ -225,7 +257,7 @@ const EnterOtpForm = ({
     }
 
     toast.success("Code verified!");
-    // Proceed to next step (e.g., Reset Password)
+    <Link to="/new-password" />;
   };
 
   return (

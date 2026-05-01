@@ -114,10 +114,7 @@ const LoginPage = () => {
               <label className="text-[11px] font-bold tracking-widest mb-1">
                 USERNAME
               </label>
-              <div className="flex items-center border border-gray-300 rounded-md bg-white px-3 py-2 gap-2">
-                <span className="text-gray-400">
-                  <LoginUsername className="w-4 h-4" />
-                </span>
+              <div className="flex items-center border border-gray-300 rounded-xl bg-white px-3 py-3 gap-2">
                 <input
                   id="username"
                   name="username"
@@ -140,10 +137,7 @@ const LoginPage = () => {
               <label className="text-[11px] font-bold tracking-widest mb-1">
                 PASSWORD
               </label>
-              <div className="flex items-center border border-gray-300 rounded-md bg-white px-3 py-2 gap-2">
-                <span className="text-gray-400">
-                  <LoginPassword className="w-4 h-4" />
-                </span>
+              <div className="flex items-center border border-gray-300 rounded-xl bg-white px-3 py-3 gap-2">
                 <input
                   id="password"
                   name="password"

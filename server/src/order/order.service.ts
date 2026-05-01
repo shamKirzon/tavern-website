@@ -12,7 +12,7 @@ class OrderService {
 
   async getOrderSummary() {
     const data = await this.getOrderList();
-    const currentYear = 2026;
+    const currentYear = new Date().getFullYear();
 
     const summary = data?.reduce((acc, curr) => {
       const status = curr.orderStatus;
@@ -30,10 +30,10 @@ class OrderService {
           )
         : 0;
 
-      acc.orderCount = (acc.orderCount || 0) + sessionQuantity;
       acc[status] = (acc[status] || 0) + 1;
 
       if (status === "done" && year === currentYear.toString()) {
+        acc.orderCount = (acc.orderCount || 0) + sessionQuantity;
         acc.totalEarnings = (acc.totalEarnings || 0) + (curr.total || 0);
       }
 
@@ -121,6 +121,96 @@ class OrderService {
         .filter(
           (item: any) => monthOrder.indexOf(item.month) <= latestMonthIndex,
         );
+    }
+
+    return [];
+  }
+  async getOrderCountsByPeriod(period: string) {
+    const data = (await this.getOrderList()) ?? [];
+    const currentYear = new Date().getFullYear();
+
+    if (period === "monthly") {
+      const monthOrder = [
+        "JAN",
+        "FEB",
+        "MAR",
+        "APR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AUG",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC",
+      ];
+
+      const countData = data
+        .filter(
+          (curr) => new Date(curr.sessionExpiry).getFullYear() === currentYear,
+        )
+        .reduce((acc, curr) => {
+          const date = new Date(curr.sessionExpiry);
+          const month = monthOrder[date.getMonth()];
+
+          let existing = acc.find((item: any) => item.month === month);
+          if (!existing) {
+            existing = { month, orders: 0 };
+            acc.push(existing);
+          }
+
+          existing.orders += 1;
+          return acc;
+        }, [] as any[]);
+
+      const latestMonthIndex = Math.max(
+        ...data
+          .filter(
+            (d) => new Date(d.sessionExpiry).getFullYear() === currentYear,
+          )
+          .map((d) => new Date(d.sessionExpiry).getMonth()),
+      );
+
+      return countData
+        .sort(
+          (a: any, b: any) =>
+            monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month),
+        )
+        .filter(
+          (item: any) => monthOrder.indexOf(item.month) <= latestMonthIndex,
+        );
+    }
+
+    if (period === "weekly") {
+      const dayOrder = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
+      const getDayLabel = (date: Date) => {
+        const jsDay = date.getDay();
+        const monFirstIndex = (jsDay + 6) % 7;
+        return dayOrder[monFirstIndex];
+      };
+
+      const countData = data
+        .filter(
+          (curr) => new Date(curr.sessionExpiry).getFullYear() === currentYear,
+        )
+        .reduce((acc, curr) => {
+          const date = new Date(curr.sessionExpiry);
+          const day = getDayLabel(date);
+
+          let existing = acc.find((item: any) => item.day === day);
+          if (!existing) {
+            existing = { day, orders: 0 };
+            acc.push(existing);
+          }
+
+          existing.orders += 1;
+          return acc;
+        }, [] as any[]);
+
+      return countData.sort(
+        (a: any, b: any) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day),
+      );
     }
 
     return [];

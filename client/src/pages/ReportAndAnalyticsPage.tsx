@@ -43,13 +43,31 @@ const bookingTrendsChartConfig: ChartConfig = {
   cancelled: { label: "Cancelled", color: "#AA3131" },
 };
 
-const revenueChartConfig: ChartConfig = {
-  revenue: { label: "Revenue", color: "#EAC54F" },
+const getRevenueChartConfig = (period: string): ChartConfig => {
+  if (period === "yearly") {
+    return {
+      total: { label: "Revenue", color: "#AA3131" },
+    };
+  }
+  return {
+    year2025: { label: "2025", color: "#E8C96A" },
+    year2026: { label: "2026", color: "#AA3131" },
+  };
 };
+
+const revenueFilterOptions = [
+  { label: "Yearly", value: "yearly" },
+  { label: "Monthly", value: "monthly" },
+];
 
 const ordersChartConfig: ChartConfig = {
   orders: { label: "Orders", color: "#AA3131" },
 };
+
+const orderVolumeFilterOptions = [
+  { label: "Monthly", value: "monthly" },
+  { label: "Weekly", value: "weekly" },
+];
 
 // ─── Shared Styles ────────────────────────────────────────────────────────────
 
@@ -214,6 +232,25 @@ const ReportsAnalyticsPage: React.FC = () => {
     ordersPerDay: 0,
   });
 
+  const [revenuePeriod, setRevenuePeriod] = useState<string>("monthly");
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+
+  useEffect(() => {
+    orderApi.getTotalRevenue(revenuePeriod).then(setRevenueData);
+  }, [revenuePeriod]);
+
+  const revenueXKey = revenuePeriod === "yearly" ? "year" : "month";
+  const currentRevenueChartConfig = getRevenueChartConfig(revenuePeriod);
+
+  const [orderVolumePeriod, setOrderVolumePeriod] = useState<string>("weekly");
+  const [orderVolumeData, setOrderVolumeData] = useState<any[]>([]);
+
+  useEffect(() => {
+    orderApi.getOrderCountsByPeriod(orderVolumePeriod).then(setOrderVolumeData);
+  }, [orderVolumePeriod]);
+
+  const orderVolumeXKey = orderVolumePeriod === "weekly" ? "day" : "month";
+
   useEffect(() => {
     const fetchOrderData = async () => {
       try {
@@ -243,7 +280,7 @@ const ReportsAnalyticsPage: React.FC = () => {
 
           setOrderMetrics({
             totalRevenue: Number(summary.totalEarnings) || 0,
-            totalOrders: totalOrders,
+            totalOrders,
             ordersPerDay,
           });
         }
@@ -656,7 +693,7 @@ const ReportsAnalyticsPage: React.FC = () => {
             accentBg="rgba(0,17,255,0.12)"
           />
           <StatCard
-            label="Orders per Day"
+            label="Average Orders per Day"
             value={orderMetrics.ordersPerDay}
             accentBg="rgba(239,217,116,0.45)"
           />
@@ -675,38 +712,41 @@ const ReportsAnalyticsPage: React.FC = () => {
                   Revenue Overtime
                 </p>
                 <p className="text-gray-400 text-[11px] mt-0.5">
-                  Total Revenue (₱) per day
+                  Total Revenue (₱) per period
                 </p>
               </div>
-              <button className="border border-gray-200 text-[11px] font-poppins px-3 py-1.5 rounded-lg text-gray-600 flex items-center gap-1 hover:bg-gray-50 shadow-sm">
-                Weekly <span className="text-[9px]">▾</span>
-              </button>
+              <FilterDropdown
+                options={revenueFilterOptions}
+                selected={revenuePeriod}
+                onChange={setRevenuePeriod}
+              />
             </div>
             <ChartContainer
-              config={revenueChartConfig}
+              config={currentRevenueChartConfig}
               className="h-[260px] w-full"
             >
               <AreaChart
-                data={[]}
+                data={revenueData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
-                  <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-revenue)"
-                      stopOpacity={0.5}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-revenue)"
-                      stopOpacity={0.05}
-                    />
+                  <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#AA3131" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#AA3131" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="fillYear2025" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#E8C96A" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="#E8C96A" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="fillYear2026" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#AA3131" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#AA3131" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
+
                 <CartesianGrid vertical={false} stroke="#f0f0f0" />
                 <XAxis
-                  dataKey="day"
+                  dataKey={revenueXKey}
                   tickLine={false}
                   axisLine={false}
                   tickMargin={10}
@@ -730,16 +770,37 @@ const ReportsAnalyticsPage: React.FC = () => {
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}
                 />
-                <Area
-                  dataKey="revenue"
-                  type="natural"
-                  fill="url(#fillRevenue)"
-                  stroke="var(--color-revenue)"
-                  strokeWidth={2.5}
-                />
+
+                {revenuePeriod === "yearly" ? (
+                  <Area
+                    dataKey="total"
+                    type="natural"
+                    fill="url(#fillTotal)"
+                    stroke="#AA3131"
+                    strokeWidth={2.5}
+                  />
+                ) : (
+                  <>
+                    <Area
+                      dataKey="year2025"
+                      type="natural"
+                      fill="url(#fillYear2025)"
+                      stroke="var(--color-year2025)"
+                      strokeWidth={2.5}
+                    />
+                    <Area
+                      dataKey="year2026"
+                      type="natural"
+                      fill="url(#fillYear2026)"
+                      stroke="var(--color-year2026)"
+                      strokeWidth={2.5}
+                    />
+                  </>
+                )}
+
                 <ChartLegend
                   content={<ChartLegendContent payload={[]} />}
-                  wrapperStyle={{ paddingTop: "16px" }}
+                  wrapperStyle={{ paddingTop: "20px" }}
                   verticalAlign="bottom"
                 />
               </AreaChart>
@@ -757,24 +818,26 @@ const ReportsAnalyticsPage: React.FC = () => {
                   Order Volume
                 </p>
                 <p className="text-gray-400 text-[11px] mt-0.5">
-                  Number of orders per day
+                  Number of orders per period
                 </p>
               </div>
-              <button className="border border-gray-200 text-[11px] font-poppins px-3 py-1.5 rounded-lg text-gray-600 flex items-center gap-1 hover:bg-gray-50 shadow-sm">
-                Weekly <span className="text-[9px]">▾</span>
-              </button>
+              <FilterDropdown
+                options={orderVolumeFilterOptions}
+                selected={orderVolumePeriod}
+                onChange={setOrderVolumePeriod}
+              />
             </div>
             <ChartContainer
               config={ordersChartConfig}
               className="h-[260px] w-full"
             >
               <BarChart
-                data={[]}
+                data={orderVolumeData}
                 margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
               >
                 <CartesianGrid vertical={false} stroke="#f0f0f0" />
                 <XAxis
-                  dataKey="day"
+                  dataKey={orderVolumeXKey}
                   tickLine={false}
                   axisLine={false}
                   tickMargin={10}

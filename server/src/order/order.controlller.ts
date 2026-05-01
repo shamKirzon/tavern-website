@@ -76,6 +76,26 @@ class OrderController {
       return res.status(400).json({ message: "can't return  total revenue" });
     }
   }
+
+  async getOrderCountsByPeriod(req: Request, res: Response) {
+    try {
+      const { period } = req.params;
+      const result = await orderService.getOrderCountsByPeriod(period || "");
+
+      if (!result)
+        return res
+          .status(400)
+          .json({ message: "There is no returned order counts. " });
+
+      return res.status(200).json({
+        message: "Fetched order counts successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getOrderCountsByPeriod(): ", error);
+      return res.status(400).json({ message: "Can't fetch order counts." });
+    }
+  }
 }
 
 export const orderController = new OrderController();

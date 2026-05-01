@@ -47,4 +47,15 @@ export const orderApi = {
       console.log("Error in orderApi/getTotalRevenue(): ", error);
     }
   },
+
+  async getOrderCountsByPeriod(period: string) {
+    try {
+      const res = await axiosInstance.get(`/order/get-order-counts/${period}`);
+      if (!res) return console.log("Can't get order counts.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log("Error in orderApi/getOrderCountsByPeriod(): ", error);
+    }
+  },
 };

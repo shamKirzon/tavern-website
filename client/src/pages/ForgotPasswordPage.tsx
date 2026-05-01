@@ -3,22 +3,29 @@ import { useNavigate, Link } from "react-router-dom";
 import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
 import tavernLogo from "../assets/logo/tavern-logo.png";
-import { LoginUsername } from "@/assets/icons/icons";
+import { toast } from "sonner";
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
 
-  const [formErrors, setFormError] = useState<{
-    username: any;
-  } | null>();
-
   const formSchema = z.object({
-    username: z.string().min(1, "Username/Email is required"),
+    username: z.string().min(1, "Email is required"),
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!username) {
+      toast.error("Please enter email address", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #8B1A1A",
+        },
+      });
+      return;
+    }
 
     const data = {
       username: username,
@@ -27,54 +34,63 @@ const ForgotPasswordPage = () => {
     const parseResult = formSchema.safeParse(data);
 
     if (!parseResult.success) {
-      const resultError = parseResult.error.format();
-      setFormError({
-        username: resultError.username?._errors[0] || "",
+      toast.error("Invalid input. Please check your entries. ", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #6e1414",
+        },
       });
       return;
     }
 
-    // Placeholder for sending verification code
-    console.log("Sending verification code to:", username);
+    if (username !== "tavernasia@gmail.com") {
+      toast.error("Access requires an authorized company email.", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #8B1A1A",
+        },
+      });
+      setUsername("");
+      return;
+    }
 
-    // You might want to navigate to a verification code entry page here
-    // navigate("/verify-code");
+    toast.success("Verification code sent!");
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen font-poppins">
       {/* Left - Background Image */}
       <div className="hidden md:block w-1/2 overflow-hidden relative">
         <div
-          className="absolute inset-0 bg-cover bg-center blur-[10px] scale-110"
+          className="absolute inset-0 bg-cover bg-center blur-[3px] scale-110"
           style={{ backgroundImage: `url(${tavernBg})` }}
         />
       </div>
 
       {/* Right - Form */}
-      <div className="w-full md:w-1/2 bg-[#F5EFE6] flex items-center justify-center px-8 py-12">
-        <div className="w-full max-w-md flex flex-col items-center">
+      <div className="w-full md:w-1/2 bg-[#F5EFE6]/90 relative flex items-center justify-center px-8 py-12 overflow-hidden">
+        <div className="relative w-full max-w-md flex flex-col items-center">
           {/* Logo */}
-          <img src={tavernLogo} alt="Tavern Logo" className="w-40 mb-8" />
+          <img src={tavernLogo} alt="Tavern Logo" className="w-40" />
 
           {/* Title */}
-          <h1 className="text-4xl font-bold text-gray-900 mb-1">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
             Forgot Password
           </h1>
-          <p className="text-sm text-gray-500 mb-8 text-center">
-            Enter your username or email to receive a verification code.
+          <p className="text-sm mb-8 text-center text-gray-600">
+            Enter your admin email address and we'll send you a verification
+            code to reset your password.
           </p>
 
           <form onSubmit={handleSubmit} className="w-full space-y-6">
-            {/* Username/Email */}
+            {/* Email */}
             <div className="flex flex-col">
               <label className="text-[11px] font-bold tracking-widest mb-1 uppercase">
-                Username / Email
+                Email
               </label>
-              <div className="flex items-center border border-gray-300 rounded-md bg-white px-3 py-2 gap-2">
-                <span className="text-gray-400">
-                  <LoginUsername className="w-4 h-4" />
-                </span>
+              <div className="flex items-center border border-gray-300 rounded-xl  bg-white px-3 py-3 gap-2">
                 <input
                   id="username"
                   name="username"
@@ -85,11 +101,6 @@ const ForgotPasswordPage = () => {
                   className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400"
                 />
               </div>
-              {formErrors?.username && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.username}
-                </p>
-              )}
             </div>
 
             {/* Submit */}
@@ -110,17 +121,6 @@ const ForgotPasswordPage = () => {
             >
               Sign in
             </Link>
-          </p>
-
-          {/* Footer */}
-          <p className="text-xs text-gray-400 text-center mt-8 leading-relaxed">
-            Access is restricted to authorized Tavern Asia staff.
-            <br />
-            Contact{" "}
-            <a href="mailto:admin@tavernasia.com" className="text-[#8B1A1A]">
-              admin@tavernasia.com
-            </a>{" "}
-            for access.
           </p>
         </div>
       </div>

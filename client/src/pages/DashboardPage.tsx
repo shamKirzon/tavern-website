@@ -31,6 +31,7 @@ import { reservationsApi } from "@/api/reservations.api";
 import { orderApi } from "@/api/orders.api";
 import { employeesApi } from "@/api/employees.api";
 import { customerApi } from "@/api/customers.api";
+import { toast } from "sonner";
 
 // ─── Dynamic chart config based on period ────────────────────────────────────
 
@@ -188,6 +189,21 @@ const DashboardPage = () => {
   const [reservationSummary, setReservationSummary] = useState<any>(null);
   const [orderSummary, setOrderSummary] = useState<any>(null);
   const [employeeSummary, setEmployeeSummary] = useState<any>(null);
+
+  const hasShownToast = useRef(false);
+
+  useEffect(() => {
+    if (!hasShownToast.current) {
+      toast.success("Welcome back, Admin!", {
+        style: {
+          background: "#14532D ",
+          color: "#FFFF",
+          border: "1px solid #14532D",
+        },
+      });
+      hasShownToast.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSummaries = async () => {

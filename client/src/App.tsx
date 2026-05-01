@@ -8,30 +8,34 @@ import ReportAndAnalyticsPage from "./pages/ReportAndAnalyticsPage";
 import ReservationPage from "./pages/ReservationPage";
 import OrderPage from "./pages/OrderPage";
 import ReservationCalendarPage from "./pages/ReservationCalendarPage";
+import { Toaster } from "sonner";
 
 const App = () => {
   return (
-    <Routes>
-      {/* Public route */}
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+    <>
+      <Toaster richColors duration={2000} />
+      <Routes>
+        {/* Public route */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-      {/* Layout routes */}
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/reservations" element={<ReservationPage />} />
-        <Route
-          path="/reservations/calendar"
-          element={<ReservationCalendarPage />}
-        />
-        <Route path="/orders" element={<OrderPage />} />
-        <Route path="/employee-management" element={<EmployeeManagement />} />
-        <Route
-          path="/report-and-analytics"
-          element={<ReportAndAnalyticsPage />}
-        />
-      </Route>
-    </Routes>
+        {/* Layout routes */}
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/reservations" element={<ReservationPage />} />
+          <Route
+            path="/reservations/calendar"
+            element={<ReservationCalendarPage />}
+          />
+          <Route path="/orders" element={<OrderPage />} />
+          <Route path="/employee-management" element={<EmployeeManagement />} />
+          <Route
+            path="/report-and-analytics"
+            element={<ReportAndAnalyticsPage />}
+          />
+        </Route>
+      </Routes>
+    </>
   );
 };
 

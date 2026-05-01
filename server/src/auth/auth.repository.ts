@@ -13,6 +13,33 @@ class AuthRepository {
       return [];
     }
   }
+
+  async updatePassword(newPassword: string) {
+    try {
+      const { data: accounts, error: fetchError } = await supabase
+        .from("admin_accounts")
+        .select("*")
+        .limit(1);
+
+      if (fetchError || !accounts || accounts.length === 0) {
+        throw fetchError || new Error("No admin account found");
+      }
+
+      const username = accounts[0].username;
+
+      const { error: updateError } = await supabase
+        .from("admin_accounts")
+        .update({ password: newPassword })
+        .eq("username", username);
+
+      if (updateError) throw updateError;
+
+      return { status: "success" };
+    } catch (error) {
+      console.error("Error in repository/updatePassword():", error);
+      return { status: "error" };
+    }
+  }
 }
 
 export const authRepository = new AuthRepository();

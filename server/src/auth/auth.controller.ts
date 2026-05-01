@@ -50,6 +50,20 @@ class AuthController {
         .json({ message: "An error occurred while sending OTP" });
     }
   }
+
+  async updatePassword(req: Request, res: Response) {
+    const { password } = req.body;
+    try {
+      const result = await authService.updatePassword(password);
+      if (result.status === "success") {
+        return res.status(200).json({ status: "success" });
+      }
+      return res.status(400).json({ status: "error", message: "Failed to update password" });
+    } catch (error) {
+      console.error("error from updatePassword(): ", error);
+      return res.status(500).json({ status: "error", message: "An error occurred during password update" });
+    }
+  }
 }
 
 export const authController = new AuthController();

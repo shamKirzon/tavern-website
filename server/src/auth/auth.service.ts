@@ -25,6 +25,10 @@ class AuthService {
     await sendAdminPasswordResetOTP(otp);
     return otp;
   }
+
+  async updatePassword(newPassword: string) {
+    return await authRepository.updatePassword(newPassword);
+  }
 }
 
 export const authService = new AuthService();

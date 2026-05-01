@@ -3,12 +3,8 @@ import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
 import tavernLogo from "../assets/logo/tavern-logo.png";
-import {
-  LoginClosedEye,
-  LoginOpenEye,
-  LoginPassword,
-  LoginUsername,
-} from "@/assets/icons/icons";
+import { LoginPassword, LoginUsername } from "@/assets/icons/icons";
+import { authApi } from "@/api/auth.api";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -32,7 +28,7 @@ const LoginPage = () => {
     password: z.string().min(1, "Password is required"),
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -52,24 +48,30 @@ const LoginPage = () => {
       return;
     }
 
-    const ADMIN = import.meta.env.VITE_ADMIN;
-    const PASSWORD = import.meta.env.VITE_PASSWORD;
+    try {
+      const response = await authApi.login(data);
 
-    if (data.username !== ADMIN || data.password !== PASSWORD) {
+      if (response && response.result) {
+        setFormError({ username: "", password: "" });
+        navigate("/dashboard");
+      } else {
+        setFormError({
+          username: "Invalid credentials",
+          password: "Invalid credentials",
+        });
+        setLoginData({ username: "", password: "" });
+      }
+    } catch (error: any) {
       setFormError({
-        username: data.username !== ADMIN ? "Invalid email" : "",
-        password: data.password !== PASSWORD ? "Invalid password" : "",
+        username: error.response?.data?.message || "Login failed",
+        password: error.response?.data?.message || "Login failed",
       });
       setLoginData({ username: "", password: "" });
-      return;
     }
-
-    setFormError({ username: "", password: "" });
-    navigate("/dashboard");
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen font-poppins">
       {/* Left - Background Image */}
       <div className="hidden md:block w-1/2 overflow-hidden relative">
         <div
@@ -80,7 +82,7 @@ const LoginPage = () => {
 
       {/* Right - Form */}
       <div className="w-full md:w-1/2 bg-[#F5EFE6] flex items-center justify-center px-8 py-12">
-        <div className="w-full max-w-md flex flex-col items-center">
+        <div className=" w-full max-w-md flex flex-col items-center">
           {/* Logo */}
           <img src={tavernLogo} alt="Tavern Logo" className="w-40" />
 
@@ -176,11 +178,11 @@ const LoginPage = () => {
           </form>
 
           {/* Footer */}
-          <p className="text-xs text-gray-400 text-center mt-6 leading-relaxed">
+          <p className="text-xs text-center mt-6 leading-relaxed">
             Access is restricted to authorized Tavern Asia staff.
             <br />
             Contact{" "}
-            <a href="mailto:admin@tavernasia.com" className="text-[#8B1A1A]">
+            <a href="mailto:admin@tavernasia.com" className="text-[#A6902A]">
               admin@tavernasia.com
             </a>{" "}
             for access.

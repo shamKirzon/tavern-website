@@ -4,10 +4,12 @@ import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
 import tavernLogo from "../assets/logo/tavern-logo.png";
 import { toast } from "sonner";
+import { authApi } from "@/api/auth.api";
 
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState<"email" | "otp">("email");
   const [username, setUsername] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
 
   return (
     <div className="flex min-h-screen font-poppins">
@@ -29,17 +31,25 @@ const ForgotPasswordPage = () => {
             <ForgotPasswordForm
               username={username}
               setUsername={setUsername}
-              onSuccess={() => setStep("otp")}
+              onSuccess={(otp) => {
+                setGeneratedOtp(otp);
+                setStep("otp");
+              }}
             />
           ) : (
-            <EnterOtpForm onBack={() => setStep("email")} />
+            <EnterOtpForm
+              onBack={() => setStep("email")}
+              expectedOtp={generatedOtp}
+            />
           )}
 
-          {/* Remember Password Link - Shared for both steps or just email? 
-              User said "copy same content", so we keep it or adapt it. */}
+          {/* Remember Password Link */}
           <p className="text-sm text-gray-600 mt-6">
             Remember your password?{" "}
-            <Link to="/" className="text-[#AA3131] font-semibold hover:underline">
+            <Link
+              to="/"
+              className="text-[#AA3131] font-semibold hover:underline"
+            >
               Sign in
             </Link>
           </p>
@@ -56,13 +66,13 @@ const ForgotPasswordForm = ({
 }: {
   username: string;
   setUsername: (val: string) => void;
-  onSuccess: () => void;
+  onSuccess: (otp: string) => void;
 }) => {
   const formSchema = z.object({
     username: z.string().min(1, "Email is required"),
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!username) {
@@ -102,13 +112,24 @@ const ForgotPasswordForm = ({
       return;
     }
 
-    toast.success("Verification code sent!");
-    onSuccess();
+    try {
+      const response = await authApi.generateOtp();
+      if (response && response.otp) {
+        toast.success("Verification code sent!");
+        onSuccess(response.otp);
+      } else {
+        toast.error("Failed to generate code. Please try again.");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    }
   };
 
   return (
     <>
-      <h1 className="text-4xl font-bold text-gray-900 mb-3">Forgot Password</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 text-center">
+        Forgot Password
+      </h1>
       <p className="text-sm mb-8 text-center text-gray-600">
         Enter your admin email address and we'll send you a verification code to
         reset your password.
@@ -143,7 +164,13 @@ const ForgotPasswordForm = ({
   );
 };
 
-const EnterOtpForm = ({ onBack }: { onBack: () => void }) => {
+const EnterOtpForm = ({
+  onBack,
+  expectedOtp,
+}: {
+  onBack: () => void;
+  expectedOtp: string;
+}) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -163,7 +190,7 @@ const EnterOtpForm = ({ onBack }: { onBack: () => void }) => {
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -183,13 +210,29 @@ const EnterOtpForm = ({ onBack }: { onBack: () => void }) => {
       });
       return;
     }
+
+    if (code !== expectedOtp) {
+      toast.error("incorrect otp, try again.", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #8B1A1A",
+        },
+      });
+      setOtp(["", "", "", ""]);
+      inputRefs.current[0]?.focus();
+      return;
+    }
+
     toast.success("Code verified!");
     // Proceed to next step (e.g., Reset Password)
   };
 
   return (
     <>
-      <h1 className="text-4xl font-bold text-gray-900 mb-3">Enter Code</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-3 text-center">
+        Enter Code
+      </h1>
       <p className="text-sm mb-8 text-center text-gray-600">
         We've sent a 4-digit verification code to your email. Enter it below to
         verify your identity.

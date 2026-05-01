@@ -13,4 +13,16 @@ export const authApi = {
       throw error;
     }
   },
+
+  async generateOtp() {
+    try {
+      const res = await axiosInstance.post("/auth/generate-otp");
+      if (!res) return console.log("Can't generate OTP.");
+
+      return res.data;
+    } catch (error) {
+      console.log("Error in authApi/generateOtp(): ", error);
+      throw error;
+    }
+  },
 };

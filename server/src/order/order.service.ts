@@ -153,13 +153,25 @@ class OrderService {
           const date = new Date(curr.sessionExpiry);
           const month = monthOrder[date.getMonth()];
 
+          const items =
+            typeof curr.orderItems === "string"
+              ? JSON.parse(curr.orderItems)
+              : curr.orderItems || [];
+
+          const sessionQuantity = Array.isArray(items)
+            ? items.reduce(
+                (sum: number, item: any) => sum + (item.quantity || 0),
+                0,
+              )
+            : 0;
+
           let existing = acc.find((item: any) => item.month === month);
           if (!existing) {
             existing = { month, orders: 0 };
             acc.push(existing);
           }
 
-          existing.orders += 1;
+          existing.orders += sessionQuantity;
           return acc;
         }, [] as any[]);
 
@@ -198,13 +210,25 @@ class OrderService {
           const date = new Date(curr.sessionExpiry);
           const day = getDayLabel(date);
 
+          const items =
+            typeof curr.orderItems === "string"
+              ? JSON.parse(curr.orderItems)
+              : curr.orderItems || [];
+
+          const sessionQuantity = Array.isArray(items)
+            ? items.reduce(
+                (sum: number, item: any) => sum + (item.quantity || 0),
+                0,
+              )
+            : 0;
+
           let existing = acc.find((item: any) => item.day === day);
           if (!existing) {
             existing = { day, orders: 0 };
             acc.push(existing);
           }
 
-          existing.orders += 1;
+          existing.orders += sessionQuantity;
           return acc;
         }, [] as any[]);
 

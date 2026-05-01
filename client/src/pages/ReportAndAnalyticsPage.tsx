@@ -712,7 +712,7 @@ const ReportsAnalyticsPage: React.FC = () => {
                   Revenue Overtime
                 </p>
                 <p className="text-gray-400 text-[11px] mt-0.5">
-                  Total Revenue (₱) per period
+                  Total Revenue (₱) per {revenuePeriod}
                 </p>
               </div>
               <FilterDropdown
@@ -818,7 +818,7 @@ const ReportsAnalyticsPage: React.FC = () => {
                   Order Volume
                 </p>
                 <p className="text-gray-400 text-[11px] mt-0.5">
-                  Number of orders per period
+                  Number of orders per {orderVolumePeriod}
                 </p>
               </div>
               <FilterDropdown

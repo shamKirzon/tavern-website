@@ -321,7 +321,7 @@ const DashboardPage = () => {
                 Total Revenue
               </p>
               <p className="font-poppins text-gray-400 text-[11px] mt-0.5">
-                Total Revenue (₱) per period
+                Total Revenue (₱) per {revenuePeriod}
               </p>
             </div>
             <FilterDropdown

@@ -474,11 +474,17 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   const normalizedDays = (employee.shiftDay ?? []).map(normalizeDay);
   const hasPinRole = roleHasPin(employee.employeeRole);
 
-  const badgeCls = ["WAITER", "BARTENDER"].includes(
-    employee.employeeRole.toUpperCase(),
-  )
-    ? "bg-[#EFD974] text-[#111]"
-    : "bg-[#AA3131] text-white";
+  const ROLE_BADGE_COLORS: Record<string, string> = {
+    BARTENDER: "bg-[#087DC7]/15 text-[#087DC7]",
+    WAITER: "bg-[#950052]/15 text-[#950052]",
+    "KITCHEN STAFF": "bg-[#009507]/15 text-[#009507]",
+    CASHIER: "bg-[#AD7434]/15 text-[#AD7434]",
+    SECURITY: "bg-[#2D37C2]/15 text-[#2D37C2]",
+  };
+
+  const badgeCls =
+    ROLE_BADGE_COLORS[employee.employeeRole.toUpperCase()] ??
+    "bg-gray-100 text-gray-600";
 
   return (
     <div className="bg-white border-[1.5px] border-[#111] rounded-2xl p-4 flex flex-col gap-3">

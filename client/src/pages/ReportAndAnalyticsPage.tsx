@@ -1,5 +1,6 @@
 import { SideBarReportsAndAnalytics } from "@/assets/icons/icons";
 import { formatReadableDate } from "@/utils/date";
+import { capitalizeWords } from "@/utils/capitalizeWords";
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
   XAxis,
@@ -24,17 +25,11 @@ import {
 } from "@/components/ui/chart";
 import { reservationsApi } from "@/api/reservations.api";
 import { orderApi } from "@/api/orders.api";
+import { employeesApi } from "@/api/employees.api";
 import type { Reservation, Cancellation } from "@/types/Reservation";
+import type { Employee } from "@/types/Employee";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-
-const employees = [
-  { name: "Dannah Torres", type: "Full-time" },
-  { name: "Shammy Suyat", type: "Part-time" },
-  { name: "Keia Marie", type: "Full-time" },
-  { name: "Paulyn Blanco", type: "Part-time" },
-  { name: "Yuji Midorikawa", type: "Full-time" },
-];
 
 // ─── Chart Configs ────────────────────────────────────────────────────────────
 
@@ -62,6 +57,14 @@ const revenueFilterOptions = [
 
 const ordersChartConfig: ChartConfig = {
   orders: { label: "Orders", color: "#AA3131" },
+};
+
+const ROLE_BADGE_COLORS: Record<string, string> = {
+  BARTENDER: "bg-[#087DC7]/15 text-[#087DC7]",
+  WAITER: "bg-[#950052]/15 text-[#950052]",
+  "KITCHEN STAFF": "bg-[#009507]/15 text-[#009507]",
+  CASHIER: "bg-[#AD7434]/15 text-[#AD7434]",
+  SECURITY: "bg-[#2D37C2]/15 text-[#2D37C2]",
 };
 
 const orderVolumeFilterOptions = [
@@ -226,6 +229,8 @@ const ReportsAnalyticsPage: React.FC = () => {
     { date: string; approved: number; cancelled: number }[]
   >([]);
 
+  const [employeeList, setEmployeeList] = useState<Employee[]>([]);
+
   const [orderMetrics, setOrderMetrics] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -250,6 +255,12 @@ const ReportsAnalyticsPage: React.FC = () => {
   }, [orderVolumePeriod]);
 
   const orderVolumeXKey = orderVolumePeriod === "weekly" ? "day" : "month";
+
+  useEffect(() => {
+    employeesApi.getEmployeeList().then((data) => {
+      if (data) setEmployeeList(data);
+    });
+  }, []);
 
   useEffect(() => {
     const fetchOrderData = async () => {
@@ -882,7 +893,9 @@ const ReportsAnalyticsPage: React.FC = () => {
             <p className="font-bold text-gray-900 text-[15px]">
               Employee Directory
             </p>
-            <p className="text-[12px] text-gray-400 mt-0.5">19 staff members</p>
+            <p className="text-[12px] text-gray-400 mt-0.5">
+              {employeeList.length} staff members
+            </p>
           </div>
 
           <table className="w-full text-sm">
@@ -900,37 +913,28 @@ const ReportsAnalyticsPage: React.FC = () => {
                 <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
                   Days
                 </th>
-                <th className="text-left py-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
-                  PIN
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {employees.map((emp, index) => (
+              {employeeList.map((emp, index) => (
                 <tr key={index} className="hover:bg-gray-50 transition-colors">
                   <td className="py-4 text-[13px] font-medium text-gray-800">
-                    {emp.name}
+                    {emp.fullName}
                   </td>
                   <td className="py-4">
-                    <span className="px-3 py-1 rounded-lg bg-yellow-100 text-yellow-700 text-[11px] font-medium">
-                      {emp.type}
+                    <span
+                      className={`px-3 py-1 rounded-md text-[11px] font-medium ${ROLE_BADGE_COLORS[emp.employeeRole.toUpperCase()] ?? "bg-gray-100 text-gray-700"}`}
+                    >
+                      {capitalizeWords(emp.employeeRole)}
                     </span>
                   </td>
                   <td className="py-4 text-[13px] text-gray-500">
-                    8:00PM - 6:00AM
+                    {emp.shiftStart} - {emp.shiftEnd}
                   </td>
                   <td className="py-4 text-[13px] text-gray-500">
-                    Mon, Tue, Wed, Sat
-                  </td>
-                  <td className="py-4">
-                    <div className="flex gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="w-2 h-2 bg-gray-300 rounded-full"
-                        />
-                      ))}
-                    </div>
+                    {emp.shiftDay
+                      .map((day) => day.substring(0, 3).toUpperCase())
+                      .join(", ")}
                   </td>
                 </tr>
               ))}

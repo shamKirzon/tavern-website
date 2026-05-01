@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
 import tavernLogo from "../assets/logo/tavern-logo.png";
+import { toast } from "sonner";
 import { LoginPassword, LoginUsername } from "@/assets/icons/icons";
 import { authApi } from "@/api/auth.api";
 
@@ -18,11 +19,6 @@ const LoginPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const [formErrors, setFormError] = useState<{
-    username: any;
-    password: any;
-  } | null>();
-
   const formSchema = z.object({
     username: z.string().min(1, "Email is required"),
     password: z.string().min(1, "Password is required"),
@@ -37,13 +33,26 @@ const LoginPage = () => {
       password: formData.get("password") as string,
     };
 
+    if (!data.username || !data.password) {
+      toast.error("Please fill in all required fields.", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #6e1414",
+        },
+      });
+      return;
+    }
+
     const parseResult = formSchema.safeParse(data);
 
     if (!parseResult.success) {
-      const resultError = parseResult.error.format();
-      setFormError({
-        username: resultError.username?._errors[0] || "",
-        password: resultError.password?._errors[0] || "",
+      toast.error("Invalid input. Please check your entries.", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #6e1414",
+        },
       });
       return;
     }
@@ -52,21 +61,26 @@ const LoginPage = () => {
       const response = await authApi.login(data);
 
       if (response && response.result) {
-        setFormError({ username: "", password: "" });
         navigate("/dashboard");
       } else {
-        setFormError({
-          username: "Invalid credentials",
-          password: "Invalid credentials",
-        });
         setLoginData({ username: "", password: "" });
+        toast.error("Invalid input. Please check your entries.", {
+          style: {
+            background: "#8B1A1A",
+            color: "#fff",
+            border: "1px solid #6e1414",
+          },
+        });
       }
     } catch (error: any) {
-      setFormError({
-        username: error.response?.data?.message || "Login failed",
-        password: error.response?.data?.message || "Login failed",
-      });
       setLoginData({ username: "", password: "" });
+      toast.error("Invalid input. Please check your entries.", {
+        style: {
+          background: "#8B1A1A",
+          color: "#fff",
+          border: "1px solid #6e1414",
+        },
+      });
     }
   };
 
@@ -81,8 +95,8 @@ const LoginPage = () => {
       </div>
 
       {/* Right - Form */}
-      <div className="w-full md:w-1/2 bg-[#F5EFE6] flex items-center justify-center px-8 py-12">
-        <div className=" w-full max-w-md flex flex-col items-center">
+      <div className="w-full md:w-1/2 bg-[#F5EFE6]/90 relative flex items-center justify-center px-8 py-12 overflow-hidden">
+        <div className="relative w-full max-w-md flex flex-col items-center">
           {/* Logo */}
           <img src={tavernLogo} alt="Tavern Logo" className="w-40" />
 
@@ -119,11 +133,6 @@ const LoginPage = () => {
                   className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400"
                 />
               </div>
-              {formErrors?.username && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.username}
-                </p>
-              )}
             </div>
 
             {/* Password */}
@@ -150,11 +159,6 @@ const LoginPage = () => {
                   className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400"
                 />
               </div>
-              {formErrors?.password && (
-                <p className="text-red-500 text-xs mt-1">
-                  {formErrors.password}
-                </p>
-              )}
             </div>
 
             {/* Forgot Password */}

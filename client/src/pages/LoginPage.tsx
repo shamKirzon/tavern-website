@@ -2,6 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
+import tavernLogo from "../assets/logo/tavern-logo.png";
+import {
+  LoginClosedEye,
+  LoginOpenEye,
+  LoginPassword,
+  LoginUsername,
+} from "@/assets/icons/icons";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -64,23 +71,21 @@ const LoginPage = () => {
   return (
     <div className="flex min-h-screen">
       {/* Left - Background Image */}
-      <div className=" w-1/2" style={{ backgroundImage: `url(${tavernBg})` }} />
+      <div className="hidden md:block w-1/2 overflow-hidden relative">
+        <div
+          className="absolute inset-0 bg-cover bg-center blur-[3px] scale-110"
+          style={{ backgroundImage: `url(${tavernBg})` }}
+        />
+      </div>
 
       {/* Right - Form */}
       <div className="w-full md:w-1/2 bg-[#F5EFE6] flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-md flex flex-col items-center">
           {/* Logo */}
-          <div className="border-2 border-[#8B1A1A] px-4 py-2 text-center mb-6">
-            <p className="font-playfair text-[#8B1A1A] text-2xl leading-tight font-bold">
-              T<br />A<br />V
-            </p>
-            <p className="text-[9px] text-[#8B1A1A] tracking-widest mt-1">
-              EST 2008
-            </p>
-          </div>
+          <img src={tavernLogo} alt="Tavern Logo" className="w-40" />
 
           {/* Title */}
-          <h1 className="font-playfair text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-4xl font-bold text-gray-900 mb-1">
             Admin Portal
           </h1>
           <p className="text-sm text-gray-500 mb-8 text-center">
@@ -90,11 +95,13 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="w-full space-y-4">
             {/* Email */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-semibold tracking-widest text-gray-600 mb-1">
-                EMAIL
+              <label className="text-[11px] font-bold tracking-widest mb-1">
+                USERNAME
               </label>
               <div className="flex items-center border border-gray-300 rounded-md bg-white px-3 py-2 gap-2">
-                <span className="text-gray-400 text-sm">👤</span>
+                <span className="text-gray-400">
+                  <LoginUsername className="w-4 h-4" />
+                </span>
                 <input
                   id="username"
                   name="username"
@@ -119,11 +126,13 @@ const LoginPage = () => {
 
             {/* Password */}
             <div className="flex flex-col">
-              <label className="text-[11px] font-semibold tracking-widest text-gray-600 mb-1">
+              <label className="text-[11px] font-bold tracking-widest mb-1">
                 PASSWORD
               </label>
               <div className="flex items-center border border-gray-300 rounded-md bg-white px-3 py-2 gap-2">
-                <span className="text-gray-400 text-sm">🔒</span>
+                <span className="text-gray-400">
+                  <LoginPassword className="w-4 h-4" />
+                </span>
                 <input
                   id="password"
                   name="password"
@@ -138,13 +147,6 @@ const LoginPage = () => {
                   placeholder="••••••••"
                   className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="text-gray-400 text-sm"
-                >
-                  {showPassword ? "🙈" : "👁"}
-                </button>
               </div>
               {formErrors?.password && (
                 <p className="text-red-500 text-xs mt-1">
@@ -166,7 +168,7 @@ const LoginPage = () => {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-[#8B1A1A] hover:bg-[#6e1414] text-white font-semibold py-3 rounded-md transition-colors text-sm tracking-wide"
+              className="w-full bg-[#AA3131] hover:bg-[#6e1414] text-white font-semibold py-3 rounded-md transition-colors text-sm tracking-wide"
             >
               Login
             </button>

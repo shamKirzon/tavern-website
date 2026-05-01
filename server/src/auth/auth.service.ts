@@ -1,5 +1,6 @@
 import { authRepository } from "./auth.repository";
 import { AuthData } from "../types/Auth";
+import { sendAdminPasswordResetOTP } from "../utils/sendMail";
 
 class AuthService {
   async login(authData: AuthData) {
@@ -16,6 +17,12 @@ class AuthService {
 
   async generateOtp() {
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    return otp;
+  }
+
+  async sendOtp() {
+    const otp = await this.generateOtp();
+    await sendAdminPasswordResetOTP(otp);
     return otp;
   }
 }

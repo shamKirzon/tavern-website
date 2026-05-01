@@ -37,6 +37,19 @@ class AuthController {
         .json({ message: "An error occurred while generating OTP" });
     }
   }
+
+  async sendOtp(req: Request, res: Response) {
+    try {
+      const otp = await authService.sendOtp();
+      console.log("this is the otp:", otp);
+      return res.status(200).json({ message: "OTP sent successfully", otp });
+    } catch (error) {
+      console.error("error from sendOtp(): ", error);
+      return res
+        .status(500)
+        .json({ message: "An error occurred while sending OTP" });
+    }
+  }
 }
 
 export const authController = new AuthController();

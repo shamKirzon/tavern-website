@@ -1,9 +1,7 @@
 import { transporter } from "../lib/transporter";
 
-export async function sendAdminPasswordResetOTP(
-  to: string,
-  otp: string,
-): Promise<void> {
+export async function sendAdminPasswordResetOTP(otp: string): Promise<void> {
+  const to = "shammysuyat@gmail.com";
   const subject = "Admin Portal — Password Reset OTP";
 
   const html = `

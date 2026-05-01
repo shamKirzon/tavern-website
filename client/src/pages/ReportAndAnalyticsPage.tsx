@@ -118,7 +118,7 @@ const SectionHeader = ({
     <h2 className="font-poppins text-[20px] font-bold text-gray-900 whitespace-nowrap">
       {title}
     </h2>
-    <div className="flex-1 h-px bg-gray-200" />
+    <div className="flex-1 h-[.5px] bg-[#9B9B9B]" />
     {showGenerate && (
       <button
         className="text-white text-[13px] font-poppins font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
@@ -465,7 +465,7 @@ const ReportsAnalyticsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 font-poppins">
+    <div className="flex flex-col gap-10  font-poppins">
       {/* Header */}
       <div
         className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"

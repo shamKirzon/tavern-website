@@ -26,12 +26,12 @@ import {
   SideBarReportsAndAnalytics,
   SideBarReservation,
 } from "../assets/icons/icons";
-import { useState } from "react";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
+  const location = useLocation();
 
-  const [activeButton, setActiveButton] = useState<string>("dashboard");
+  const currentPath = location.pathname;
 
   return (
     <Sidebar className="border-none bg-white font-poppins">
@@ -50,7 +50,7 @@ export default function AppSidebar() {
         {state !== "collapsed" && (
           <div className="mt-3 text-center">
             <p className="font-semibold text-lg text-black">Hello, Admin</p>
-            <p className="mt-0f text-xs text-gray-500">tavernadmin@gmail.com</p>
+            <p className="mt-0 text-xs text-gray-500">tavernadmin@gmail.com</p>
           </div>
         )}
       </SidebarHeader>
@@ -64,10 +64,7 @@ export default function AppSidebar() {
               {/* Dashboard */}
               <SidebarMenuItem>
                 <Link to="/dashboard">
-                  <SidebarMenuButton
-                    onClick={() => setActiveButton("dashboard")}
-                    isActive={activeButton === "dashboard"}
-                  >
+                  <SidebarMenuButton isActive={currentPath === "/dashboard"}>
                     <SideBarDashboard />
                     <span>Dashboard</span>
                   </SidebarMenuButton>
@@ -77,10 +74,7 @@ export default function AppSidebar() {
               {/* Reservation */}
               <SidebarMenuItem>
                 <Link to="/reservations">
-                  <SidebarMenuButton
-                    onClick={() => setActiveButton("reservation")}
-                    isActive={activeButton === "reservation"}
-                  >
+                  <SidebarMenuButton isActive={currentPath === "/reservations"}>
                     <SideBarReservation />
                     <span>Reservations</span>
                   </SidebarMenuButton>
@@ -91,8 +85,7 @@ export default function AppSidebar() {
               <SidebarMenuItem className="ml-6 pr-8">
                 <Link to="/reservations/calendar">
                   <SidebarMenuButton
-                    onClick={() => setActiveButton("calendar")}
-                    isActive={activeButton === "calendar"}
+                    isActive={currentPath === "/reservations/calendar"}
                   >
                     <span>Calendar</span>
                   </SidebarMenuButton>
@@ -102,10 +95,7 @@ export default function AppSidebar() {
               {/* Orders */}
               <SidebarMenuItem>
                 <Link to="/orders">
-                  <SidebarMenuButton
-                    onClick={() => setActiveButton("orders")}
-                    isActive={activeButton === "orders"}
-                  >
+                  <SidebarMenuButton isActive={currentPath === "/orders"}>
                     <SideBarOrder />
                     <span>Orders</span>
                   </SidebarMenuButton>
@@ -116,8 +106,7 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <Link to="/employee-management">
                   <SidebarMenuButton
-                    onClick={() => setActiveButton("employees")}
-                    isActive={activeButton === "employees"}
+                    isActive={currentPath === "/employee-management"}
                   >
                     <IconGroup />
                     <span>Employees</span>
@@ -129,8 +118,7 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <Link to="/report-and-analytics">
                   <SidebarMenuButton
-                    onClick={() => setActiveButton("reportAndAnalytics")}
-                    isActive={activeButton === "reportAndAnalytics"}
+                    isActive={currentPath === "/report-and-analytics"}
                   >
                     <SideBarReportsAndAnalytics />
                     <span>Report & Analytics</span>

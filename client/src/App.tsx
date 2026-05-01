@@ -1,5 +1,6 @@
 import Dashboard from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { Route, Routes } from "react-router-dom";
 import EmployeeManagement from "./pages/EmployeePage";
 import Layout from "./components/app/layout";
@@ -13,6 +14,7 @@ const App = () => {
     <Routes>
       {/* Public route */}
       <Route path="/" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       {/* Layout routes */}
       <Route element={<Layout />}>

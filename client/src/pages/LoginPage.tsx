@@ -159,6 +159,7 @@ const LoginPage = () => {
             <div className="flex justify-end">
               <button
                 type="button"
+                onClick={() => navigate("/forgot-password")}
                 className="text-sm text-[#8B1A1A] hover:underline"
               >
                 Forgot Password?

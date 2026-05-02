@@ -1,6 +1,7 @@
 "use client";
 
-import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   Sidebar,
@@ -27,11 +28,23 @@ import {
   SideBarReservation,
 } from "../assets/icons/icons";
 
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "./ui/dialog";
+import { Button } from "./ui/button";
+
 export default function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const currentPath = location.pathname;
+
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   return (
     <Sidebar className="border-none bg-white font-poppins">
@@ -135,15 +148,47 @@ export default function AppSidebar() {
 
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link to="/logout">
-              <SidebarMenuButton>
-                <SideBarLogout />
-                <span>Logout</span>
-              </SidebarMenuButton>
-            </Link>
+            <SidebarMenuButton onClick={() => setIsLogoutModalOpen(true)}>
+              <SideBarLogout />
+              <span>Logout</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      {/* Logout Confirmation Modal */}
+      <Dialog open={isLogoutModalOpen} onOpenChange={setIsLogoutModalOpen}>
+        <DialogContent className="w-sm p-0 overflow-hidden font-poppins rounded-2xl border-none gap-0">
+          <div className="bg-red-900 px-6 py-5">
+            <DialogTitle className="text-white text-xl font-medium">
+              Confirmation
+            </DialogTitle>
+          </div>
+
+          <div className="bg-white px-6 pt-6 pb-6 flex flex-col gap-4 text-sm">
+            <DialogDescription className="text-gray-600 text-md">
+              Are you sure you want to logout?
+            </DialogDescription>
+
+            <div className="flex gap-3">
+              <DialogClose asChild>
+                <Button className="flex-1 bg-[#1C1B1F] hover:bg-gray-900 text-white rounded-xl py-5 text-md">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                onClick={() => {
+                  setIsLogoutModalOpen(false);
+                  navigate("/login");
+                }}
+                className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }

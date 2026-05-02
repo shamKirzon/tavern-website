@@ -11,15 +11,18 @@ import OrderPage from "./pages/OrderPage";
 import ReservationCalendarPage from "./pages/ReservationCalendarPage";
 import { Toaster } from "sonner";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 const App = () => {
   return (
     <>
       <Toaster richColors duration={2000} />
       <Routes>
-        {/* Public route */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route element={<PublicRoute />}>
+          {/* Public route */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        </Route>
 
         {/* Layout routes */}
         <Route element={<ProtectedRoute />}>

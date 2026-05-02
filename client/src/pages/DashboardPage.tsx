@@ -190,18 +190,19 @@ const DashboardPage = () => {
   const [orderSummary, setOrderSummary] = useState<any>(null);
   const [employeeSummary, setEmployeeSummary] = useState<any>(null);
 
-  const hasShownToast = useRef(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!hasShownToast.current) {
-      toast.success("Welcome back, Admin!", {
+    if (location.state?.justLoggedIn) {
+      toast.success("Welcome back!", {
         style: {
-          background: "#14532D ",
+          background: "#14532D",
           color: "#FFFF",
           border: "1px solid #14532D",
         },
       });
-      hasShownToast.current = true;
+      navigate(".", { replace: true, state: {} });
     }
   }, []);
 

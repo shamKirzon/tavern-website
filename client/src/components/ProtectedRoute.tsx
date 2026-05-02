@@ -7,8 +7,10 @@ import { toast } from "sonner";
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
 
+  const location = useLocation();
+
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !location.state?.loggedOut) {
       toast.error("Please login to access this page.", {
         style: {
           background: "#8B1A1A",
@@ -17,7 +19,7 @@ const ProtectedRoute = () => {
         },
       });
     }
-  }, [user, loading]);
+  }, [user, loading, location.state]);
 
   if (loading) return <div>Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;

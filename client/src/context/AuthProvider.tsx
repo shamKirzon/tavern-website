@@ -18,15 +18,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Step 1: Get existing session on mount
+    // getting session from supa
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("CONTEXT: ", session?.user);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Step 2: Listen for any auth changes
+    // listen to any session
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {

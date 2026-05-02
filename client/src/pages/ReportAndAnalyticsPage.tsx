@@ -118,29 +118,12 @@ const StatCard = ({
 
 // ─── Section Header ───────────────────────────────────────────────────────────
 
-const SectionHeader = ({
-  title,
-  showGenerate = false,
-  onGenerate,
-}: {
-  title: string;
-  showGenerate?: boolean;
-  onGenerate?: () => void;
-}) => (
+const SectionHeader = ({ title }: { title: string }) => (
   <div className="flex items-center gap-4 mb-5">
     <h2 className="font-poppins text-[20px] font-bold text-gray-900 whitespace-nowrap">
       {title}
     </h2>
     <div className="flex-1 h-[.5px] bg-[#9B9B9B]" />
-    {showGenerate && (
-      <button
-        onClick={onGenerate}
-        className="text-white text-[13px] font-poppins font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-        style={{ background: headerGradient }}
-      >
-        Generate
-      </button>
-    )}
   </div>
 );
 
@@ -258,48 +241,56 @@ const ReportsAnalyticsPage: React.FC = () => {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const handleGenerateReport = async (section: string) => {
-    let mockData;
-    if (section === "Reservations") {
-      mockData = {
-        title: "Reservations Report",
-        headers: ["Date", "Status", "Amount"],
-        rows: [
-          { name: "2026-05-01", orders: "Accepted", revenue: "₱ 1,500" },
-          { name: "2026-05-02", orders: "Done", revenue: "₱ 2,200" },
-          { name: "2026-05-03", orders: "Pending", revenue: "₱ 1,800" },
-          { name: "2026-05-04", orders: "Accepted", revenue: "₱ 2,500" },
-          { name: "2026-05-05", orders: "Accepted", revenue: "₱ 3,100" },
-        ],
-      };
-    } else if (section === "Orders and Revenue") {
-      mockData = {
-        title: "Orders & Revenue Report",
-        headers: ["Order ID", "Items", "Total"],
-        rows: [
-          { name: "#ORD-001", orders: "5 items", revenue: "₱ 3,450" },
-          { name: "#ORD-002", orders: "2 items", revenue: "₱ 1,200" },
-          { name: "#ORD-003", orders: "8 items", revenue: "₱ 5,600" },
-          { name: "#ORD-004", orders: "1 item", revenue: "₱ 450" },
-          { name: "#ORD-005", orders: "3 items", revenue: "₱ 2,100" },
-        ],
-      };
-    } else {
-      mockData = {
-        title: "Employee Directory Report",
-        headers: ["Name", "Role", "Shift"],
-        rows: [
-          { name: "John Doe", orders: "Bartender", revenue: "10:00-18:00" },
-          { name: "Jane Smith", orders: "Waiter", revenue: "14:00-22:00" },
-          { name: "Mike Ross", orders: "Cashier", revenue: "08:00-16:00" },
-          { name: "Sarah Connor", orders: "Security", revenue: "22:00-06:00" },
-          { name: "Peter Parker", orders: "Waiter", revenue: "12:00-20:00" },
-        ],
-      };
-    }
+  const handleGenerateReport = async () => {
+    const comprehensiveData = {
+      title: "Comprehensive Tavern Report",
+      sections: [
+        {
+          title: "Reservations Summary",
+          headers: ["Date", "Status", "Amount"],
+          rows: [
+            { name: "2026-05-01", orders: "Accepted", revenue: "₱ 1,500" },
+            { name: "2026-05-02", orders: "Done", revenue: "₱ 2,200" },
+            { name: "2026-05-03", orders: "Pending", revenue: "₱ 1,800" },
+            { name: "2026-05-04", orders: "Accepted", revenue: "₱ 2,500" },
+            { name: "2026-05-05", orders: "Accepted", revenue: "₱ 3,100" },
+          ],
+        },
+        {
+          title: "Orders & Revenue Summary",
+          headers: ["Order ID", "Items", "Total"],
+          rows: [
+            { name: "#ORD-001", orders: "5 items", revenue: "₱ 3,450" },
+            { name: "#ORD-002", orders: "2 items", revenue: "₱ 1,200" },
+            { name: "#ORD-003", orders: "8 items", revenue: "₱ 5,600" },
+            { name: "#ORD-004", orders: "1 item", revenue: "₱ 450" },
+            { name: "#ORD-005", orders: "3 items", revenue: "₱ 2,100" },
+          ],
+        },
+        {
+          title: "Employee Directory Summary",
+          headers: ["Name", "Role", "Shift"],
+          rows: [
+            { name: "John Doe", orders: "Bartender", revenue: "10:00-18:00" },
+            { name: "Jane Smith", orders: "Waiter", revenue: "14:00-22:00" },
+            { name: "Mike Ross", orders: "Cashier", revenue: "08:00-16:00" },
+            {
+              name: "Sarah Connor",
+              orders: "Security",
+              revenue: "22:00-06:00",
+            },
+            { name: "Peter Parker", orders: "Waiter", revenue: "12:00-20:00" },
+          ],
+        },
+      ],
+    };
 
     try {
-      const blob = await reportApi.generateReport(mockData);
+      const blob = await reportApi.generateReport(comprehensiveData);
+      if (!blob) {
+        toast.error("Failed to generate report blob");
+        return;
+      }
       const url = URL.createObjectURL(blob);
       if (pdfUrl) URL.revokeObjectURL(pdfUrl); // Clean up previous URL
       setPdfUrl(url);
@@ -544,31 +535,36 @@ const ReportsAnalyticsPage: React.FC = () => {
     <div className="flex flex-col gap-10  font-poppins">
       {/* Header */}
       <div
-        className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
+        className="flex flex-row px-7 items-center w-full h-[100px] rounded-2xl"
         style={{
           background: headerGradient,
           boxShadow: "0 8px 32px rgba(150,30,30,0.45)",
         }}
       >
-        <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
-          <SideBarReportsAndAnalytics className="text-white w-8 h-8" />
+        <div className="flex flex-row items-center flex-1">
+          <div className="w-[60px] h-[60px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <SideBarReportsAndAnalytics className="text-white w-8 h-8" />
+          </div>
+          <div className="ml-5 text-white">
+            <h1 className="text-[38px] font-bold leading-tight">
+              Reports and Analytics
+            </h1>
+            <p className="text-[13px] mt-0.5 opacity-85">
+              {formatReadableDate(new Date())}
+            </p>
+          </div>
         </div>
-        <div className="ml-5 text-white">
-          <h1 className="text-[38px] font-bold leading-tight">
-            Reports and Analytics
-          </h1>
-          <p className="text-[13px] mt-0.5 opacity-85">
-            {formatReadableDate(new Date())}
-          </p>
-        </div>
+        <button
+          onClick={handleGenerateReport}
+          className="text-black text-[14px] font-poppins font-bold px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity bg-[#EFD974] shadow-md"
+        >
+          Generate
+        </button>
       </div>
 
       {/* ═══════════════════ RESERVATIONS ═══════════════════ */}
       <div>
-        <SectionHeader
-          title="Reservations"
-          onGenerate={() => handleGenerateReport("Reservations")}
-        />
+        <SectionHeader title="Reservations" />
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
@@ -768,10 +764,7 @@ const ReportsAnalyticsPage: React.FC = () => {
 
       {/* ═══════════════════ ORDERS & REVENUE ═══════════════════ */}
       <div>
-        <SectionHeader
-          title="Orders and Revenue"
-          onGenerate={() => handleGenerateReport("Orders and Revenue")}
-        />
+        <SectionHeader title="Orders and Revenue" />
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
@@ -965,10 +958,7 @@ const ReportsAnalyticsPage: React.FC = () => {
 
       {/* ═══════════════════ EMPLOYEES ═══════════════════ */}
       <div>
-        <SectionHeader
-          title="Employees"
-          onGenerate={() => handleGenerateReport("Employees")}
-        />
+        <SectionHeader title="Employees" />
 
         <div
           className="bg-white rounded-2xl border border-gray-100 p-5"

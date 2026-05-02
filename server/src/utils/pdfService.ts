@@ -13,7 +13,6 @@ export const generateReportFromTemplate = async (
     const templateBytes = fs.readFileSync(templatePath);
     pdfDoc = await PDFDocument.load(templateBytes);
   } else {
-    // Fallback: Create a new PDF if template is missing
     pdfDoc = await PDFDocument.create();
     pdfDoc.addPage();
   }
@@ -22,24 +21,19 @@ export const generateReportFromTemplate = async (
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   const pages = pdfDoc.getPages();
-  const page = pages[0];
-
-  if (!page) {
-    throw new Error("PDF must have at least one page.");
-  }
-
-  const { width, height } = page.getSize();
+  let currentPage = pages[0] || pdfDoc.addPage();
+  const { width, height } = currentPage.getSize();
 
   // Title
-  page.drawText(reportData.title || "Sales Report", {
+  currentPage.drawText("Comprehensive Tavern Report", {
     x: 50,
     y: height - 50,
     size: 24,
     font: boldFont,
-    color: rgb(0.67, 0.19, 0.19), // #AA3131
+    color: rgb(0.67, 0.19, 0.19),
   });
 
-  page.drawText(`Generated on: ${new Date().toLocaleString()}`, {
+  currentPage.drawText(`Generated on: ${new Date().toLocaleString()}`, {
     x: 50,
     y: height - 80,
     size: 10,
@@ -47,41 +41,97 @@ export const generateReportFromTemplate = async (
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  // Table Header
-  let yPosition = height - 130;
-  const tableHeaders = reportData.headers || ["Name", "Orders", "Revenue"];
+  let yPosition = height - 120;
 
-  page.drawText(tableHeaders[0], { x: 50, y: yPosition, size: 12, font: boldFont });
-  page.drawText(tableHeaders[1], { x: 250, y: yPosition, size: 12, font: boldFont });
-  page.drawText(tableHeaders[2], { x: 450, y: yPosition, size: 12, font: boldFont });
+  const sanitizeText = (text: string) => {
+    return text.toString().replace(/₱/g, "P");
+  };
 
-  yPosition -= 20;
-  page.drawLine({
-    start: { x: 50, y: yPosition },
-    end: { x: 550, y: yPosition },
-    thickness: 1,
-    color: rgb(0.8, 0.8, 0.8),
-  });
-  yPosition -= 25;
-
-  // Draw table rows
-  reportData.rows.forEach((row: any) => {
-    if (yPosition < 50) {
-      // Very basic pagination: if we run out of space, stop (or we could add a page)
-      return;
+  const drawSection = (section: any) => {
+    // Check if we need a new page
+    if (yPosition < 150) {
+      currentPage = pdfDoc.addPage();
+      yPosition = currentPage.getSize().height - 50;
     }
-    page.drawText(row.name.toString(), { x: 50, y: yPosition, size: 11, font });
-    page.drawText(row.orders.toString(), {
+
+    // Section Title
+    currentPage.drawText(sanitizeText(section.title), {
+      x: 50,
+      y: yPosition,
+      size: 16,
+      font: boldFont,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+    yPosition -= 25;
+
+    // Table Header
+    const headers = section.headers || ["Name", "Orders", "Revenue"];
+    currentPage.drawText(sanitizeText(headers[0]), {
+      x: 50,
+      y: yPosition,
+      size: 11,
+      font: boldFont,
+    });
+    currentPage.drawText(sanitizeText(headers[1]), {
       x: 250,
       y: yPosition,
       size: 11,
-      font,
+      font: boldFont,
     });
-    page.drawText(row.revenue.toString(), { x: 450, y: yPosition, size: 11, font });
-    yPosition -= 25;
-  });
+    currentPage.drawText(sanitizeText(headers[2]), {
+      x: 450,
+      y: yPosition,
+      size: 11,
+      font: boldFont,
+    });
+
+    yPosition -= 10;
+    currentPage.drawLine({
+      start: { x: 50, y: yPosition },
+      end: { x: 550, y: yPosition },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+    yPosition -= 20;
+
+    // Rows
+    section.rows.forEach((row: any) => {
+      if (yPosition < 50) {
+        currentPage = pdfDoc.addPage();
+        yPosition = currentPage.getSize().height - 50;
+      }
+      currentPage.drawText(sanitizeText(row.name), {
+        x: 50,
+        y: yPosition,
+        size: 10,
+        font,
+      });
+      currentPage.drawText(sanitizeText(row.orders), {
+        x: 250,
+        y: yPosition,
+        size: 10,
+        font,
+      });
+      currentPage.drawText(sanitizeText(row.revenue), {
+        x: 450,
+        y: yPosition,
+        size: 10,
+        font,
+      });
+      yPosition -= 20;
+    });
+
+    yPosition -= 30; // Gap between sections
+  };
+
+  if (reportData.sections && Array.isArray(reportData.sections)) {
+    reportData.sections.forEach((section: any) => {
+      drawSection(section);
+    });
+  } else {
+    drawSection(reportData);
+  }
 
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
 };
-

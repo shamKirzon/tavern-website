@@ -100,7 +100,10 @@ const NewPasswordPage = () => {
       <div className="hidden md:block w-1/2 overflow-hidden relative">
         <div
           className="absolute inset-0 bg-cover bg-center blur-[3px] scale-110"
-          style={{ backgroundImage: `url(${tavernBg})` }}
+          style={{
+            backgroundImage: `url(${tavernBg})`,
+            backgroundPosition: "center 90%",
+          }}
         />
       </div>
 

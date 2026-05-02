@@ -4,8 +4,8 @@ import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
 import tavernLogo from "../assets/logo/tavern-logo.png";
 import { toast } from "sonner";
-import { LoginPassword, LoginUsername } from "@/assets/icons/icons";
 import { authApi } from "@/api/auth.api";
+import { supabase } from "@/lib/supabase-client";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -60,18 +60,40 @@ const LoginPage = () => {
     try {
       const response = await authApi.login(data);
 
-      if (response && response.result) {
-        navigate("/dashboard");
-      } else {
+      if (!response || !response.result) {
         setLoginData({ username: "", password: "" });
-        toast.error("Invalid input. Please check your entries.", {
+        toast.error("Invalid email or password.", {
           style: {
             background: "#8B1A1A",
             color: "#fff",
             border: "1px solid #6e1414",
           },
         });
+        return;
       }
+
+      // supabase login session:
+      const { error: supabaseError } = await supabase.auth.signInWithPassword({
+        email: data.username,
+        password: data.password,
+      });
+
+      if (supabaseError) {
+        toast.error("Authentication failed. Please try again.", {
+          style: {
+            background: "#8B1A1A",
+            color: "#fff",
+            border: "1px solid #6e1414",
+          },
+        });
+        return;
+      }
+
+      // Step 5: Both passed — go to dashboard
+      toast.success("Welcome back, Admin! The tavern awaits.", {
+        duration: 3000,
+      });
+      navigate("/dashboard");
     } catch (error: any) {
       setLoginData({ username: "", password: "" });
       toast.error("Invalid input. Please check your entries.", {
@@ -89,8 +111,11 @@ const LoginPage = () => {
       {/* Left - Background Image */}
       <div className="hidden md:block w-1/2 overflow-hidden relative">
         <div
-          className="absolute inset-0 bg-cover bg-center blur-[3px] scale-110"
-          style={{ backgroundImage: `url(${tavernBg})` }}
+          className="absolute inset-0 bg-cover blur-[3px] scale-110"
+          style={{
+            backgroundImage: `url(${tavernBg})`,
+            backgroundPosition: "center 90%",
+          }}
         />
       </div>
 

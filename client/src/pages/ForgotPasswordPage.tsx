@@ -17,7 +17,10 @@ const ForgotPasswordPage = () => {
       <div className="hidden md:block w-1/2 overflow-hidden relative">
         <div
           className="absolute inset-0 bg-cover bg-center blur-[3px] scale-110"
-          style={{ backgroundImage: `url(${tavernBg})` }}
+          style={{
+            backgroundImage: `url(${tavernBg})`,
+            backgroundPosition: "center 90%",
+          }}
         />
       </div>
 
@@ -101,7 +104,7 @@ const ForgotPasswordForm = ({
       return;
     }
 
-    if (username !== "tavernasia@gmail.com") {
+    if (username !== "admin@tavernasia.com") {
       toast.error("Access requires an authorized company email.", {
         style: {
           background: "#8B1A1A",
@@ -258,7 +261,7 @@ const EnterOtpForm = ({
     }
 
     toast.success("Code verified!");
-    
+
     setTimeout(() => {
       navigate("/new-password");
     }, 2000);

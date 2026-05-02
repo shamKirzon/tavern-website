@@ -89,10 +89,6 @@ const LoginPage = () => {
         return;
       }
 
-      // Step 5: Both passed — go to dashboard
-      toast.success("Welcome back, Admin! The tavern awaits.", {
-        duration: 3000,
-      });
       navigate("/dashboard");
     } catch (error: any) {
       setLoginData({ username: "", password: "" });

@@ -10,6 +10,7 @@ import ReservationPage from "./pages/ReservationPage";
 import OrderPage from "./pages/OrderPage";
 import ReservationCalendarPage from "./pages/ReservationCalendarPage";
 import { Toaster } from "sonner";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   return (
@@ -22,19 +23,24 @@ const App = () => {
         <Route path="/new-password" element={<NewPasswordPage />} />
 
         {/* Layout routes */}
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/reservations" element={<ReservationPage />} />
-          <Route
-            path="/reservations/calendar"
-            element={<ReservationCalendarPage />}
-          />
-          <Route path="/orders" element={<OrderPage />} />
-          <Route path="/employee-management" element={<EmployeeManagement />} />
-          <Route
-            path="/report-and-analytics"
-            element={<ReportAndAnalyticsPage />}
-          />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/reservations" element={<ReservationPage />} />
+            <Route
+              path="/reservations/calendar"
+              element={<ReservationCalendarPage />}
+            />
+            <Route path="/orders" element={<OrderPage />} />
+            <Route
+              path="/employee-management"
+              element={<EmployeeManagement />}
+            />
+            <Route
+              path="/report-and-analytics"
+              element={<ReportAndAnalyticsPage />}
+            />
+          </Route>
         </Route>
       </Routes>
     </>

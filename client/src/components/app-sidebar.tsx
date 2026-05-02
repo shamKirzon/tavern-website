@@ -21,7 +21,6 @@ import {
 import {
   IconGroup,
   SideBarDashboard,
-  SideBarEmployee,
   SideBarLogout,
   SideBarOrder,
   SideBarReportsAndAnalytics,
@@ -36,6 +35,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { useAuth } from "@/context/AuthProvider";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
@@ -43,7 +43,7 @@ export default function AppSidebar() {
   const navigate = useNavigate();
 
   const currentPath = location.pathname;
-
+  const { logout } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   return (
@@ -177,7 +177,8 @@ export default function AppSidebar() {
                 </Button>
               </DialogClose>
               <Button
-                onClick={() => {
+                onClick={async () => {
+                  await logout();
                   setIsLogoutModalOpen(false);
                   navigate("/login");
                 }}

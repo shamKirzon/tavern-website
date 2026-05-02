@@ -883,7 +883,7 @@ const ReportsAnalyticsPage: React.FC = () => {
 
       {/* ═══════════════════ EMPLOYEES ═══════════════════ */}
       <div>
-        <SectionHeader title="Employees" />
+        <SectionHeader title="Employees" showGenerate />
 
         <div
           className="bg-white rounded-2xl border border-gray-100 p-5"

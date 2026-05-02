@@ -307,8 +307,8 @@ const ReportsAnalyticsPage: React.FC = () => {
       try {
         const [yearsData, allRes, allCancels] = await Promise.all([
           reservationsApi.getAvailableYears(),
-          reservationsApi.getReservationList(),
-          reservationsApi.getReservationCancellations(),
+          reservationsApi.getReservationList(2026),
+          reservationsApi.getReservationCancellations(2026),
         ]);
         if (yearsData) setYears(yearsData);
         if (allRes) setSummaryReservations(allRes);

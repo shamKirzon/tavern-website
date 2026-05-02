@@ -68,7 +68,7 @@ const ReservationPage = () => {
   // Fetch reservations
   useEffect(() => {
     const fetchReservations = async () => {
-      const data = await reservationsApi.getReservationList();
+      const data = await reservationsApi.getReservationList(2026);
       setReservations(data);
     };
     fetchReservations();
@@ -170,7 +170,7 @@ const ReservationPage = () => {
       { count: countByStatus("pending"), name: "Pending" },
       { count: pendingCancellations, name: "Cancel Request" },
       { count: countByStatus("accepted"), name: "Accepted" },
-      { count: countByStatus("rejected"), name: "Rejected" },
+      { count: countByStatus("rejected"), name: "Declined" },
       { count: cancelledCount, name: "Cancelled" },
       { count: countByStatus("done"), name: "Done" },
     ];
@@ -193,6 +193,7 @@ const ReservationPage = () => {
     return reservations.filter((r) => {
       const filterStatusMap: Record<string, string> = {
         Accepted: "accepted",
+        Declined: "rejected",
       };
       const mappedStatus =
         filterStatusMap[filterActive] ?? filterActive.toLowerCase();
@@ -303,7 +304,7 @@ const ReservationPage = () => {
     All: "bg-black/20 border-black",
     Pending: "bg-[#A6902A]/20 border-[#A6902A]",
     Accepted: "bg-[#009507]/20 border-[#009507]",
-    Rejected: "bg-[#B10000]/20 border-[#B10000]",
+    Declined: "bg-[#B10000]/20 border-[#B10000]",
     Cancelled: "bg-[#ECD105]/20 border-[#ECD105]",
     CancelRequest: "bg-[#FF8400]/20 border-[#FF8400]",
     Done: "bg-[#2563EB]/20 border-[#2563EB]",
@@ -313,7 +314,7 @@ const ReservationPage = () => {
     All: "bg-white",
     Pending: "bg-[#A6902A]",
     Accepted: "bg-[#009507]",
-    Rejected: "bg-[#B10000]",
+    Declined: "bg-[#B10000]",
     Cancelled: "bg-[#ECD105]",
     CancelRequest: "bg-[#FF8400]",
     Done: "bg-[#2563EB]/20",
@@ -508,7 +509,9 @@ const ReservationPage = () => {
                         ${field.value === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
                       `}
                     >
-                      {capitalizeWords(field.value as string)}
+                      {field.value === "rejected"
+                        ? "Declined"
+                        : capitalizeWords(field.value as string)}
                     </span>
                   </TableCell>
                 ) : (
@@ -697,7 +700,9 @@ const ReservationPage = () => {
                         ${field.value === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
                       `}
                     >
-                      {capitalizeWords(field.value as string)}
+                      {field.value === "rejected"
+                        ? "Declined"
+                        : capitalizeWords(field.value as string)}
                     </span>
                   </TableCell>
                 )}
@@ -908,7 +913,9 @@ const ReservationPage = () => {
                             ${cancellation.status === "rejected" ? "bg-[#B10000]/20 text-[#B10000]" : ""}
                           `}
                         >
-                          {capitalizeWords(cancellation.status)}
+                          {cancellation.status === "rejected"
+                            ? "Declined"
+                            : capitalizeWords(cancellation.status)}
                         </span>
                       </TableCell>
                       <TableCell className="py-4 max-w-[120px]">
@@ -963,7 +970,9 @@ const ReservationPage = () => {
                             ${reservation.reservationStatus === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
                           `}
                         >
-                          {capitalizeWords(reservation.reservationStatus)}
+                          {reservation.reservationStatus === "rejected"
+                            ? "Declined"
+                            : capitalizeWords(reservation.reservationStatus)}
                         </span>
                       </TableCell>
                       <TableCell className="py-4">
@@ -1013,7 +1022,9 @@ const ReservationPage = () => {
                               ${reservation.reservationStatus === "done" ? "bg-[#2563EB]/20 text-[#2563EB]" : ""}
                             `}
                           >
-                            {capitalizeWords(reservation.reservationStatus)}
+                            {reservation.reservationStatus === "rejected"
+                              ? "Declined"
+                              : capitalizeWords(reservation.reservationStatus)}
                           </span>
                         </TableCell>
                         <TableCell className="py-4">

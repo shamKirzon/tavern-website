@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import * as z from "zod";
 import tavernBg from "../assets/backgrounds/tavern-background.jpg";
@@ -43,6 +43,7 @@ const ForgotPasswordPage = () => {
             <EnterOtpForm
               onBack={() => setStep("email")}
               expectedOtp={generatedOtp}
+              onResendSuccess={(otp) => setGeneratedOtp(otp)}
             />
           )}
 
@@ -202,13 +203,47 @@ const ForgotPasswordForm = ({
 const EnterOtpForm = ({
   onBack,
   expectedOtp,
+  onResendSuccess,
 }: {
   onBack: () => void;
   expectedOtp: string;
+  onResendSuccess: (otp: string) => void;
 }) => {
   const navigate = useNavigate();
   const [otp, setOtp] = useState(["", "", "", ""]);
+  const [timer, setTimer] = useState(30);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    let interval: any;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const handleResend = async () => {
+    if (timer > 0 || isResending) return;
+
+    try {
+      setIsResending(true);
+      const response = await authApi.sendOtp();
+      if (response && response.otp) {
+        toast.success("New verification code sent!");
+        onResendSuccess(response.otp);
+        setTimer(30);
+      } else {
+        toast.error("Failed to generate code. Please try again.");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handleChange = (index: number, value: string) => {
     // Only allow numbers
@@ -278,22 +313,42 @@ const EnterOtpForm = ({
       </p>
 
       <form onSubmit={handleSubmit} className="w-full space-y-6">
-        <div className="flex justify-center gap-4">
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-14 h-14 text-center text-2xl font-bold border border-gray-300 rounded-xl bg-white outline-none focus:border-[#AA3131] transition-colors"
-            />
-          ))}
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex justify-center gap-4">
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="w-14 h-14 text-center text-2xl font-bold border border-gray-300 rounded-xl bg-white outline-none focus:border-[#AA3131] transition-colors"
+              />
+            ))}
+          </div>
+
+          <div className="text-center">
+            {timer > 0 ? (
+              <p className="text-xs text-gray-500">
+                Resend OTP in{" "}
+                <span className="font-semibold text-[#AA3131]">{timer}s</span>
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResending}
+                className="text-xs text-[#AA3131] font-semibold hover:underline disabled:opacity-50"
+              >
+                {isResending ? "Resending..." : "Resend OTP"}
+              </button>
+            )}
+          </div>
         </div>
 
         <button

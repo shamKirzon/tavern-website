@@ -20,7 +20,6 @@ const App = () => {
         {/* Public route */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/new-password" element={<NewPasswordPage />} />
 
         {/* Layout routes */}
         <Route element={<ProtectedRoute />}>
@@ -41,6 +40,7 @@ const App = () => {
               element={<ReportAndAnalyticsPage />}
             />
           </Route>
+          <Route path="/new-password" element={<NewPasswordPage />} />
         </Route>
       </Routes>
     </>

@@ -34,6 +34,29 @@ class AuthRepository {
 
       if (updateError) throw updateError;
 
+      // supabase auth update session
+      const {
+        data: { users },
+        error,
+      } = await supabase.auth.admin.listUsers();
+
+      const user = users.find((u) => u.email === username);
+
+      if (!user) {
+        throw error;
+      }
+
+      // Now use their UID to update password
+      // but change first the api key in your settings/api keys/legacy anon.. / service_role
+      const { error: updateAuthError } =
+        await supabase.auth.admin.updateUserById(user.id, {
+          password: newPassword,
+        });
+
+      if (updateAuthError) {
+        throw updateAuthError;
+      }
+
       return { status: "success" };
     } catch (error) {
       console.error("Error in repository/updatePassword():", error);

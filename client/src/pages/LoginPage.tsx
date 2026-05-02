@@ -89,7 +89,7 @@ const LoginPage = () => {
         return;
       }
 
-      navigate("/dashboard", { state: { justLoggedIn: true } });
+      navigate("/dashboard");
     } catch (error: any) {
       setLoginData({ username: "", password: "" });
       toast.error("Invalid email or password. Please check your entries. ", {

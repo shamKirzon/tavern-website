@@ -182,6 +182,9 @@ const customerMapFilterOptions: DropdownOption[] = [
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 const DashboardPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [revenuePeriod, setRevenuePeriod] = useState<string>("monthly");
   const [customerMapPeriod, setCustomerMapPeriod] = useState<string>("weekly");
   const [revenueData, setRevenueData] = useState<any[]>([]);
@@ -191,15 +194,15 @@ const DashboardPage = () => {
   const [orderSummary, setOrderSummary] = useState<any>(null);
   const [employeeSummary, setEmployeeSummary] = useState<any>(null);
 
-  useEffect(() => {
-    toast.success("Welcome back, Admin!", {
-      style: {
-        background: "#009507",
-        color: "#fff",
-        border: "1px solid #007d06",
-      },
-    });
-  }, []);
+  // Toaster na hindi naman gumagana
+  // useEffect(() => {
+  //   toast("Welcome back, Admin!", {
+  //     style: {
+  //       background: "#D6CFC5",
+  //       // border: "1px solid ",
+  //     },
+  //   });
+  // }, []);
 
   useEffect(() => {
     const fetchSummaries = async () => {

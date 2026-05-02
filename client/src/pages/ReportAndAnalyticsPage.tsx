@@ -29,6 +29,17 @@ import { employeesApi } from "@/api/employees.api";
 import type { Reservation, Cancellation } from "@/types/Reservation";
 import type { Employee } from "@/types/Employee";
 
+import { reportApi } from "@/api/report.api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 // ─── Chart Configs ────────────────────────────────────────────────────────────
@@ -110,9 +121,11 @@ const StatCard = ({
 const SectionHeader = ({
   title,
   showGenerate = false,
+  onGenerate,
 }: {
   title: string;
   showGenerate?: boolean;
+  onGenerate?: () => void;
 }) => (
   <div className="flex items-center gap-4 mb-5">
     <h2 className="font-poppins text-[20px] font-bold text-gray-900 whitespace-nowrap">
@@ -121,6 +134,7 @@ const SectionHeader = ({
     <div className="flex-1 h-[.5px] bg-[#9B9B9B]" />
     {showGenerate && (
       <button
+        onClick={onGenerate}
         className="text-white text-[13px] font-poppins font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
         style={{ background: headerGradient }}
       >
@@ -239,6 +253,68 @@ const ReportsAnalyticsPage: React.FC = () => {
 
   const [revenuePeriod, setRevenuePeriod] = useState<string>("monthly");
   const [revenueData, setRevenueData] = useState<any[]>([]);
+
+  // PDF Viewer State
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  const handleGenerateReport = async (section: string) => {
+    let mockData;
+    if (section === "Reservations") {
+      mockData = {
+        title: "Reservations Report",
+        headers: ["Date", "Status", "Amount"],
+        rows: [
+          { name: "2026-05-01", orders: "Accepted", revenue: "₱ 1,500" },
+          { name: "2026-05-02", orders: "Done", revenue: "₱ 2,200" },
+          { name: "2026-05-03", orders: "Pending", revenue: "₱ 1,800" },
+          { name: "2026-05-04", orders: "Accepted", revenue: "₱ 2,500" },
+          { name: "2026-05-05", orders: "Accepted", revenue: "₱ 3,100" },
+        ],
+      };
+    } else if (section === "Orders and Revenue") {
+      mockData = {
+        title: "Orders & Revenue Report",
+        headers: ["Order ID", "Items", "Total"],
+        rows: [
+          { name: "#ORD-001", orders: "5 items", revenue: "₱ 3,450" },
+          { name: "#ORD-002", orders: "2 items", revenue: "₱ 1,200" },
+          { name: "#ORD-003", orders: "8 items", revenue: "₱ 5,600" },
+          { name: "#ORD-004", orders: "1 item", revenue: "₱ 450" },
+          { name: "#ORD-005", orders: "3 items", revenue: "₱ 2,100" },
+        ],
+      };
+    } else {
+      mockData = {
+        title: "Employee Directory Report",
+        headers: ["Name", "Role", "Shift"],
+        rows: [
+          { name: "John Doe", orders: "Bartender", revenue: "10:00-18:00" },
+          { name: "Jane Smith", orders: "Waiter", revenue: "14:00-22:00" },
+          { name: "Mike Ross", orders: "Cashier", revenue: "08:00-16:00" },
+          { name: "Sarah Connor", orders: "Security", revenue: "22:00-06:00" },
+          { name: "Peter Parker", orders: "Waiter", revenue: "12:00-20:00" },
+        ],
+      };
+    }
+
+    try {
+      const blob = await reportApi.generateReport(mockData);
+      const url = URL.createObjectURL(blob);
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl); // Clean up previous URL
+      setPdfUrl(url);
+      setIsViewerOpen(true);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error("Failed to generate report");
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
 
   useEffect(() => {
     orderApi.getTotalRevenue(revenuePeriod).then(setRevenueData);
@@ -489,7 +565,10 @@ const ReportsAnalyticsPage: React.FC = () => {
 
       {/* ═══════════════════ RESERVATIONS ═══════════════════ */}
       <div>
-        <SectionHeader title="Reservations" showGenerate />
+        <SectionHeader
+          title="Reservations"
+          onGenerate={() => handleGenerateReport("Reservations")}
+        />
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
@@ -689,7 +768,10 @@ const ReportsAnalyticsPage: React.FC = () => {
 
       {/* ═══════════════════ ORDERS & REVENUE ═══════════════════ */}
       <div>
-        <SectionHeader title="Orders and Revenue" showGenerate />
+        <SectionHeader
+          title="Orders and Revenue"
+          onGenerate={() => handleGenerateReport("Orders and Revenue")}
+        />
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
@@ -883,7 +965,10 @@ const ReportsAnalyticsPage: React.FC = () => {
 
       {/* ═══════════════════ EMPLOYEES ═══════════════════ */}
       <div>
-        <SectionHeader title="Employees" showGenerate />
+        <SectionHeader
+          title="Employees"
+          onGenerate={() => handleGenerateReport("Employees")}
+        />
 
         <div
           className="bg-white rounded-2xl border border-gray-100 p-5"
@@ -942,6 +1027,38 @@ const ReportsAnalyticsPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* PDF Viewer Dialog */}
+      <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Report Preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 w-full bg-gray-100 rounded-lg overflow-hidden border">
+            {pdfUrl && (
+              <iframe
+                src={pdfUrl}
+                className="w-full h-full"
+                title="PDF Viewer"
+              />
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsViewerOpen(false)}>
+              Close
+            </Button>
+            {pdfUrl && (
+              <a
+                href={pdfUrl}
+                download="report.pdf"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-[#AA3131] text-white shadow hover:bg-[#770B0B] h-9 px-4 py-2"
+              >
+                Download PDF
+              </a>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

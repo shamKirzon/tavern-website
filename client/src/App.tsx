@@ -20,6 +20,7 @@ const App = () => {
       <Routes>
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/new-password" element={<NewPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
@@ -42,7 +43,6 @@ const App = () => {
               element={<ReportAndAnalyticsPage />}
             />
           </Route>
-          <Route path="/new-password" element={<NewPasswordPage />} />
         </Route>
       </Routes>
     </>

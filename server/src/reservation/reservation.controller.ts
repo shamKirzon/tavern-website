@@ -83,6 +83,31 @@ class ReservationController {
     }
   }
 
+  async getPendingReservationCancellation(req: Request, res: Response) {
+    try {
+      const { year } = req.query;
+      const result = await reservationService.getPendingReservationCancellation(
+        year ? Number(year) : undefined,
+      );
+
+      if (!result)
+        return res.status(400).json({
+          message:
+            "There is no returned pending reservation cancellation list. ",
+        });
+
+      return res.status(200).json({
+        message: "Fetched pending reservation cancellation list successfully. ",
+        result,
+      });
+    } catch (error: any) {
+      console.error("error from getPendingReservationCancellation(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't get pending reservation cancellations" });
+    }
+  }
+
   async getReservationSummary(req: Request, res: Response) {
     try {
       const result = await reservationService.getReservationSummary();

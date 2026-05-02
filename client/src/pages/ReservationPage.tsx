@@ -77,8 +77,11 @@ const ReservationPage = () => {
   // Fetch reservation cancellations
   useEffect(() => {
     const fetchCancellations = async () => {
-      const data = await reservationsApi.getReservationCancellations();
-      setReservationCancellations(data);
+      const [accepted, pending] = await Promise.all([
+        reservationsApi.getReservationCancellations(),
+        reservationsApi.getPendingReservationCancellation(2026),
+      ]);
+      setReservationCancellations([...(accepted || []), ...(pending || [])]);
     };
     fetchCancellations();
   }, []);

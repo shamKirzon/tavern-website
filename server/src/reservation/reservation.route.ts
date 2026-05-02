@@ -39,6 +39,11 @@ reservationRoutes.get(
   reservationController.getReservationCancellations,
 );
 
+reservationRoutes.get(
+  "/get-pending-reservation-cancellations",
+  reservationController.getPendingReservationCancellation,
+);
+
 reservationRoutes.get("/get-email/:customerId", reservationController.getEmail);
 reservationRoutes.get(
   "/get-reservation-by-id/:reservationId",

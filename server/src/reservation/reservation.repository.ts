@@ -55,6 +55,39 @@ class ReservationRepository {
     }
   }
 
+  async getPendingReservationCancellation(year?: number) {
+    try {
+      let query = supabase
+        .from("reservation_cancellations")
+        .select("*, reservations!inner(date)")
+        .eq("status", "pending");
+
+      if (year) {
+        const start = `${year}-01-01`;
+        const end = `${year}-12-31`;
+        query = query
+          .gte("reservations.date", start)
+          .lte("reservations.date", end);
+      }
+
+      const { data: cancellations, error } = await query;
+
+      if (error) throw error;
+
+      const result = (cancellations || []).map((c: any) => ({
+        ...c,
+        date: c.reservations?.date,
+      }));
+
+      return result;
+    } catch (error) {
+      console.error(
+        "Error in repository/getPendingReservationCancellation():",
+        error,
+      );
+    }
+  }
+
   async updateReservationStatus(
     reservationId: string,
     status: ReservationStatus,

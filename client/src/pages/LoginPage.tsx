@@ -47,7 +47,7 @@ const LoginPage = () => {
     const parseResult = formSchema.safeParse(data);
 
     if (!parseResult.success) {
-      toast.error("Invalid input. Please check your entries.", {
+      toast.error("Invalid email or password. Please check your entries. ", {
         style: {
           background: "#8B1A1A",
           color: "#fff",
@@ -92,7 +92,7 @@ const LoginPage = () => {
       navigate("/dashboard", { state: { justLoggedIn: true } });
     } catch (error: any) {
       setLoginData({ username: "", password: "" });
-      toast.error("Invalid input. Please check your entries.", {
+      toast.error("Invalid email or password. Please check your entries. ", {
         style: {
           background: "#8B1A1A",
           color: "#fff",

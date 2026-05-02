@@ -127,6 +127,23 @@ export const reservationsApi = {
     }
   },
 
+  async getPendingReservationCancellation(year?: number) {
+    try {
+      const res = await axiosInstance.get(
+        "/reservation/get-pending-reservation-cancellations",
+        { params: { year } },
+      );
+      if (!res) return console.log("Can't get pending reservation cancellations.");
+
+      return res.data.result;
+    } catch (error) {
+      console.log(
+        "Error in reservationApi/getPendingReservationCancellation(): ",
+        error,
+      );
+    }
+  },
+
   async getReservationSummary() {
     try {
       const res = await axiosInstance.get(

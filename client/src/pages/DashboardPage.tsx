@@ -32,6 +32,7 @@ import { orderApi } from "@/api/orders.api";
 import { employeesApi } from "@/api/employees.api";
 import { customerApi } from "@/api/customers.api";
 import { toast } from "sonner";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // ─── Dynamic chart config based on period ────────────────────────────────────
 
@@ -190,20 +191,14 @@ const DashboardPage = () => {
   const [orderSummary, setOrderSummary] = useState<any>(null);
   const [employeeSummary, setEmployeeSummary] = useState<any>(null);
 
-  const location = useLocation();
-  const navigate = useNavigate();
-
   useEffect(() => {
-    if (location.state?.justLoggedIn) {
-      toast.success("Welcome back!", {
-        style: {
-          background: "#14532D",
-          color: "#FFFF",
-          border: "1px solid #14532D",
-        },
-      });
-      navigate(".", { replace: true, state: {} });
-    }
+    toast.success("Welcome back, Admin!", {
+      style: {
+        background: "#009507",
+        color: "#fff",
+        border: "1px solid #007d06",
+      },
+    });
   }, []);
 
   useEffect(() => {

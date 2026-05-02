@@ -127,7 +127,14 @@ const NewPasswordPage = () => {
               <label className="text-[11px] font-bold tracking-widest mb-1">
                 NEW PASSWORD
               </label>
-              <div className="flex items-center border border-gray-300 rounded-xl bg-white px-3 py-3 gap-2">
+              <div
+                className={`flex items-center border ${
+                  passwordData.password.length > 0 &&
+                  passwordData.password.length < 6
+                    ? "border-red-500"
+                    : "border-gray-300"
+                } rounded-xl bg-white px-3 py-3 gap-2 transition-colors`}
+              >
                 <input
                   id="password"
                   name="password"
@@ -144,6 +151,12 @@ const NewPasswordPage = () => {
                   disabled={loading}
                 />
               </div>
+              {passwordData.password.length > 0 &&
+                passwordData.password.length < 6 && (
+                  <p className="text-[10px] text-red-500 mt-1 ml-1">
+                    Password must be at least 6 characters.
+                  </p>
+                )}
             </div>
 
             {/* Confirm Password */}

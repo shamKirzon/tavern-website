@@ -68,6 +68,14 @@ class ReservationService {
     return camelcaseKeys(dbResult ?? [], { deep: true });
   }
 
+  async getPendingReservationCancellation(year?: number) {
+    const dbResult =
+      await reservationRepository.getPendingReservationCancellation(year);
+    if (!dbResult) return;
+
+    return camelcaseKeys(dbResult ?? [], { deep: true });
+  }
+
   async updateReservationStatus(
     reservationId: string,
     status: ReservationStatus,
@@ -92,9 +100,17 @@ class ReservationService {
 
   async getReservationSummary() {
     const data = await this.getReservationList();
-    const cancellations = await this.getReservationCancellations();
+    const [acceptedCancellations, pendingCancellations] = await Promise.all([
+      this.getReservationCancellations(),
+      this.getPendingReservationCancellation(),
+    ]);
 
-    const summary = data?.reduce((acc, curr) => {
+    const cancellations = [
+      ...(acceptedCancellations || []),
+      ...(pendingCancellations || []),
+    ];
+
+    const summary = data?.reduce((acc: any, curr: any) => {
       const status = curr.reservationStatus;
 
       acc.reservationCount = (acc.reservationCount || 0) + 1;

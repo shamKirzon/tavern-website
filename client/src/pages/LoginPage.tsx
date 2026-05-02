@@ -89,7 +89,7 @@ const LoginPage = () => {
         return;
       }
 
-      navigate("/dashboard");
+      navigate("/dashboard", { state: { justLoggedIn: true } });
     } catch (error: any) {
       setLoginData({ username: "", password: "" });
       toast.error("Invalid input. Please check your entries.", {

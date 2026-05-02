@@ -18,7 +18,6 @@ const App = () => {
     <>
       <Toaster richColors duration={2000} />
       <Routes>
-        {/* Public route */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

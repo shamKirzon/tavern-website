@@ -177,16 +177,15 @@ export default function AppSidebar() {
                 </Button>
               </DialogClose>
               <Button
-                onClick={async () => {
-                  await logout();
-                  setIsLogoutModalOpen(false);
-                  navigate("/login");
-                }}
-                className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
+              onClick={async () => {
+                await logout();
+                setIsLogoutModalOpen(false);
+                navigate("/login", { state: { loggedOut: true } });
+              }}
+              className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
               >
-                Confirm
-              </Button>
-            </div>
+              Confirm
+              </Button>            </div>
           </div>
         </DialogContent>
       </Dialog>

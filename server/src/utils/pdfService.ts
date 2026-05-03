@@ -45,7 +45,6 @@ interface State {
   font: PDFFont;
   boldFont: PDFFont;
   doc: PDFDocument;
-  sectionIndex: number;
 }
 
 const addNewPage = (state: State): void => {
@@ -119,7 +118,7 @@ const drawSectionHeader = (state: State, title: string): void => {
     color: COLORS.primary,
   });
 
-  state.currentPage.drawText(`${state.sectionIndex}. ${sanitize(title)}`, {
+  state.currentPage.drawText(sanitize(title), {
     x: MARGIN + 12,
     y: state.y + 2,
     size: 10,
@@ -128,7 +127,6 @@ const drawSectionHeader = (state: State, title: string): void => {
   });
 
   state.y -= 28;
-  state.sectionIndex += 1;
 };
 
 const drawTableHeader = (
@@ -319,7 +317,6 @@ export const generateReportFromTemplate = async (
     y: PAGE_HEIGHT - MARGIN,
     font,
     boldFont,
-    sectionIndex: 1,
   };
 
   const reportTitle: string = reportData.title ?? "Comprehensive Tavern Report";

@@ -373,8 +373,11 @@ const ReportsAnalyticsPage: React.FC = () => {
       const orderSummary = [
         `Total revenue from orders: ${formatRevenue(orderMetrics.totalRevenue)}`,
         `Average orders per day: ${orderMetrics.ordersPerDay}`,
-        `Highest order day: ${orderHighestDay !== "N/A" ? formatReadableDate(new Date(orderHighestDay)) : "N/A"} `,
-        `Top 3 Most ordered items: ${top3Items.join(", ")}`,
+        `Highest order day: ${orderHighestDay !== "N/A" ? formatReadableDate(new Date(orderHighestDay)) : "N/A"}`,
+        `Top Most Ordered Items:`,
+        `  Top 1 - ${top3Items[0] ?? "N/A"}`,
+        `  Top 2 - ${top3Items[1] ?? "N/A"}`,
+        `  Top 3 - ${top3Items[2] ?? "N/A"}`,
       ];
 
       const orderSections: any[] = [];
@@ -385,7 +388,7 @@ const ReportsAnalyticsPage: React.FC = () => {
         );
         if (filtered.length > 0) {
           orderSections.push({
-            title: `Orders - ${status.toUpperCase()}`,
+            title: "Orders",
             headers: ["Order ID", "Date", "Qty", "Total"],
             rows: filtered.map((o: any) => {
               let totalQty = 0;

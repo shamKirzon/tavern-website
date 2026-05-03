@@ -3,8 +3,8 @@ import { orderRepository } from "./order.repository";
 import camelcaseKeys from "camelcase-keys";
 
 class OrderService {
-  async getOrderList() {
-    const dbResult = await orderRepository.getOrderList();
+  async getOrderList(year?: number) {
+    const dbResult = await orderRepository.getOrderList(year);
     if (!dbResult) return;
 
     return camelcaseKeys(dbResult ?? [], { deep: true });

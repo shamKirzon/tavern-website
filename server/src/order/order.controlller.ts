@@ -4,7 +4,10 @@ import { orderService } from "./order.service";
 class OrderController {
   async getOrderList(req: Request, res: Response) {
     try {
-      const result = await orderService.getOrderList();
+      const { year } = req.query;
+      const result = await orderService.getOrderList(
+        year ? Number(year) : undefined,
+      );
 
       if (!result)
         return res

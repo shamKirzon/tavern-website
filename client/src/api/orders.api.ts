@@ -1,9 +1,11 @@
 import { axiosInstance } from "./axios";
 
 export const orderApi = {
-  async getOrderList() {
+  async getOrderList(year?: number) {
     try {
-      const res = await axiosInstance.get("order/get-order-list");
+      const res = await axiosInstance.get("order/get-order-list", {
+        params: { year },
+      });
 
       if (!res) return console.log("Can't get order list. ");
 

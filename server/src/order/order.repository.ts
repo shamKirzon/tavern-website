@@ -2,9 +2,17 @@ import { supabase } from "../lib/supabase-client";
 import { ReservationStatus } from "../types/Reservation";
 
 class OrderRepository {
-  async getOrderList() {
+  async getOrderList(year?: number) {
     try {
-      const { data, error } = await supabase.from("orders").select("*");
+      let query = supabase.from("orders").select("*");
+
+      if (year) {
+        const start = `${year}-01-01`;
+        const end = `${year}-12-31`;
+        query = query.gte("session_expiry", start).lte("session_expiry", end);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

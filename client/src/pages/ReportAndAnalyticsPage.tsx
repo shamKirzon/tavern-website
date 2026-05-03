@@ -245,8 +245,8 @@ const ReportsAnalyticsPage: React.FC = () => {
     try {
       toast.info("Fetching data for report...");
       const [reservationsData, ordersData, employeesData] = await Promise.all([
-        reservationsApi.getReservationList(),
-        orderApi.getOrderList(),
+        reservationsApi.getReservationList(2026),
+        orderApi.getOrderList(2026),
         employeesApi.getEmployeeList(),
       ]);
 
@@ -256,13 +256,56 @@ const ReportsAnalyticsPage: React.FC = () => {
       }
 
       const sections: any[] = [];
+
+      // Calculate Reservation Summary
+      const resDone = reservationsData.filter(
+        (r: any) => r.reservationStatus === "done",
+      );
+      const resTotalRevenue = resDone.reduce(
+        (sum: number, r: any) => sum + (Number(r.reservationAmount) || 0),
+        0,
+      );
+      const resAverageRevenue =
+        reservationsData.length > 0
+          ? resTotalRevenue / reservationsData.length
+          : 0;
+
+      const resRevenueByDay = reservationsData.reduce(
+        (acc: any, r: any) => {
+          if (r.reservationStatus === "done") {
+            const date = r.date;
+            acc[date] = (acc[date] || 0) + (Number(r.reservationAmount) || 0);
+          }
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      let resHighestDay = "N/A";
+      let resMaxRevenue = 0;
+      Object.entries(resRevenueByDay).forEach(
+        ([date, revenue]: [string, any]) => {
+          if (revenue > resMaxRevenue) {
+            resMaxRevenue = revenue;
+            resHighestDay = date;
+          }
+        },
+      );
+
+      const resSummary = [
+        `Total revenue from reservations: P ${resTotalRevenue.toLocaleString()}`,
+        `Average revenue per reservation: P ${resAverageRevenue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+        `Highest revenue day: ${resHighestDay !== "N/A" ? formatReadableDate(new Date(resHighestDay)) : "N/A"}`,
+      ];
+
       const resStatuses = ["accepted", "done", "pending", "rejected"];
+      const resSections: any[] = [];
       resStatuses.forEach((status) => {
         const filtered = reservationsData.filter(
           (r: any) => r.reservationStatus === status,
         );
         if (filtered.length > 0) {
-          sections.push({
+          resSections.push({
             title: `Reservations - ${status.toUpperCase()}`,
             headers: ["Guest Name", "Type", "Status", "Pax", "Date", "Amount"],
             rows: filtered.map((r: any) => [
@@ -277,15 +320,73 @@ const ReportsAnalyticsPage: React.FC = () => {
         }
       });
 
+      if (resSections.length > 0) {
+        resSections[resSections.length - 1].summary = resSummary;
+        sections.push(...resSections);
+      }
+
+      // Calculate Order Summary
+      const ordersByDay = ordersData.reduce(
+        (acc: any, o: any) => {
+          const date = new Date(o.sessionExpiry).toISOString().split("T")[0];
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      let orderHighestDay = "N/A";
+      let maxOrdersCount = 0;
+      Object.entries(ordersByDay).forEach(([date, count]: [string, any]) => {
+        if (count > maxOrdersCount) {
+          maxOrdersCount = count;
+          orderHighestDay = date;
+        }
+      });
+
+      const itemCounts: Record<string, number> = {};
+      ordersData.forEach((o: any) => {
+        let items: any[] = [];
+        if (Array.isArray(o.orderItems)) {
+          items = o.orderItems;
+        } else {
+          if (o.orderItems?.newOrders?.items) {
+            items.push(...o.orderItems.newOrders.items);
+          }
+          if (o.orderItems?.originalOrders?.items) {
+            items.push(...o.orderItems.originalOrders.items);
+          }
+        }
+        items.forEach((item: any) => {
+          const name = item.orderName || item.name;
+          if (name) {
+            itemCounts[name] = (itemCounts[name] || 0) + (item.quantity || 0);
+          }
+        });
+      });
+
+      const top3Items = Object.entries(itemCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([name, count]) => `${name} (${count})`);
+
+      const orderSummary = [
+        `Total revenue from orders: ${formatRevenue(orderMetrics.totalRevenue)}`,
+        `Average orders per day: ${orderMetrics.ordersPerDay}`,
+        `Highest order day: ${orderHighestDay !== "N/A" ? formatReadableDate(new Date(orderHighestDay)) : "N/A"} `,
+        `Top 3 Most ordered items: ${top3Items.join(", ")}`,
+      ];
+
+      const orderSections: any[] = [];
       const orderStatuses = ["pending", "cancelled", "done"];
       orderStatuses.forEach((status) => {
         const filtered = ordersData.filter(
           (o: any) => o.orderStatus === status,
         );
         if (filtered.length > 0) {
-          sections.push({
+          orderSections.push({
             title: `Orders - ${status.toUpperCase()}`,
-            headers: ["Order ID", "Date (Expiry)", "Qty", "Total"],
+            headers: ["Order ID", "Date", "Qty", "Total"],
             rows: filtered.map((o: any) => {
               let totalQty = 0;
               if (Array.isArray(o.orderItems)) {
@@ -315,6 +416,11 @@ const ReportsAnalyticsPage: React.FC = () => {
           });
         }
       });
+
+      if (orderSections.length > 0) {
+        orderSections[orderSections.length - 1].summary = orderSummary;
+        sections.push(...orderSections);
+      }
 
       const roles = Array.from(
         new Set(employeesData.map((e: any) => e.employeeRole)),

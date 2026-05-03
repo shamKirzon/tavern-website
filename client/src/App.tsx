@@ -2,7 +2,7 @@ import Dashboard from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NewPasswordPage from "./pages/NewPasswordPage";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import EmployeeManagement from "./pages/EmployeePage";
 import Layout from "./components/app/layout";
 import ReportAndAnalyticsPage from "./pages/ReportAndAnalyticsPage";
@@ -18,6 +18,7 @@ const App = () => {
     <>
       <Toaster richColors duration={2000} />
       <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/new-password" element={<NewPasswordPage />} />

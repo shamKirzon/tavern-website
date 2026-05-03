@@ -66,29 +66,24 @@ export const generateReportFromTemplate = async (
 
     // Table Header
     const headers = section.headers || ["Name", "Orders", "Revenue"];
-    currentPage.drawText(sanitizeText(headers[0]), {
-      x: 50,
-      y: yPosition,
-      size: 11,
-      font: boldFont,
-    });
-    currentPage.drawText(sanitizeText(headers[1]), {
-      x: 250,
-      y: yPosition,
-      size: 11,
-      font: boldFont,
-    });
-    currentPage.drawText(sanitizeText(headers[2]), {
-      x: 450,
-      y: yPosition,
-      size: 11,
-      font: boldFont,
+    const numCols = headers.length;
+    const margin = 50;
+    const availableWidth = width - margin * 2;
+    const colWidth = availableWidth / numCols;
+
+    headers.forEach((header: string, index: number) => {
+      currentPage.drawText(sanitizeText(header), {
+        x: margin + index * colWidth,
+        y: yPosition,
+        size: 10,
+        font: boldFont,
+      });
     });
 
     yPosition -= 10;
     currentPage.drawLine({
-      start: { x: 50, y: yPosition },
-      end: { x: 550, y: yPosition },
+      start: { x: margin, y: yPosition },
+      end: { x: width - margin, y: yPosition },
       thickness: 1,
       color: rgb(0.8, 0.8, 0.8),
     });
@@ -98,25 +93,23 @@ export const generateReportFromTemplate = async (
     section.rows.forEach((row: any) => {
       if (yPosition < 50) {
         currentPage = pdfDoc.addPage();
-        yPosition = currentPage.getSize().height - 50;
+        yPosition = currentPage.getSize().height - margin;
       }
-      currentPage.drawText(sanitizeText(row.name), {
-        x: 50,
-        y: yPosition,
-        size: 10,
-        font,
-      });
-      currentPage.drawText(sanitizeText(row.orders), {
-        x: 250,
-        y: yPosition,
-        size: 10,
-        font,
-      });
-      currentPage.drawText(sanitizeText(row.revenue), {
-        x: 450,
-        y: yPosition,
-        size: 10,
-        font,
+
+      // Handle both old object format and new array format for backward compatibility
+      const values = Array.isArray(row)
+        ? row
+        : [row.name || "", row.orders || "", row.revenue || ""];
+
+      values.forEach((value: any, index: number) => {
+        if (index < numCols) {
+          currentPage.drawText(sanitizeText(value), {
+            x: margin + index * colWidth,
+            y: yPosition,
+            size: 9,
+            font,
+          });
+        }
       });
       yPosition -= 20;
     });

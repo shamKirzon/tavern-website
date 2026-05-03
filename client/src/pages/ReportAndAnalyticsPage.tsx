@@ -242,50 +242,109 @@ const ReportsAnalyticsPage: React.FC = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const handleGenerateReport = async () => {
-    const comprehensiveData = {
-      title: "Comprehensive Tavern Report",
-      sections: [
-        {
-          title: "Reservations Summary",
-          headers: ["Date", "Status", "Amount"],
-          rows: [
-            { name: "2026-05-01", orders: "Accepted", revenue: "₱ 1,500" },
-            { name: "2026-05-02", orders: "Done", revenue: "₱ 2,200" },
-            { name: "2026-05-03", orders: "Pending", revenue: "₱ 1,800" },
-            { name: "2026-05-04", orders: "Accepted", revenue: "₱ 2,500" },
-            { name: "2026-05-05", orders: "Accepted", revenue: "₱ 3,100" },
-          ],
-        },
-        {
-          title: "Orders & Revenue Summary",
-          headers: ["Order ID", "Items", "Total"],
-          rows: [
-            { name: "#ORD-001", orders: "5 items", revenue: "₱ 3,450" },
-            { name: "#ORD-002", orders: "2 items", revenue: "₱ 1,200" },
-            { name: "#ORD-003", orders: "8 items", revenue: "₱ 5,600" },
-            { name: "#ORD-004", orders: "1 item", revenue: "₱ 450" },
-            { name: "#ORD-005", orders: "3 items", revenue: "₱ 2,100" },
-          ],
-        },
-        {
-          title: "Employee Directory Summary",
-          headers: ["Name", "Role", "Shift"],
-          rows: [
-            { name: "John Doe", orders: "Bartender", revenue: "10:00-18:00" },
-            { name: "Jane Smith", orders: "Waiter", revenue: "14:00-22:00" },
-            { name: "Mike Ross", orders: "Cashier", revenue: "08:00-16:00" },
-            {
-              name: "Sarah Connor",
-              orders: "Security",
-              revenue: "22:00-06:00",
-            },
-            { name: "Peter Parker", orders: "Waiter", revenue: "12:00-20:00" },
-          ],
-        },
-      ],
-    };
-
     try {
+      toast.info("Fetching data for report...");
+      const [reservationsData, ordersData, employeesData] = await Promise.all([
+        reservationsApi.getReservationList(),
+        orderApi.getOrderList(),
+        employeesApi.getEmployeeList(),
+      ]);
+
+      if (!reservationsData || !ordersData || !employeesData) {
+        toast.error("Failed to fetch data for report");
+        return;
+      }
+
+      const sections: any[] = [];
+      const resStatuses = ["accepted", "done", "pending", "rejected"];
+      resStatuses.forEach((status) => {
+        const filtered = reservationsData.filter(
+          (r: any) => r.reservationStatus === status,
+        );
+        if (filtered.length > 0) {
+          sections.push({
+            title: `Reservations - ${status.toUpperCase()}`,
+            headers: ["Guest Name", "Type", "Status", "Pax", "Date", "Amount"],
+            rows: filtered.map((r: any) => [
+              `${r.firstName} ${r.lastName}`,
+              capitalizeWords(r.reservationType),
+              capitalizeWords(r.reservationStatus),
+              r.pax.toString(),
+              formatReadableDate(new Date(r.date)),
+              `P ${r.reservationAmount.toLocaleString()}`,
+            ]),
+          });
+        }
+      });
+
+      const orderStatuses = ["pending", "cancelled", "done"];
+      orderStatuses.forEach((status) => {
+        const filtered = ordersData.filter(
+          (o: any) => o.orderStatus === status,
+        );
+        if (filtered.length > 0) {
+          sections.push({
+            title: `Orders - ${status.toUpperCase()}`,
+            headers: ["Order ID", "Date (Expiry)", "Qty", "Total"],
+            rows: filtered.map((o: any) => {
+              let totalQty = 0;
+              if (Array.isArray(o.orderItems)) {
+                totalQty = o.orderItems.reduce(
+                  (sum: number, item: any) => sum + item.quantity,
+                  0,
+                );
+              } else if (o.orderItems?.newOrders) {
+                const n = o.orderItems.newOrders.items.reduce(
+                  (s: number, i: any) => s + i.quantity,
+                  0,
+                );
+                const or = o.orderItems.originalOrders.items.reduce(
+                  (s: number, i: any) => s + i.quantity,
+                  0,
+                );
+                totalQty = n + or;
+              }
+
+              return [
+                o.orderId,
+                formatReadableDate(new Date(o.sessionExpiry)),
+                totalQty.toString(),
+                `P ${o.total.toLocaleString()}`,
+              ];
+            }),
+          });
+        }
+      });
+
+      const roles = Array.from(
+        new Set(employeesData.map((e: any) => e.employeeRole)),
+      );
+      roles.forEach((role: any) => {
+        const filtered = employeesData.filter(
+          (e: any) => e.employeeRole === role,
+        );
+        if (filtered.length > 0) {
+          sections.push({
+            title: `Employees - ${capitalizeWords(role)}`,
+            headers: ["Full Name", "Role", "Shift Start", "Shift End", "Days"],
+            rows: filtered.map((e: any) => [
+              e.fullName,
+              capitalizeWords(e.employeeRole),
+              e.shiftStart,
+              e.shiftEnd,
+              e.shiftDay
+                .map((d: string) => d.substring(0, 3).toUpperCase())
+                .join(", "),
+            ]),
+          });
+        }
+      });
+
+      const comprehensiveData = {
+        title: "Comprehensive Tavern Report",
+        sections,
+      };
+
       const blob = await reportApi.generateReport(comprehensiveData);
       if (!blob) {
         toast.error("Failed to generate report blob");
@@ -295,6 +354,7 @@ const ReportsAnalyticsPage: React.FC = () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl); // Clean up previous URL
       setPdfUrl(url);
       setIsViewerOpen(true);
+      toast.success("Report generated successfully!");
     } catch (error) {
       console.error("Error generating report:", error);
       toast.error("Failed to generate report");

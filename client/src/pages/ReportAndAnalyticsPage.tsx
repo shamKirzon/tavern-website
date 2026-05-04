@@ -1,4 +1,12 @@
-import { SideBarReportsAndAnalytics } from "@/assets/icons/icons";
+import { 
+  SideBarReportsAndAnalytics, 
+  ReportsAndAnalyticsTotalReservation, 
+  ReportsAndAnalyticsApprovedReservation, 
+  ReportsAndAnalyticsCancelledReservation, 
+  ReportsAndAnalyticsOrderTotalReveune, 
+  ReportsAndAnalyticsTotalOrders, 
+  ReportsAndAnalyticsOrdersPerDay 
+} from "@/assets/icons/icons";
 import { formatReadableDate } from "@/utils/date";
 import { capitalizeWords } from "@/utils/capitalizeWords";
 import React, { useEffect, useState, useMemo, useRef } from "react";
@@ -94,19 +102,23 @@ const StatCard = ({
   label,
   value,
   accentBg,
+  children,
 }: {
   label: string;
   value: string | number;
   accentBg: string;
+  children?: React.ReactNode;
 }) => (
   <div
     className="relative bg-white rounded-2xl border border-gray-100 px-5 py-5"
     style={{ boxShadow: cardShadow }}
   >
     <div
-      className="absolute top-4 right-4 w-10 h-10 rounded-xl"
+      className="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center"
       style={{ backgroundColor: accentBg }}
-    />
+    >
+      {children}
+    </div>
     <p className="font-poppins text-gray-500 text-[13px] font-medium leading-snug">
       {label}
     </p>
@@ -741,17 +753,23 @@ const ReportsAnalyticsPage: React.FC = () => {
             label="Total Reservation Revenue"
             value={formatRevenue(summaryMetrics.totalRevenue)}
             accentBg="rgba(0,149,7,0.15)"
-          />
+          >
+            <ReportsAndAnalyticsTotalReservation className="w-full h-full p-2 text-[#009507]" />
+          </StatCard>
           <StatCard
             label="Approved Reservations"
             value={summaryMetrics.approvedCount}
             accentBg="rgba(0,17,255,0.12)"
-          />
+          >
+            <ReportsAndAnalyticsApprovedReservation className="w-full h-full p-2 text-[#2D37C2]" />
+          </StatCard>
           <StatCard
             label="Cancelled Reservations"
             value={summaryMetrics.cancelledCount}
             accentBg="rgba(239,217,116,0.45)"
-          />
+          >
+            <ReportsAndAnalyticsCancelledReservation className="w-full h-full p-2 text-[#770B0B]" />
+          </StatCard>
         </div>
 
         {/* Charts */}
@@ -941,17 +959,23 @@ const ReportsAnalyticsPage: React.FC = () => {
             label="Total Order Revenue"
             value={formatRevenue(orderMetrics.totalRevenue)}
             accentBg="rgba(0,149,7,0.15)"
-          />
+          >
+            <ReportsAndAnalyticsOrderTotalReveune className="w-full h-full p-2 text-[#009507]" />
+          </StatCard>
           <StatCard
             label="Total Orders"
             value={orderMetrics.totalOrders}
             accentBg="rgba(0,17,255,0.12)"
-          />
+          >
+            <ReportsAndAnalyticsTotalOrders className="w-full h-full p-2 text-[#2D37C2]" />
+          </StatCard>
           <StatCard
             label="Average Orders per Day"
             value={orderMetrics.ordersPerDay}
             accentBg="rgba(239,217,116,0.45)"
-          />
+          >
+            <ReportsAndAnalyticsOrdersPerDay className="w-full h-full p-2 text-[#A6902A]" />
+          </StatCard>
         </div>
 
         {/* Charts */}

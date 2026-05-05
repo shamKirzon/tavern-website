@@ -55,7 +55,7 @@ export default function AppSidebar() {
         <SidebarSeparator />
 
         <img
-          src="src/assets/images/johnny.png"
+          src="src/assets/backgrounds/tavern-background.jpg"
           alt="Admin Avatar"
           className="mt-3 rounded-full w-20 h-20"
         />
@@ -177,15 +177,16 @@ export default function AppSidebar() {
                 </Button>
               </DialogClose>
               <Button
-              onClick={async () => {
-                await logout();
-                setIsLogoutModalOpen(false);
-                navigate("/login", { state: { loggedOut: true } });
-              }}
-              className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
+                onClick={async () => {
+                  await logout();
+                  setIsLogoutModalOpen(false);
+                  navigate("/login", { state: { loggedOut: true } });
+                }}
+                className="flex-1 bg-[#EFD974] hover:bg-yellow-300 text-black rounded-xl py-5 text-md"
               >
-              Confirm
-              </Button>            </div>
+                Confirm
+              </Button>{" "}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

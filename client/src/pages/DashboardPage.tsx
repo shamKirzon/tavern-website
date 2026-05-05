@@ -31,7 +31,6 @@ import { reservationsApi } from "@/api/reservations.api";
 import { orderApi } from "@/api/orders.api";
 import { employeesApi } from "@/api/employees.api";
 import { customerApi } from "@/api/customers.api";
-import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 
 // ─── Dynamic chart config based on period ────────────────────────────────────

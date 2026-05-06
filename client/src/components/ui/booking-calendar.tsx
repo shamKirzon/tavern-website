@@ -27,6 +27,7 @@ interface BookingCalendarProps {
   onCloseAll?: (dates: string[]) => void;
   onMonthChange?: (year: number, month: number) => void;
   isLoading?: boolean;
+  totalReservations?: number;
 }
 
 function getDaysInMonth(year: number, month: number): number {
@@ -64,6 +65,7 @@ export function BookingCalendar({
   onCloseAll,
   onMonthChange,
   isLoading,
+  totalReservations,
 }: BookingCalendarProps) {
   const today = new Date();
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
@@ -90,10 +92,7 @@ export function BookingCalendar({
     },
   );
 
-  const totalBooked = Object.values(bookingData).reduce(
-    (sum, d) => sum + (d?.booked ?? 0),
-    0,
-  );
+  const totalBooked = totalReservations ?? 0;
   const totalCapacity =
     Object.values(bookingData).reduce((sum, d) => sum + (d?.total ?? 0), 0) ||
     1000;

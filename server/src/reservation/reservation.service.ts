@@ -154,7 +154,7 @@ class ReservationService {
       if (!acc[date]) {
         acc[date] = { date, count: 0 };
       }
-      acc[date].count += 1;
+      acc[date].count += Number(curr.pax) || 0;
       return acc;
     }, {});
 

@@ -161,7 +161,13 @@ const ReservationCalendarPage = () => {
     const approved = filtered.filter(
       (r) => r.reservationStatus === "accepted",
     ).length;
-    const total = filtered.length;
+    const totalReservations = filtered.length;
+    const totalPax = filtered
+      .filter(
+        (r) =>
+          r.reservationStatus === "accepted" || r.reservationStatus === "done",
+      )
+      .reduce((sum, r) => sum + (Number(r.pax) || 0), 0);
     const exclusive = filtered.filter(
       (r) => r.reservationType === "exclusive",
     ).length;
@@ -172,12 +178,12 @@ const ReservationCalendarPage = () => {
       .filter((r) => r.reservationStatus === "done")
       .reduce((sum, r) => sum + (Number(r.reservationAmount) || 0), 0);
 
-    // Available formula: (days open * 100) - total reservations in month
+    // Available formula: (days open * 100) - total pax in month
     // "Open" days are those with status 'available' or 'fullyBooked'
     const openDaysCount = Object.values(bookingData).filter(
       (d) => d.status === "available" || d.status === "fullyBooked",
     ).length;
-    const available = Math.max(0, openDaysCount * 100 - total);
+    const available = Math.max(0, openDaysCount * 100 - totalPax);
 
     return [
       {
@@ -186,14 +192,14 @@ const ReservationCalendarPage = () => {
       },
       {
         label: "Total Reservation",
-        count: total,
+        count: totalReservations,
       },
       {
         label: "Approved Reservation",
         count: approved,
       },
       {
-        label: "Available Reservation",
+        label: "Available Slots",
         count: available,
       },
       {
@@ -235,7 +241,7 @@ const ReservationCalendarPage = () => {
             <ApprovedReservation className="w-5 h-5" />
           </div>
         );
-      case "Available Reservation":
+      case "Available Slots":
         return (
           <div className=" flex justify-center items-center p-1.5 bg-[#10B981]/20 rounded-lg ">
             <AvailableReservation className="w-5 h-5 text-[#059669]" />
@@ -277,7 +283,6 @@ const ReservationCalendarPage = () => {
           </button>
         </div>
       )}
-
       {/* Header Container */}
       <div
         className="flex flex-row pl-7 items-center w-full h-[100px] rounded-2xl"
@@ -296,8 +301,6 @@ const ReservationCalendarPage = () => {
           </p>
         </div>
       </div>
-
-      {/* Calendar & Reservation Summary Container*/}
       <div className="flex flex-row gap-5">
         {/* Calendar*/}
         <div className="w-200  bg-white p-3 mt-4 rounded-2xl shadow-lg h-fit">
@@ -309,6 +312,11 @@ const ReservationCalendarPage = () => {
             onApply={(dates) => handleUpdateBookingDays(dates, "available")}
             onOpenAll={(dates) => handleUpdateBookingDays(dates, "available")}
             onCloseAll={(dates) => handleUpdateBookingDays(dates, "closed")}
+            totalReservations={
+              reservationSummaryItems.find(
+                (item) => item.label === "Total Reservation",
+              )?.count as number
+            }
           />
         </div>
 

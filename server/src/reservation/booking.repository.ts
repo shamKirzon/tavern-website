@@ -28,17 +28,18 @@ class BookingRepository {
 
   async updateBookingDays(dates: string[], status: DayStatus) {
     try {
-      // 1. Fetch current reservation counts for these dates to avoid resetting them to 0
-      const { data: counts, error: countError } = await supabase
+      // 1. Fetch current reservation pax counts for these dates to avoid resetting them to 0
+      const { data: reservations, error: countError } = await supabase
         .from("reservations")
-        .select("date")
+        .select("date, pax")
         .in("date", dates)
-        .neq("reservation_status", "cancelled");
+        .in("reservation_status", ["accepted", "done"]);
 
       if (countError) throw countError;
 
-      const countMap = (counts || []).reduce((acc: any, curr: any) => {
-        acc[curr.date] = (acc[curr.date] || 0) + 1;
+      const paxMap = (reservations || []).reduce((acc: any, curr: any) => {
+        const pax = Number(curr.pax) || 0;
+        acc[curr.date] = (acc[curr.date] || 0) + pax;
         return acc;
       }, {});
 
@@ -47,7 +48,7 @@ class BookingRepository {
         date,
         status,
         total_slots: 100, // Default as per schema
-        booked_slots: countMap[date] || 0,
+        booked_slots: paxMap[date] || 0,
       }));
 
       const { data, error } = await supabase

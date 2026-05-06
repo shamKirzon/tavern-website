@@ -401,7 +401,7 @@ const OrdersPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [orderList, resList, empList] = await Promise.all([
-        orderApi.getOrderList(),
+        orderApi.getOrderList(2026),
         reservationsApi.getReservationList(),
         employeesApi.getEmployeeList(),
       ]);

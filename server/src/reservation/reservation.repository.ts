@@ -16,7 +16,17 @@ class ReservationRepository {
 
       if (error) throw error;
 
-      return data;
+      const reservationsWithEmail = await Promise.all(
+        (data || []).map(async (res: any) => {
+          const customer = await this.getCustomerById(res.customer_id);
+          return {
+            ...res,
+            email: customer?.email,
+          };
+        }),
+      );
+
+      return reservationsWithEmail;
     } catch (error) {
       console.error("Error in repository/getReservationList():", error);
     }
@@ -100,6 +110,14 @@ class ReservationRepository {
 
       if (error) throw error;
 
+      if (status === "accepted") {
+        const resData = await this.getReservationById(reservationId);
+        if (resData && resData.length > 0) {
+          const res = resData[0];
+          await this.updateBookedSlots(res.date, res.pax);
+        }
+      }
+
       return { message: "Reservation status updated successfully." };
     } catch (error) {
       console.error("Error in repository/updateReservationStatus():", error);
@@ -118,6 +136,23 @@ class ReservationRepository {
       return data;
     } catch (error) {
       console.error("Error in repository/getEmail():", error);
+      return null;
+    }
+  }
+
+  async getCustomerById(customerId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("customer_id", customerId)
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error("Error in repository/getCustomerById():", error);
       return null;
     }
   }
@@ -165,8 +200,8 @@ class ReservationRepository {
     try {
       const { data, error } = await supabase
         .from("reservations")
-        .select("date")
-        .neq("reservation_status", "cancelled")
+        .select("date, pax")
+        .in("reservation_status", ["accepted", "done"])
         .gte("date", startDate)
         .lte("date", endDate);
 
@@ -195,6 +230,35 @@ class ReservationRepository {
     } catch (error) {
       console.error("Error in repository/uploadRefundReceipt():", error);
       return null;
+    }
+  }
+
+  async updateBookedSlots(date: string | undefined, pax: number | undefined) {
+    try {
+      const formattedDate = date?.split("T")[0];
+
+      const { data: currentData, error: fetchError } = await supabase
+        .from("booking_days")
+        .select("booked_slots")
+        .eq("date", formattedDate)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const newSlots = (currentData?.booked_slots || 0) + pax;
+
+      const { data, error } = await supabase
+        .from("booking_days")
+        .update({ booked_slots: newSlots })
+        .eq("date", formattedDate)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.log("Error in reservationRepository/updateBookedSlots ", error);
     }
   }
 }

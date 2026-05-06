@@ -69,7 +69,7 @@ const ReservationPage = () => {
   useEffect(() => {
     const fetchReservations = async () => {
       const data = await reservationsApi.getReservationList(2026);
-      setReservations(data);
+      setReservations(data || []);
     };
     fetchReservations();
   }, []);
@@ -145,9 +145,13 @@ const ReservationPage = () => {
 
   // ─── Reservation Filters ────────────────────────────────────────────────────
   const reservationFilters = useMemo(() => {
+    const activeReservations = reservations.filter(
+      (r) => r.reservationStatus !== "cancelled",
+    );
+
     // Reservation-side counts (pending / accepted / rejected / done)
     const countByStatus = (status: string) =>
-      reservations.filter((r) => r.reservationStatus === status).length;
+      activeReservations.filter((r) => r.reservationStatus === status).length;
 
     // Cancellation-side counts
     const pendingCancellations = reservationCancellations.filter(
@@ -158,9 +162,9 @@ const ReservationPage = () => {
       (c) => c.status === "accepted",
     ).length;
 
-    // "All" = all reservations (pending/accepted/rejected/done) + all cancellations (pending/accepted)
+    // "All" = all non-cancelled reservations + all cancellations (pending/accepted)
     const allCount =
-      reservations.length +
+      activeReservations.length +
       reservationCancellations.filter(
         (c) => c.status === "pending" || c.status === "accepted",
       ).length;
@@ -190,30 +194,32 @@ const ReservationPage = () => {
 
   // ─── Filtered Reservations (Pending / Accepted / Rejected / Done) ───────────
   const filteredReservations = useMemo(() => {
-    return reservations.filter((r) => {
-      const filterStatusMap: Record<string, string> = {
-        Accepted: "accepted",
-        Declined: "rejected",
-      };
-      const mappedStatus =
-        filterStatusMap[filterActive] ?? filterActive.toLowerCase();
+    return reservations
+      .filter((r) => r.reservationStatus !== "cancelled")
+      .filter((r) => {
+        const filterStatusMap: Record<string, string> = {
+          Accepted: "accepted",
+          Declined: "rejected",
+        };
+        const mappedStatus =
+          filterStatusMap[filterActive] ?? filterActive.toLowerCase();
 
-      // In "All" view, only show reservation-side statuses
-      const matchesFilter =
-        isAllView ||
-        r.reservationStatus.toLowerCase() === mappedStatus.toLowerCase();
+        // In "All" view, only show reservation-side statuses
+        const matchesFilter =
+          isAllView ||
+          r.reservationStatus.toLowerCase() === mappedStatus.toLowerCase();
 
-      const q = searchQuery.toLowerCase();
-      const fullName = `${r.firstName} ${r.lastName}`.toLowerCase();
-      const matchesSearch =
-        q === "" ||
-        fullName.includes(q) ||
-        r.reservationStatus.toLowerCase().includes(q) ||
-        r.reservationType.toLowerCase().includes(q) ||
-        r.date.includes(q);
+        const q = searchQuery.toLowerCase();
+        const fullName = `${r.firstName} ${r.lastName}`.toLowerCase();
+        const matchesSearch =
+          q === "" ||
+          fullName.includes(q) ||
+          r.reservationStatus.toLowerCase().includes(q) ||
+          r.reservationType.toLowerCase().includes(q) ||
+          r.date.includes(q);
 
-      return matchesFilter && matchesSearch;
-    });
+        return matchesFilter && matchesSearch;
+      });
   }, [reservations, filterActive, searchQuery, isAllView]);
 
   // ─── Filtered Cancellations (Cancel Request = pending, Cancelled = accepted) ─
@@ -585,6 +591,7 @@ const ReservationPage = () => {
 
     const reservationFields = [
       { label: "Status", value: selectedReservation.reservationStatus },
+      { label: "Email", value: selectedReservation.email ?? "N/A" },
       {
         label: "Name",
         value: `${selectedReservation.firstName} ${selectedReservation.lastName}`,

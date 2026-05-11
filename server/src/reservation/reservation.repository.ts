@@ -114,7 +114,7 @@ class ReservationRepository {
         const resData = await this.getReservationById(reservationId);
         if (resData && resData.length > 0) {
           const res = resData[0];
-          await this.updateBookedSlots(res.date, res.pax);
+          await this.adjustBookedSlots(res.date, res.pax);
         }
       }
 
@@ -178,12 +178,34 @@ class ReservationRepository {
     status: CancellationStatus,
   ) {
     try {
-      const { data, error } = await supabase
+      // 1. Fetch the cancellation record to get the reservation_id
+      const { data: cancellationData, error: fetchError } = await supabase
+        .from("reservation_cancellations")
+        .select("reservation_id")
+        .eq("reservation_cancellation_id", reservationCancellationId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const reservationId = cancellationData.reservation_id;
+
+      // 2. Update the cancellation status
+      const { error: updateError } = await supabase
         .from("reservation_cancellations")
         .update({ status })
         .eq("reservation_cancellation_id", reservationCancellationId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // 3. If accepted, deduct the slots
+      if (status === "accepted") {
+        const resData = await this.getReservationById(reservationId);
+        if (resData && resData.length > 0) {
+          const res = resData[0];
+          // Pass negative pax to deduct slots
+          await this.adjustBookedSlots(res.date, -res.pax);
+        }
+      }
 
       return {
         message: "Reservation Cancellation status updated successfully.",
@@ -233,8 +255,9 @@ class ReservationRepository {
     }
   }
 
-  async updateBookedSlots(date: string | undefined, pax: number | undefined) {
+  async adjustBookedSlots(date: string | undefined, pax: number | undefined) {
     try {
+      if (pax === 0) return;
       const formattedDate = date?.split("T")[0];
 
       const { data: currentData, error: fetchError } = await supabase
@@ -245,7 +268,7 @@ class ReservationRepository {
 
       if (fetchError) throw fetchError;
 
-      const newSlots = (currentData?.booked_slots || 0) + pax;
+      const newSlots = Math.max(0, (currentData?.booked_slots || 0) + (pax || 0));
 
       const { data, error } = await supabase
         .from("booking_days")
@@ -258,7 +281,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.log("Error in reservationRepository/updateBookedSlots ", error);
+      console.log("Error in reservationRepository/adjustBookedSlots ", error);
     }
   }
 }

@@ -268,7 +268,10 @@ class ReservationRepository {
 
       if (fetchError) throw fetchError;
 
-      const newSlots = Math.max(0, (currentData?.booked_slots || 0) + (pax || 0));
+      const newSlots = Math.max(
+        0,
+        (currentData?.booked_slots || 0) + (pax || 0),
+      );
 
       const { data, error } = await supabase
         .from("booking_days")

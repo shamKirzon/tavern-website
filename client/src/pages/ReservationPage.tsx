@@ -751,15 +751,9 @@ const ReservationPage = () => {
       ? filteredReservations.length + filteredCancellations.length
       : filteredReservations.length;
 
-  const totalSource = isCancellationView
-    ? enrichedCancellations.filter(
-        (c) =>
-          (isCancelRequestView && c.status === "pending") ||
-          (isCancelledView && c.status === "accepted"),
-      ).length
-    : isAllView
-      ? reservations.length + enrichedCancellations.length
-      : reservations.length;
+  const totalSource = useMemo(() => {
+    return reservationFilters.find((f) => f.name === "All")?.count ?? 0;
+  }, [reservationFilters]);
 
   return (
     <div>

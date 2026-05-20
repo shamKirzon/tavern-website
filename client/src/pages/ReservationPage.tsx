@@ -517,7 +517,11 @@ const ReservationPage = () => {
                     >
                       {field.value === "rejected"
                         ? "Declined"
-                        : capitalizeWords(field.value as string)}
+                        : field.value === "accepted"
+                          ? "Cancelled"
+                          : field.value === "pending"
+                            ? "Cancel Request"
+                            : capitalizeWords(field.value as string)}
                     </span>
                   </TableCell>
                 ) : (
@@ -916,7 +920,11 @@ const ReservationPage = () => {
                         >
                           {cancellation.status === "rejected"
                             ? "Declined"
-                            : capitalizeWords(cancellation.status)}
+                            : cancellation.status === "accepted"
+                              ? "Cancelled"
+                              : cancellation.status === "pending"
+                                ? "Cancel Request"
+                                : capitalizeWords(cancellation.status)}
                         </span>
                       </TableCell>
                       <TableCell className="py-4 max-w-[120px]">
@@ -1059,7 +1067,9 @@ const ReservationPage = () => {
                               : "N/A"}
                           </TableCell>
                           <TableCell className="py-4">
-                            <span className="inline-flex items-center rounded-lg py-0.5 h-8 px-8 bg-[#FF8400]/20 text-[#FF8400]">
+                            <span className={`inline-flex items-center rounded-lg py-0.5 h-8 px-8 
+                              ${cancellation.status === "pending" ? "bg-[#EFD974]/20 text-[#A6902A]" : "bg-[#009507]/20 text-[#009507]"}
+                            `}>
                               {cancellation.status === "pending"
                                 ? "Cancel Request"
                                 : "Cancelled"}

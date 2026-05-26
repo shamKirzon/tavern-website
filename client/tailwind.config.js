@@ -1,14 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./index.html", // if using plain HTML
-    "./src/**/*.{js,ts,jsx,tsx}", // for React/Vite
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+
   theme: {
     extend: {
-      fontFamily: {
-        poppins: ["Poppins", "sans-serif"],
-      },
+      // I moved the fontFamily and colors to index.css(to theme inline) cause this tailwind is using version 4.
     },
   },
   plugins: [],

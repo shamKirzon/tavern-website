@@ -1,24 +1,52 @@
-import Dashboard from "./components/Dashboard";
-import LoginPage from "./components/LoginPage";
-import { Route, Routes } from "react-router-dom";
-import OrderTracking from "./components/OrderTracking";
-import ReportAndAnalytics from "./components/ReportAndAnalytics";
-import ReservationManagement from "./components/ReservationManagement";
-import EmployeeManagement from "./components/EmployeeManagement";
+import Dashboard from "./pages/DashboardPage";
+import LoginPage from "./pages/LoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import NewPasswordPage from "./pages/NewPasswordPage";
+import { Navigate, Route, Routes } from "react-router-dom";
+import EmployeeManagement from "./pages/EmployeePage";
+import Layout from "./components/app/layout";
+import ReportAndAnalyticsPage from "./pages/ReportAndAnalyticsPage";
+import ReservationPage from "./pages/ReservationPage";
+import OrderPage from "./pages/OrderPage";
+import ReservationCalendarPage from "./pages/ReservationCalendarPage";
+import { Toaster } from "sonner";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/order-tracking" element={<OrderTracking />} />
-      <Route path="/report-and-analytics" element={<ReportAndAnalytics />} />
-      <Route
-        path="/reservation-management"
-        element={<ReservationManagement />}
-      />
-      <Route path="/employee-management" element={<EmployeeManagement />} />
-    </Routes>
+    <>
+      <Toaster richColors duration={2000} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/new-password" element={<NewPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        </Route>
+
+        {/* Layout routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/reservations" element={<ReservationPage />} />
+            <Route
+              path="/reservations/calendar"
+              element={<ReservationCalendarPage />}
+            />
+            <Route path="/orders" element={<OrderPage />} />
+            <Route
+              path="/employee-management"
+              element={<EmployeeManagement />}
+            />
+            <Route
+              path="/report-and-analytics"
+              element={<ReportAndAnalyticsPage />}
+            />
+          </Route>
+        </Route>
+      </Routes>
+    </>
   );
 };
 

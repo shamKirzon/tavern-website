@@ -4,16 +4,7 @@
 
 ---
 
-## 📦 Repositories
-
-| System | Stack | Description |
-|---|---|---|
-| `tavern-mobile` | React Native + Expo + TypeScript | Customer-facing mobile app |
-| `tavern-web` | Node.js + PostgreSQL + Supabase | Admin, cashier, and security web dashboard |
-
----
-
-## 🌐 Web Dashboard — `tavern-web`
+## 🌐 Web Dashboard — `tavern-website`
 
 The web application is used by the **admin**, **cashier**, and **security** staff to manage the full day-to-day operation of the restobar.
 
@@ -59,8 +50,8 @@ The web application is used by the **admin**, **cashier**, and **security** staf
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-org/tavern-web.git
-cd tavern-web
+git clone https://github.com/shamKirzon/tavern-website.git
+cd tavern-website
 
 # Install dependencies
 npm install
@@ -73,36 +64,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 
 ---
 
-### Environment Variables
 
-Create a `.env` file in the root directory:
-
-```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-DATABASE_URL=your_postgresql_connection_string
-```
-
-> Never commit your `.env` file. A `.env.example` is provided as reference.
-
----
-
-## 🔐 Security
-
-- QR codes are encrypted using **AES-256-CBC** to prevent forgery and duplication
-- PIN-based authentication is required for all staff roles (security and cashier)
-- All `.env` files are gitignored — sensitive credentials are never hardcoded in source
-
----
 
 ## 🗂️ System Overview
 
 ```
-Customer (Mobile App)
-  └── Register / Verify Email
-  └── Make Reservation → Upload Payment Proof
-  └── Place Order → Receive QR Code
-
 Admin (Web Dashboard)
   └── Approve / Decline Reservations
   └── Manage Employees & Schedules
@@ -118,20 +84,3 @@ Cashier (Web Dashboard)
 
 ---
 
-## 👥 Team
-
-| Name | Role |
-|---|---|
-| Blanco, Paulyn Anne | Developer |
-| Midorikawa, Yuji | Developer |
-| Suyat, Shammy Kierson | Developer |
-| Torres, Dannah Joyce | Developer |
-| Tucker, Keiameere Ayesa | Developer |
-
-**Course Adviser:** Prof. Alexander B. Pahayahay
-
----
-
-## 📄 License
-
-This project was developed as an academic requirement. All rights reserved by the authors and Tavern Asia Resto Bar.

@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase-client";
+import { logger } from "../utils/logger";
 
 class EmployeeRepository {
   async getEmployeeList() {
@@ -9,7 +10,7 @@ class EmployeeRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getEmployeeList():", error);
+      logger.error("Error in repository/getEmployeeList():", error);
     }
   }
 
@@ -21,12 +22,11 @@ class EmployeeRepository {
         .eq("employee_id", employeeId)
         .eq("employee_role", "cashier");
 
-      console.log(data);
       if (error) throw error;
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getCashierName():", error);
+      logger.error("Error in repository/getCashierName():", error);
     }
   }
 
@@ -42,7 +42,7 @@ class EmployeeRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getSecurityName():", error);
+      logger.error("Error in repository/getSecurityName():", error);
     }
   }
 
@@ -56,7 +56,7 @@ class EmployeeRepository {
       if (error) throw error;
       return data[0];
     } catch (error) {
-      console.error("Error in repository/addEmployee():", error);
+      logger.error("Error in repository/addEmployee():", error);
     }
   }
 
@@ -71,7 +71,7 @@ class EmployeeRepository {
       if (error) throw error;
       return data[0];
     } catch (error) {
-      console.error("Error in repository/updateEmployee():", error);
+      logger.error("Error in repository/updateEmployee():", error);
     }
   }
 
@@ -85,7 +85,7 @@ class EmployeeRepository {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error("Error in repository/deleteEmployee():", error);
+      logger.error("Error in repository/deleteEmployee():", error);
     }
   }
 }

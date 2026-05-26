@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase-client";
 import { CancellationStatus, ReservationStatus } from "../types/Reservation";
+import { logger } from "../utils/logger";
 
 class ReservationRepository {
   async getReservationList(year?: number) {
@@ -28,7 +29,7 @@ class ReservationRepository {
 
       return reservationsWithEmail;
     } catch (error) {
-      console.error("Error in repository/getReservationList():", error);
+      logger.error("Error in repository/getReservationList():", error);
     }
   }
 
@@ -58,10 +59,7 @@ class ReservationRepository {
 
       return result;
     } catch (error) {
-      console.error(
-        "Error in repository/getReservationCancellations():",
-        error,
-      );
+      logger.error("Error in repository/getReservationCancellations():", error);
     }
   }
 
@@ -91,7 +89,7 @@ class ReservationRepository {
 
       return result;
     } catch (error) {
-      console.error(
+      logger.error(
         "Error in repository/getPendingReservationCancellation():",
         error,
       );
@@ -120,7 +118,7 @@ class ReservationRepository {
 
       return { message: "Reservation status updated successfully." };
     } catch (error) {
-      console.error("Error in repository/updateReservationStatus():", error);
+      logger.error("Error in repository/updateReservationStatus():", error);
     }
   }
 
@@ -135,7 +133,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getEmail():", error);
+      logger.error("Error in repository/getEmail():", error);
       return null;
     }
   }
@@ -152,7 +150,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getCustomerById():", error);
+      logger.error("Error in repository/getCustomerById():", error);
       return null;
     }
   }
@@ -168,7 +166,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/getReservationById():", error);
+      logger.error("Error in repository/getReservationById():", error);
       return null;
     }
   }
@@ -211,7 +209,7 @@ class ReservationRepository {
         message: "Reservation Cancellation status updated successfully.",
       };
     } catch (error) {
-      console.error("Error in repository/updateCancellationStatus():", error);
+      logger.error("Error in repository/updateCancellationStatus():", error);
     }
   }
   async getReservationCalendarSummary(year: number, month: number) {
@@ -231,7 +229,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Error in repository/getReservationCalendarSummary():",
         error,
       );
@@ -250,7 +248,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.error("Error in repository/uploadRefundReceipt():", error);
+      logger.error("Error in repository/uploadRefundReceipt():", error);
       return null;
     }
   }
@@ -284,7 +282,7 @@ class ReservationRepository {
 
       return data;
     } catch (error) {
-      console.log("Error in reservationRepository/adjustBookedSlots ", error);
+      logger.error("Error in repository/adjustBookedSlots():", error);
     }
   }
 }

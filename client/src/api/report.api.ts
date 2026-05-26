@@ -6,11 +6,13 @@ export const reportApi = {
       const res = await axiosInstance.post("/report/generate", reportData, {
         responseType: "blob",
       });
-      if (!res) return console.log("Can't generate report.");
+      if (!res?.data) throw new Error("Can't generate report.");
 
       return res.data;
-    } catch (error) {
-      console.log("Error in reportApi/generateReport(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to generate report.",
+      );
     }
   },
 };

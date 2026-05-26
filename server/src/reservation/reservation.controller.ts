@@ -4,6 +4,7 @@ import { uploadImageWithUrl } from "../utils/uploadImageWithUrl";
 
 import multer from "multer";
 import { reservationRepository } from "./reservation.repository";
+import { logger } from "../utils/logger";
 
 const upload = multer({ dest: "uploads/" });
 export const uploadMiddleware = upload.single("file");
@@ -20,8 +21,10 @@ class ReservationController {
         result,
       });
     } catch (error: any) {
-      console.error("error from getReservationTrends(): ", error);
-      return res.status(400).json({ message: "can't fetch reservation trends" });
+      logger.error("error from getReservationTrends(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't fetch reservation trends" });
     }
   }
 
@@ -33,7 +36,7 @@ class ReservationController {
         result,
       });
     } catch (error: any) {
-      console.error("error from getAvailableYears(): ", error);
+      logger.error("error from getAvailableYears(): ", error);
       return res.status(400).json({ message: "can't fetch available years" });
     }
   }
@@ -54,7 +57,7 @@ class ReservationController {
         .status(200)
         .json({ message: "Fetched reservation list successfully. ", result });
     } catch (error: any) {
-      console.error("error from getReservationList(): ", error);
+      logger.error("error from getReservationList(): ", error);
       return res.status(400).json({ message: "can't fetch reservation list" });
     }
   }
@@ -76,7 +79,7 @@ class ReservationController {
         result,
       });
     } catch (error: any) {
-      console.error("error from getReservationCancellations(): ", error);
+      logger.error("error from getReservationCancellations(): ", error);
       return res
         .status(400)
         .json({ message: "can't get reservation cancellations" });
@@ -101,7 +104,7 @@ class ReservationController {
         result,
       });
     } catch (error: any) {
-      console.error("error from getPendingReservationCancellation(): ", error);
+      logger.error("error from getPendingReservationCancellation(): ", error);
       return res
         .status(400)
         .json({ message: "can't get pending reservation cancellations" });
@@ -122,7 +125,7 @@ class ReservationController {
         result,
       });
     } catch (error: any) {
-      console.error("error from getReservationSummary(): ", error);
+      logger.error("error from getReservationSummary(): ", error);
       return res
         .status(400)
         .json({ message: "can't fetch reservation summary" });
@@ -149,7 +152,7 @@ class ReservationController {
         result,
       });
     } catch (error: any) {
-      console.error("error from getReservationCalendarSummary(): ", error);
+      logger.error("error from getReservationCalendarSummary(): ", error);
       return res
         .status(400)
         .json({ message: "can't fetch reservation calendar summary" });
@@ -177,8 +180,10 @@ class ReservationController {
 
       return res.status(200).json({ message: result.message });
     } catch (error: any) {
-      console.error("error from createReservation(): ", error);
-      return res.status(400).json({ message: "can't create reservation" });
+      logger.error("error from updateReservationStatus(): ", error);
+      return res
+        .status(400)
+        .json({ message: "can't update reservation status" });
     }
   }
   async updateCancellationStatus(req: Request, res: Response) {
@@ -202,7 +207,7 @@ class ReservationController {
 
       return res.status(200).json({ message: result.message });
     } catch (error: any) {
-      console.error("error from updateCancellationtatus(): ", error);
+      logger.error("error from updateCancellationStatus(): ", error);
       return res
         .status(400)
         .json({ message: "can't update cancellation status" });
@@ -222,8 +227,8 @@ class ReservationController {
 
       return res.status(200).json({ message: "get email successfully", email });
     } catch (error: any) {
-      console.error("error from createReservation(): ", error);
-      return res.status(400).json({ message: "can't create reservation" });
+      logger.error("error from getEmail(): ", error);
+      return res.status(400).json({ message: "can't get email" });
     }
   }
   async getReservationById(req: Request, res: Response) {
@@ -237,13 +242,14 @@ class ReservationController {
 
       const data = await reservationService.getReservationById(reservationId);
 
-      if (!data) return res.status(200).json({ message: "Can't get email." });
+      if (!data)
+        return res.status(200).json({ message: "Can't get reservation info." });
 
       return res
         .status(200)
         .json({ message: "get information successfully", data });
     } catch (error: any) {
-      console.error("error from getReservationById(): ", error);
+      logger.error("error from getReservationById(): ", error);
       return res.status(400).json({ message: "can't get reservation" });
     }
   }
@@ -267,7 +273,7 @@ class ReservationController {
         .status(200)
         .json({ message: "image uploaded successfully", imageUrl });
     } catch (error: any) {
-      console.log("Error in uploadImage(): ", error);
+      logger.error("Error in uploadImage(): ", error);
       return res.status(400).json({ message: "can't upload image" });
     }
   }

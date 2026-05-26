@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { authService } from "./auth.service";
+import { logger } from "../utils/logger";
 
 class AuthController {
   async login(req: Request, res: Response) {
@@ -17,7 +18,7 @@ class AuthController {
         result,
       });
     } catch (error) {
-      console.error("error from login(): ", error);
+      logger.error("error from login(): ", error);
       return res
         .status(500)
         .json({ message: "An error occurred during login" });
@@ -27,11 +28,11 @@ class AuthController {
   async generateOtp(req: Request, res: Response) {
     try {
       const otp = await authService.generateOtp();
-      console.log("this is the otp: ", otp);
+      // OTP logging removed for security
 
       return res.status(200).json({ otp });
     } catch (error) {
-      console.error("error from generateOtp(): ", error);
+      logger.error("error from generateOtp(): ", error);
       return res
         .status(500)
         .json({ message: "An error occurred while generating OTP" });
@@ -41,10 +42,10 @@ class AuthController {
   async sendOtp(req: Request, res: Response) {
     try {
       const otp = await authService.sendOtp();
-      console.log("this is the otp:", otp);
+      // OTP logging removed for security
       return res.status(200).json({ message: "OTP sent successfully", otp });
     } catch (error) {
-      console.error("error from sendOtp(): ", error);
+      logger.error("error from sendOtp(): ", error);
       return res
         .status(500)
         .json({ message: "An error occurred while sending OTP" });
@@ -58,10 +59,15 @@ class AuthController {
       if (result.status === "success") {
         return res.status(200).json({ status: "success" });
       }
-      return res.status(400).json({ status: "error", message: "Failed to update password" });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Failed to update password" });
     } catch (error) {
-      console.error("error from updatePassword(): ", error);
-      return res.status(500).json({ status: "error", message: "An error occurred during password update" });
+      logger.error("error from updatePassword(): ", error);
+      return res.status(500).json({
+        status: "error",
+        message: "An error occurred during password update",
+      });
     }
   }
 }

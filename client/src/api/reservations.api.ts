@@ -12,22 +12,26 @@ export const reservationsApi = {
       const res = await axiosInstance.get("/reservation/get-reservation-trends", {
         params: { year },
       });
-      if (!res) return console.log("Can't get reservation trends.");
+      if (!res?.data) throw new Error("Can't get reservation trends.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in reservationApi/getReservationTrends(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch reservation trends.",
+      );
     }
   },
 
   async getAvailableYears() {
     try {
       const res = await axiosInstance.get("/reservation/get-available-years");
-      if (!res) return console.log("Can't get available years.");
+      if (!res?.data) throw new Error("Can't get available years.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in reservationApi/getAvailableYears(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch available years.",
+      );
     }
   },
 
@@ -39,12 +43,13 @@ export const reservationsApi = {
       const res = await axiosInstance.get("/booking-days", {
         params: { year, month: month + 1 },
       });
-      if (!res) return {};
+      if (!res?.data) return {};
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in reservationApi/getBookingDaysByMonth(): ", error);
-      return {};
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch booking days.",
+      );
     }
   },
 
@@ -56,12 +61,13 @@ export const reservationsApi = {
       const res = await axiosInstance.get("/booking-days/range", {
         params: { startDate, endDate },
       });
-      if (!res) return {};
+      if (!res?.data) return {};
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in reservationApi/getBookingDaysInRange(): ", error);
-      return {};
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch booking days in range.",
+      );
     }
   },
 
@@ -73,15 +79,14 @@ export const reservationsApi = {
       const res = await axiosInstance.get("/reservation/calendar-summary", {
         params: { year, month: month + 1 },
       });
-      if (!res) return [];
+      if (!res?.data) return [];
 
       return res.data.result;
-    } catch (error) {
-      console.log(
-        "Error in reservationApi/getReservationCalendarSummary(): ",
-        error,
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Failed to fetch reservation calendar summary.",
       );
-      return [];
     }
   },
 
@@ -91,9 +96,11 @@ export const reservationsApi = {
         dates,
         status,
       });
-      if (!res) return console.log("Can't update booking days.");
-    } catch (error) {
-      console.log("Error in reservationApi/updateBookingDays(): ", error);
+      if (!res?.data) throw new Error("Can't update booking days.");
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update booking days.",
+      );
     }
   },
 
@@ -102,11 +109,13 @@ export const reservationsApi = {
       const res = await axiosInstance.get("/reservation/get-reservation-list", {
         params: { year },
       });
-      if (!res) return console.log("Can't get reservation list.");
+      if (!res?.data) throw new Error("Can't get reservation list.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in reservationApi/getReservationList(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch reservation list.",
+      );
     }
   },
 
@@ -116,13 +125,13 @@ export const reservationsApi = {
         "/reservation/get-reservation-cancellations",
         { params: { year } },
       );
-      if (!res) return console.log("Can't get reservation cancellations.");
+      if (!res?.data) throw new Error("Can't get reservation cancellations.");
 
       return res.data.result;
-    } catch (error) {
-      console.log(
-        "Error in reservationApi/getReservationCancellations(): ",
-        error,
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Failed to fetch reservation cancellations.",
       );
     }
   },
@@ -133,13 +142,14 @@ export const reservationsApi = {
         "/reservation/get-pending-reservation-cancellations",
         { params: { year } },
       );
-      if (!res) return console.log("Can't get pending reservation cancellations.");
+      if (!res?.data)
+        throw new Error("Can't get pending reservation cancellations.");
 
       return res.data.result;
-    } catch (error) {
-      console.log(
-        "Error in reservationApi/getPendingReservationCancellation(): ",
-        error,
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Failed to fetch pending reservation cancellations.",
       );
     }
   },
@@ -149,11 +159,13 @@ export const reservationsApi = {
       const res = await axiosInstance.get(
         "/reservation/get-reservation-summary",
       );
-      if (!res) return console.log("Can't get reservation summary.");
+      if (!res?.data) throw new Error("Can't get reservation summary.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in reservationApi/getReservationSummmary(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch reservation summary.",
+      );
     }
   },
   async getReservationById(reservationId: string) {
@@ -161,11 +173,13 @@ export const reservationsApi = {
       const res = await axiosInstance.get(
         `/reservation/get-reservation-by-id/${reservationId}`,
       );
-      if (!res) return console.log("Can't get reservation data.");
+      if (!res?.data) throw new Error("Can't get reservation data.");
 
       return res.data.data[0];
-    } catch (error) {
-      console.log("Error in reservationApi/getReservationById(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch reservation by ID.",
+      );
     }
   },
 
@@ -174,11 +188,11 @@ export const reservationsApi = {
       const res = await axiosInstance.get(
         `/reservation/get-email/${customerId}`,
       );
-      if (!res) return console.log("Can't get reservation list.");
+      if (!res?.data) throw new Error("Can't get email.");
 
       return res.data.email;
-    } catch (error) {
-      console.log("Error in reservationApi/getReservationList(): ", error);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to fetch email.");
     }
   },
 
@@ -194,11 +208,13 @@ export const reservationsApi = {
           status,
         },
       );
-      if (!res) return console.log("Can't update reservation status.");
+      if (!res?.data) throw new Error("Can't update reservation status.");
 
       return res.data.message;
-    } catch (error) {
-      console.log("Error in reservationApi/updateReservationStatus(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update reservation status.",
+      );
     }
   },
   async updateCancellationStatus(
@@ -213,13 +229,13 @@ export const reservationsApi = {
           status,
         },
       );
-      if (!res) return console.log("Can't update cancellation status.");
+      if (!res?.data) throw new Error("Can't update cancellation status.");
 
       return res.data.message;
-    } catch (error) {
-      console.log(
-        "Error in reservationApi/updateCancellationStatus(): ",
-        error,
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Failed to update cancellation status.",
       );
     }
   },
@@ -227,8 +243,7 @@ export const reservationsApi = {
   async uploadImage(file: File, type: string, reservationId: string) {
     try {
       if (!file) {
-        console.log("It must have a file");
-        return;
+        throw new Error("A file must be provided.");
       }
 
       const data = await this.getReservationById(reservationId);
@@ -254,14 +269,13 @@ export const reservationsApi = {
         },
       );
 
-      if (!res) {
-        console.log("Can't upload image");
-        return;
+      if (!res?.data) {
+        throw new Error("Can't upload image.");
       }
 
       return res.data.imageUrl;
     } catch (error: any) {
-      console.log("Error in uploadImage()", error.message);
+      throw new Error(error.response?.data?.message || "Failed to upload image.");
     }
   },
 };

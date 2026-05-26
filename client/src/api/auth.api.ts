@@ -4,36 +4,37 @@ export const authApi = {
   async login(authData: any) {
     try {
       const res = await axiosInstance.post("/auth/login", authData);
-      if (!res) return console.log("Can't login.");
+      if (!res?.data) throw new Error("Invalid response from server");
 
       return res.data;
-    } catch (error) {
-      console.log("Error in authApi/login(): ", error);
-      throw error;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Login failed. Please try again.",
+      );
     }
   },
 
   async generateOtp() {
     try {
       const res = await axiosInstance.post("/auth/generate-otp");
-      if (!res) return console.log("Can't generate OTP.");
+      if (!res?.data) throw new Error("Can't generate OTP.");
 
       return res.data;
-    } catch (error) {
-      console.log("Error in authApi/generateOtp(): ", error);
-      throw error;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to generate OTP.",
+      );
     }
   },
 
   async sendOtp() {
     try {
       const res = await axiosInstance.post("/auth/send-otp");
-      if (!res) return console.log("Can't send OTP.");
+      if (!res?.data) throw new Error("Can't send OTP.");
 
       return res.data;
-    } catch (error) {
-      console.log("Error in authApi/sendOtp(): ", error);
-      throw error;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to send OTP.");
     }
   },
 
@@ -42,12 +43,13 @@ export const authApi = {
       const res = await axiosInstance.post("/auth/update-password", {
         password,
       });
-      if (!res) return console.log("Can't update password.");
+      if (!res?.data) throw new Error("Can't update password.");
 
       return res.data;
-    } catch (error) {
-      console.log("Error in authApi/updatePassword(): ", error);
-      throw error;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update password.",
+      );
     }
   },
 };

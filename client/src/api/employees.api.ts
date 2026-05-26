@@ -5,22 +5,26 @@ export const employeesApi = {
     try {
       const res = await axiosInstance.get("employee/get-employee-list");
 
-      if (!res) return console.log("Can't get employee list. ");
+      if (!res?.data) throw new Error("Can't get employee list.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in orderApi/getEmployeeList(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch employee list.",
+      );
     }
   },
 
   async getEmployeeSummary() {
     try {
       const res = await axiosInstance.get("/employee/get-employee-summary");
-      if (!res) return console.log("Can't get employee summary.");
+      if (!res?.data) throw new Error("Can't get employee summary.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in employees/getEmployeeSummary(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch employee summary.",
+      );
     }
   },
 
@@ -30,11 +34,13 @@ export const employeesApi = {
         "employee/add-employee",
         employeeData,
       );
-      if (!res) return console.log("Can't add employee.");
+      if (!res?.data) throw new Error("Can't add employee.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in employees/addEmployee(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to add employee.",
+      );
     }
   },
 
@@ -44,11 +50,13 @@ export const employeesApi = {
         `employee/update-employee/${employeeId}`,
         employeeData,
       );
-      if (!res) return console.log("Can't update employee.");
+      if (!res?.data) throw new Error("Can't update employee.");
 
       return res.data.result;
-    } catch (error) {
-      console.log("Error in employees/updateEmployee(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update employee.",
+      );
     }
   },
 
@@ -57,11 +65,13 @@ export const employeesApi = {
       const res = await axiosInstance.delete(
         `employee/delete-employee/${employeeId}`,
       );
-      if (!res) return console.log("Can't delete employee.");
+      if (!res?.data) throw new Error("Can't delete employee.");
 
       return true;
-    } catch (error) {
-      console.log("Error in employees/deleteEmployee(): ", error);
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete employee.",
+      );
     }
   },
 };

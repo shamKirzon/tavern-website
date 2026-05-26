@@ -1,7 +1,13 @@
 import { transporter } from "../lib/transporter";
+import { logger } from "./logger";
 
 export async function sendAdminPasswordResetOTP(otp: string): Promise<void> {
-  const to = "shammysuyat@gmail.com";
+  const to = process.env.ADMIN_EMAIL || "shammysuyat@gmail.com";
+  if (!process.env.ADMIN_EMAIL) {
+    logger.warn(
+      "ADMIN_EMAIL env var is missing. Falling back to default email.",
+    );
+  }
   const subject = "Admin Portal — Password Reset OTP";
 
   const html = `
@@ -118,8 +124,8 @@ export async function sendAdminPasswordResetOTP(otp: string): Promise<void> {
       subject,
       html,
     });
-    console.log("Admin password reset OTP sent to:", to);
+    logger.info("Admin password reset OTP sent to:", to);
   } catch (error) {
-    console.error("Failed to send admin password reset OTP:", error);
+    logger.error("Failed to send admin password reset OTP:", error);
   }
 }

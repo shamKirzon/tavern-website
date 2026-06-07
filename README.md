@@ -1,10 +1,10 @@
-# 🍻 Tav — Restobar Management System
+#  Tav — Restobar Management System
 
 > A full-stack reservation and order management system built for **Tavern Asia Resto Bar**, Parañaque City. Designed to modernize operations by moving from walk-in to a reservation-only model, with QR-based verification and real-time order tracking.
 
 ---
 
-## 🌐 Web Dashboard — `tavern-website`
+##  Web Dashboard — `tavern-website`
 
 The web application is used by the **admin**, **cashier**, and **security** staff to manage the full day-to-day operation of the restobar.
 
@@ -12,19 +12,19 @@ The web application is used by the **admin**, **cashier**, and **security** staf
 
 ### Features
 
-#### 🛡️ Admin
+####  Admin
 - **Manage Reservations** — View reservation history and full reservation lists; control available schedules shown to customers on the mobile app
 - **Approve / Decline Payments** — Review customer-submitted deposit screenshots and manually confirm or reject each reservation
 - **Manage Employees** — Create, read, update, and delete employee records; assign roles (admin, cashier, security) and manage shift schedules
 - **Track Orders** — Monitor all active and past orders placed by customers in real time
 - **Reports & Analytics** — View daily, monthly, and yearly graphs of reservations and sales; export PDF and Excel reports for orders, reservations, and sales
 
-#### 🔒 Security
+####  Security
 - **PIN Authentication** — Log in to the security station using a personal PIN
 - **QR Code Scanner** — Scan and validate customer QR codes at the entrance; displays instant success or failure feedback
 - **Logout** — Securely end the active PIN session
 
-#### 🧾 Cashier
+####  Cashier
 - **PIN Authentication** — Log in to the cashier station using a personal PIN
 - **QR Code Scanner** — Scan order QR codes at the counter to update order status (Pending, Cancelled, Done) in real time
 - **Add Additional Orders** — Append new items to an existing customer order; total bill updates automatically
@@ -66,7 +66,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 
 
 
-## 🗂️ System Overview
+##  System Overview
 
 ```
 Admin (Web Dashboard)
